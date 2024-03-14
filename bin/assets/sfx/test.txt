@@ -1,0 +1,21 @@
+{
+	"name":"test_soundscript",
+	"src_name":"test",
+	
+	"events":{
+		"generic":{
+			"loops":1,
+			"volume":1,
+			
+			"pre_eff":"sfx_prefx_default",
+			"post_eff":"sfx_postfx_default"
+		},
+		"loop":{
+			"loops":-1,
+			"volume":1,
+			
+			"pre_eff":"sfx_prefx_default",
+			"post_eff":"sfx_postfx_default"
+		}
+	}
+}

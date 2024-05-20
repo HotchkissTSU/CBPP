@@ -16,6 +16,9 @@ cbpp::Log boot_log("startup");
 
 using namespace cbpp;
 
+Mesh* MESH = new Mesh(3);
+Mesh* CONVEX = new Mesh(3);
+
 void Initialize(std::string window_title, cbpp::Vec2 window_pos, cbpp::Vec2 window_size, SDL_WindowFlags window_flags);
 void ParseArgs(int argc, char* argv[]);
 void TickThreadFunc(float tps_lock);
@@ -38,10 +41,40 @@ bool file_validate(std::string file){
 }
 
 void pre_rnd_hook(cbdraw::RenderSurface* rt){
-	rt->DrawCircle(cbdraw::Color(255,0,0,255), cbpp::Vec2(100), 100, 3);
+	
+	//for(int i = 0; i < MESH->Size(); i++){
+		//rt->DrawCircle(cbdraw::Color(255,255,255,255), MESH->At(i), 3, 2);
+	//}
+	
+	//rt->DrawMesh(cbdraw::Color(255,255, 0 ,100), Vec2(0), CONVEX, 5);
+	
+	int mx, my;
+	SDL_GetMouseState(&mx, &my);
+	
+	mCircle c1;
+	
+	c1.pos = Vec2(400);
+	c1.radius = 100.0f;
+	
+	mCircle c2;
+	c2.pos = Vec2(mx,my);
+	c2.radius = 50.0f;
+	
+	rt->DrawCircle(cbdraw::Color(255,255,255,255), c1.pos, c1.radius, 2);	
+	rt->DrawCircle(cbdraw::Color(255,255,255,255), c2.pos, c2.radius, 2);
+	
+	Intersection isec = Intersect_CircleCircle(c1,c2);
+	
+	for(int i = 0; i < isec.points.size(); i++){
+		rt->DrawCircle(cbdraw::Color(255,0,0,255), isec.points[i], 3, 2);
+	}
 }
 
 int main(int argc, char* argv[]){
+	
+	MESH->At(0) = Vec2(100,100);
+	MESH->At(1) = Vec2(150,100);
+	MESH->At(2) = Vec2(160,100);
 	
 	ParseArgs(argc, argv);
 	
@@ -116,6 +149,8 @@ void TickThreadFunc(float tps_lock = 0){
 		tps_lock = CBPP_TPS_LOCK;
 	}
 	
+	//cbsv::ConnectToHost("localhost", 16000);
+	
 	bool is_running = true;
 	
 	float update_rate, frame_time, tps_current;
@@ -123,26 +158,7 @@ void TickThreadFunc(float tps_lock = 0){
 	
 	update_rate = tps_lock;
 	
-	//cbsv::RunServer(3000);
-	
-	//std::cout<<cbsv::server_is_run<<std::endl;
-	
-	cbpp::ByteTable test;
-	
-	test.WriteValueSingle<int32_t>("test_int", 1024, INT32);
-	test.WriteValueSingle<cbpp::Vec2>("test_vector", cbpp::Vec2(-1.0f, 45.67f), VEC2);
-	
-	//std::cout<<test.ReadValueSingle<int32_t>("test_int")<<std::endl;
-	
-	test.SetHeader("nigger");
-	auto sarr = test.Assemble();
-	
-	//sarr.PrintVerbose<int>(8);
-	
-	test.Disassemble(sarr);
-	
-	std::cout<<test.ReadValueSingle<int32_t>("test_int")<<std::endl;
-	std::cout<<test.ReadValueSingle<cbpp::Vec2>("test_vector")<<std::endl;
+	int mx,my;
 	
 	while(is_running){
 		frame_time = (int)(1000.0f/update_rate);
@@ -158,6 +174,13 @@ void TickThreadFunc(float tps_lock = 0){
 					is_running = false;
 					
 					break;
+				case SDL_MOUSEBUTTONDOWN:
+					SDL_GetMouseState(&mx, &my);
+					
+					MESH->AdjustVertex(Vec2(mx,my));
+					
+					MESH->GetConvex(CONVEX);
+				
 			}
 		}
 		

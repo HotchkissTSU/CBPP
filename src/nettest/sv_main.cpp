@@ -24,6 +24,9 @@ int main(int argc, char* argv[]){
 			cout<<"Got packet!"<<endl;
 			cout<<"\tPacket length: "<<packet->len<<endl;
 			cout<<"\tPacket data: "<<packet->data<<endl;
+			
+			SDLNet_UDP_Send(sock, packet->channel, packet);
+			
 			memset(packet->data, 0, 1024);
 		}
 	}

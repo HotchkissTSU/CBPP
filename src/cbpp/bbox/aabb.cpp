@@ -1,65 +1,92 @@
 #include "cbpp/bbox/aabb.h"
-
-using namespace cbpp;
+#include "cbpp/cb_alloc.h"
 
 namespace cbpp{
-	AABB::AABB(){}
+	AABB::AABB(const AABB& other){
+		Allocate();
+		
+		for(uint8_t i = 0; i < 4; i++){
+			pts[i] = other.pts[i];
+		}
+	}
+	
+	AABB::AABB(){
+		Set(Vec2(-5), Vec2(5));
+	}
+	
 	AABB::AABB(Vec2 minp, Vec2 maxp){
-		pmin = minp; pmax = maxp;
-		GenerateBoxVector();
+		Allocate();
+		
+		Set(minp, maxp);
 	}
 	
-	Vec2 AABB::GetMin(){ return pmin; }
-	Vec2 AABB::GetMax(){ return pmax; }
-	
-	void AABB::Set(Vec2 p1, Vec2 p2){
-		pmin = p1;
-		pmax = p2;
-		GenerateBoxVector();
-	}
-	
-	void AABB::SetMin(Vec2 p){
-		pmin = p;
-		GenerateBoxVector();
-	}
-	
-	void AABB::SetMax(Vec2 p){
-		pmax = p;
-		GenerateBoxVector();
-	}
-	
-	std::vector<Vec2> AABB::GetBoxVector(){
-		return boxv;
-	}
-	
-	void AABB::GenerateBoxVector(){
-		boxv[0] = pmin;
-		boxv[1] = Vec2(pmax.x, pmin.y);
-		boxv[2] = pmax;
-		boxv[3] = Vec2(pmin.x, pmax.y);
-	}
-	
-	bool AABB::CollidePoint(Vec2 p){
-		bool out = false;
-		if(p.x >= pmin.x && p.x <= pmax.x){
-			if(p.y >= pmin.y && p.y <= pmax.y){
-				out = true;
-			}
+	void AABB::Set(Vec2 minp, Vec2 maxp){
+		if(!allocated){
+			Allocate();
 		}
 		
-		return out;
+		pts[0] = minp;
+		pts[1] = Vec2(maxp.x, minp.y);
+		pts[2] = maxp;
+		pts[3] = Vec2(minp.x, maxp.y);
 	}
 	
-	bool AABB::CollideAABB(AABB other){
-		bool out = true;
-		
-		for(int i = 0; i < 4; i++){
-			if(!CollidePoint(other.boxv[i])){
-				out = false;
-				break;
+	Vec2 AABB::At(uint8_t index){
+		if(allocated){
+			index = index % 4;
+			return pts[index];
+		}else{
+			return Vec2(0);
+		}
+	}
+	
+	Vec2 AABB::operator[](uint8_t index){
+		return At(index);
+	}
+	
+	bool AABB::CollidePoint(Vec2 pt){
+		if(allocated){
+			return (pt.x >= At(0).x && pt.x <= At(1).x) && (pt.y >= At(0).y && pt.y <= At(2).y);
+		}else{
+			return false;
+		}
+	}
+	
+	bool AABB::CollideAABB(AABB& other){
+		if(allocated){
+			bool out = true;
+			for(uint8_t i = 0; i < 4; i++){
+				if(!other.CollidePoint(At(i))){
+					out = false;
+					break;
+				}
 			}
+			
+			return out;
+		}else{
+			return false;
+		}
+	}
+	
+	void AABB::Allocate(){
+		if(allocated){
+			Free();
 		}
 		
-		return out;
+		pts = cbpp::Allocate<Vec2>(4);
+		allocated = true;
+	}
+	
+	void AABB::Free(){
+		if(allocated){
+			delete[] pts;
+			pts = nullptr;
+			
+			allocated = false;
+		}
+	}
+	
+	AABB::~AABB(){
+		Free();
 	}
 }

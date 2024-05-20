@@ -8,6 +8,6 @@
 #include "cbasset/sfx_asm.h"
 #include "SDL2/SDL_mixer.h"
 
-#include "cbasset/entity/BaseEntity.h"
+//#include "cbasset/entity/BaseEntity.h"
 
 #endif

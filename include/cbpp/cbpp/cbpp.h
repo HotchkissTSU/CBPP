@@ -3,13 +3,14 @@
 
 #include "cbpp/vec2.h"
 #include "cbpp/matrix.h"
+#include "cbpp/math.h"
 
-#include "cbpp/exceptions.h"
 #include "cbpp/mesh.h"
 #include "cbpp/bbox/aabb.h"
 #include "cbpp/bbox/obb.h"
 #include "cbpp/physobj.h"
 #include "cbpp/logs.h"
-#include "cbpp/btable.h"
+#include "cbpp/ttype.h"
+#include "cbpp/gamestate.h"
 
 #endif

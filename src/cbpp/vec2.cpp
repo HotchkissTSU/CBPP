@@ -61,6 +61,10 @@ namespace cbpp{
 		return (x*y + other.x*other.y)/other.Length();
 	}
 	
+	float Vec2::VectorMul(Vec2 other){
+		return x*other.y - y*other.x;
+	}
+	
 	Vec2 Vec2::operator+(Vec2 other){ return Vec2(x + other.x, y + other.y); }
 	Vec2 Vec2::operator+(float other){ return Vec2(x + other, y + other); }
 	Vec2 Vec2::operator+(int other){ return Vec2(x + (float)other, y + (float)other); }
@@ -99,6 +103,7 @@ namespace cbpp{
 	Vec2 Vec2::operator/(int other){ return *this/(float)other; }
 	
 	bool Vec2::operator==(Vec2 other){ return ((x == other.x) && (y == other.y)); }
+	bool Vec2::operator!=(Vec2 other){ return ((x != other.x) || (y != other.y)); }
 	
 	float Vec2::operator[](std::size_t index){ if(index == 0){ return x; }else{ return y; } }
 	

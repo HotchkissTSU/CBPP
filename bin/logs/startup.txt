@@ -1,2 +1,0 @@
-[Fri Mar 08 22:31:02 2024]  INFO: RenderThread FPS lock: 60
-[Fri Mar 08 22:31:02 20244]  INFO: MainThread TPS lock: 150

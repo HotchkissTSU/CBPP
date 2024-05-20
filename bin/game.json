@@ -1,4 +1,7 @@
-{	
-	"fullscreen":false,
-	"screen_resolution":[800, 600],
+{
+	"name":"template",
+	
+	"base":"game.dll",
+	"entity":[ "entity/baselib.dll" ],
+	"assets":[ "assets/assets.json" ]
 }

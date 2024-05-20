@@ -1,219 +1,325 @@
 #include "cbpp/mesh.h"
+#include "cbpp/misc.h"
 
-using namespace cbpp;
+#include "cbpp/cb_alloc.h"
 
-namespace cbpp{
-	Mesh::Mesh(){}
-	
-	Mesh::Mesh(std::size_t size){
-		if(size <= 0){size = 1;}
-		mesh.resize(size);
+#include <iostream>
+
+namespace cbpp{ //Mesh
+	bool MeshValidate(Mesh* msh){
+		if(msh == nullptr){ return false; }
+		
+		return msh->IsValid();
 	}
 	
-	Mesh::Mesh(std::vector<Vec2> verts){
-		mesh.resize(verts.size());
-		for(int i = 0; i < verts.size(); i++){
-			mesh.push_back(verts[i]);
-		}
-		
-		_validate();
-	}
-	
-	void Mesh::Set(std::size_t index, Vec2 p){
-		if(index >= 0 && index < mesh.size()){
-			mesh[index] = p;
-		}
-		
-		if(index >= mesh.size()){
-			AdjustVertex(p);
+	Mesh::Mesh(Mesh& other){
+		if(other.IsValid()){
+			Set(&other);
 		}
 	}
+
+	Mesh::Mesh(){
+		Mesh(3);
+	}
 	
-	void Mesh::SetMesh(std::vector<Vec2> verts){
-		this->SetSize(verts.size());
-		for(std::size_t i = 0; i < verts.size(); i++){
-			mesh[i] = verts[i];
+	Mesh::Mesh(uint32_t len){
+		Allocate( std::max((int)len, 3) );
+	}
+	
+	Mesh::Mesh(Vec2* varr, uint32_t len){
+		if(varr != nullptr && len >= 3){
+			Allocate(len);
+			
+			for(uint32_t i = 0; i < len; i++){
+				vecarr[i] = varr[i];
+			}
 		}
-		
-		_validate();
 	}
 	
-	void Mesh::SetMesh(Mesh* msh){
-		this->SetSize(msh->Size());
-		for(std::size_t i = 0; i < msh->Size(); i++){
-			mesh[i] = msh->At(i);
+	Mesh::Mesh(const std::vector<Vec2>& vvec){
+		if(vvec.size() >= 3){
+			Allocate(vvec.size());
+			
+			for(uint32_t i = 0; i < vvec.size(); i++){
+				vecarr[i] = vvec[i];
+			}
 		}
+	}
+	
+	void Mesh::Set(Mesh* src){
+		if(!MeshValidate(src)){ return; }
 		
-		_validate();
-	}
-	
-	std::size_t Mesh::Size(){
-		return mesh.size();
-	}
-	
-	void Mesh::Clear(){
-		mesh.clear();
-		valid = false;
-	}
-	
-	void Mesh::SetSize(std::size_t sz){
-		if(sz <= 0){ sz = 1; }
-		mesh.resize(sz);
+		Free();
+		Allocate(src->Size());
 		
-		_validate();
+		for(uint32_t i = 0; i < src->Size(); i++){
+			At(i) = src->At(i);
+		}
 	}
 	
-	void Mesh::AdjustVertex(Vec2 v){
-		mesh.push_back(v);
+	void Mesh::Set(Vec2* varr, uint32_t vlen){
+		if(varr == nullptr){ return; }
 		
-		_validate();
-	}
-	
-	void Mesh::PopVertex(std::size_t index){
-		mesh.erase(mesh.begin()+index);
+		Free();
+		Allocate(vlen);
 		
-		_validate();
+		for(uint32_t i = 0; i < vlen; i++){
+			At(i) = varr[i];
+		}
 	}
 	
-	Vec2& Mesh::operator[](std::size_t index){
-		return mesh[index];
+	bool Mesh::IsValid(){ return allocated && (arrlen >= 3); }
+	uint32_t Mesh::Size(){ return arrlen; }
+	
+	Vec2& Mesh::At(uint32_t vid){
+		if(allocated){
+			return vecarr[vid % arrlen]; //циклическая индексация
+		}else{
+			return nullvec;
+		}
 	}
 	
-	void Mesh::GetRotatedByCenter(Mesh* target, float ang){
-		target->SetSize(mesh.size());
-		for(std::size_t i = 0; i < mesh.size(); i++){
-			target->Set(i, mesh[i].GetRotated(ang));
+	Vec2& Mesh::operator[](uint32_t vid){
+		return At(vid);
+	}
+	
+	void Mesh::AdjustVertex(Vec2 vtx){
+		if(allocated){			
+			uint32_t oldlen = arrlen;
+			
+			Vec2* buff = cbpp::Allocate<Vec2>(oldlen+1);
+			
+			for(uint32_t i = 0; i < arrlen+1; i++){
+				buff[i] = vecarr[i];
+			}
+			
+			delete[] vecarr;
+			vecarr = cbpp::Allocate<Vec2>(oldlen+1);
+			arrlen = oldlen+1;
+			
+			for(uint32_t i = 0; i < arrlen; i++){
+				vecarr[i] = buff[i];
+			}
+			
+			vecarr[arrlen-1] = vtx;
+			
+			delete[] buff;
+		}
+	}
+	
+	void Mesh::PopVertex(uint32_t vid){
+		if(allocated && vid < arrlen){
+			uint32_t oldlen = arrlen;
+			
+			Vec2* buff = cbpp::Allocate<Vec2>(oldlen-1);
+			
+			uint32_t k = 0;
+			for(uint32_t i = 0; i < oldlen-1; i++){
+				if(i != vid){
+					buff[k] = vecarr[i];
+					k++;
+				}
+			}
+			
+			delete[] vecarr;
+			vecarr = cbpp::Allocate<Vec2>(oldlen-1);
+			arrlen = oldlen - 1;
+			
+			for(uint32_t i = 0; i < arrlen; i++){
+				vecarr[i] = buff[i];
+			}
+			
+			delete[] buff;
 		}
 	}
 	
 	void Mesh::RotateByCenter(float ang){
-		for(std::size_t i = 0; i < mesh.size(); i++){
-			mesh[i].Rotate(ang);
-		}
-	}
-	
-	void Mesh::RotateByOffset(float ang, Vec2 p){
-		for(std::size_t i = 0; i < mesh.size(); i++){
-			mesh[i] = (mesh[i]-p).GetRotated(ang);
-		}
-	}
-	
-	void Mesh::GetRotatedByOffset(Mesh* target, float ang, Vec2 p){
-		target->Clear();
-		for(std::size_t i = 0; i < mesh.size(); i++){
-			target->AdjustVertex((mesh[i]-p).GetRotated(ang));
-		}
-	}
-	
-	void Mesh::Scale(float scal){
-		for(std::size_t i = 0; i < mesh.size(); i++){
-			mesh[i] = mesh[i]*scal;
-		}
-	}
-	
-	void Mesh::GetScaled(Mesh* target, float scal){
-		target->Clear();
-		for(std::size_t i = 0; i < mesh.size(); i++){
-			target->AdjustVertex(mesh[i]*scal);
-		}
-	}
-	
-	void Mesh::Clip(Vec2 pos1, Vec2 pos2, int dir){	
-		std::vector<Vec2> mesh_tmp;
-		for(std::size_t i = 0; i < mesh.size(); i++){
-			Vec2 p1,p2;
-			
-			if(i == mesh.size() - 1){
-				p1 = mesh[mesh.size()-1];
-				p2 = mesh[0];
-			}else{
-				p1 = mesh[i];
-				p2 = mesh[i+1];
-			}
-			
-			auto result = GetLineIntersection(pos1, pos2, p1, p2);
-
-			if(result.intersect){
-				Vec2 ps = result.intersect_pos;
-				mesh_tmp.push_back(p1);
-				mesh_tmp.push_back(ps);
-				mesh_tmp.push_back(p2);
-			}else{
-				mesh_tmp.push_back(p1);
-				mesh_tmp.push_back(p2);
+		if(allocated){
+			Vec2 X = Vec2(1,0).GetRotated(ang);
+			Vec2 Y = Vec2(0,1).GetRotated(ang); //вместо того, чтобы отдельно вертеть каждую точку в меше,
+												//делаем немного векторного волшебства
+			for(uint32_t i = 0; i < arrlen; i++){
+				vecarr[i] = X*vecarr[i].x + Y*vecarr[i].y;
 			}
 		}
+	}
+	
+	Mesh Mesh::GetRotatedByCenter(float ang){
+		Mesh out(arrlen);
 		
-		std::vector<Vec2> mesh_new;
-		for(std::size_t i = 0; i < mesh_tmp.size(); i++){
-			Vec2 pos = mesh_tmp[i];
-			
-			float D = GetLinePointOrientation(pos1, pos2, pos);
-			
-			if( (D < 0 && dir < 0) || (D > 0 && dir > 0) || std::abs(D) < 0.01f ){
-				mesh_new.push_back(pos);
-			}
-		}
-		
-		SetMesh(mesh_new);
-	}
-	
-	void Mesh::GetClipped(Mesh* target, Vec2 pos1, Vec2 pos2, int dir){
-		target->Clip(pos1, pos2, dir);
-	}
-	
-	bool Mesh::CollidePoint(Vec2 v){
-		uint16_t counter = 0;
-		for(std::size_t i = 0; i < mesh.size(); i++){
-			Vec2 p1,p2;
-			
-			if(i == mesh.size() - 1){
-				p1 = mesh[mesh.size()-1];
-				p2 = mesh[0];
-			}else{
-				p1 = mesh[i];
-				p2 = mesh[i+1];
-			}
-			
-			auto result = GetLineIntersection(Vec2(), Vec2(0.0f, 0.93f), p1, p2);
-			counter += (uint16_t)result.intersect;
-		}
-		
-		return (counter%2) != 0;
-	}
-	
-	std::vector<Vec2> Mesh::GetLineIntersections(Vec2 _p1, Vec2 _p2){
-		std::vector<Vec2> out;
-		
-		for(std::size_t i = 0; i < mesh.size(); i++){
-			Vec2 p1,p2;
-			
-			if(i == mesh.size() - 1){
-				p1 = mesh[mesh.size()-1];
-				p2 = mesh[0];
-			}else{
-				p1 = mesh[i];
-				p2 = mesh[i+1];
-			}
-			
-			auto result = GetLineIntersection(_p1, _p2, p1, p2);
-			if(result.intersect){
-				out.push_back(result.intersect_pos);
-			}
-		}
+		out.Set(vecarr, arrlen);
+		out.RotateByCenter(ang);
 		
 		return out;
 	}
 	
-	Vec2& Mesh::At(std::size_t index){ return mesh[index]; }
-	
-	Mesh& Mesh::operator=(Mesh& other){
-		this->SetSize(other.Size());
-		for(std::size_t i = 0; i < other.Size(); i++){
-			mesh[i] = other.At(i);
+	void Mesh::RotateByOffset(float ang, Vec2 offset){
+		if(allocated){
+			Vec2 X = Vec2(1,0).GetRotated(ang);
+			Vec2 Y = Vec2(0,1).GetRotated(ang);
+			
+			for(uint32_t i = 0; i < arrlen; i++){
+				Vec2 pt = vecarr[i] - offset;
+				vecarr[i] = X*pt.x + Y*pt.y + offset;
+			}
 		}
-		return *this;
 	}
 	
-	void Mesh::_validate(){ valid = mesh.size() >= 3; }
+	Mesh Mesh::GetRotatedByOffset(float ang, Vec2 offset){
+		Mesh out;
+		out.Set(vecarr, arrlen);
+		
+		out.RotateByOffset(ang, offset);
+		
+		return out;
+	}
+	
+	void Mesh::InsertVertex(uint32_t index, Vec2 vtx){
+		Vec2* newarr = cbpp::Allocate<Vec2>(arrlen+1);
+		
+		index = index % (arrlen+1);
+		newarr[index] = vtx;
+		
+		for(uint32_t i = 0; i < arrlen+1; i++){
+			if(i < index){
+				newarr[i] = At(i);
+			}else if(i > index){
+				newarr[i+1] = At(i);
+			}else{
+				newarr[i] = vtx;
+			}
+		}
+		
+		Set(newarr, arrlen+1);
+	}
+	
+	void Mesh::MakeConvex(){
+		if(!allocated){ return; }
+		
+		Vec2* convex = cbpp::Allocate<Vec2>(arrlen);
+		uint32_t convex_len = 0;
+		
+		uint32_t left_pt = 0;
+		float min_x = vecarr[0].x; //находим самую левую точку, она гарантированно попадает в выпуклую оболочку
+		
+		for(uint32_t i = 0; i < arrlen; i++){
+			if(vecarr[i].x < min_x){
+				min_x = vecarr[i].x;
+				left_pt = i;
+			}
+		}
+		
+		Vec2 c = vecarr[0];
+		vecarr[0] = vecarr[left_pt]; //суём левейшую точку в начало массива
+		vecarr[left_pt] = c;
+		
+		uint32_t current = 0;
+		
+		while(1){
+			convex[convex_len] = vecarr[current];
+			convex_len++;
+			
+			uint32_t vmul_min_point = -1;
+			
+			for(uint32_t i = 0; i < arrlen; i++){				
+				if( (i != current) && (vmul_min_point == -1 || (vecarr[i] - vecarr[current]).VectorMul(vecarr[vmul_min_point] - vecarr[current]) < 0)){
+					vmul_min_point = i;
+				}
+			}
+			
+			if(vmul_min_point == 0){
+				break;
+			}
+			
+			current = vmul_min_point;
+		}
+		
+		Set(convex, convex_len);
+		
+		delete[] convex;
+	}
+	
+	Mesh Mesh::GetConvex(){
+		Mesh out;
+		out.Set(vecarr, arrlen);
+		out.MakeConvex();
+		
+		return out;
+	}
+	
+	bool Mesh::CollidePoint(Vec2 v){
+		return false;
+	}
+	
+	void Mesh::Allocate(uint32_t len){
+		if(allocated){
+			Free();
+		}
+		
+		vecarr = cbpp::Allocate<Vec2>(len);
+		arrlen = len;
+		
+		allocated = (vecarr != nullptr);
+	}
+	
+	void Mesh::Free(){
+		if(allocated){
+			delete[] vecarr;
+			
+			vecarr = nullptr;
+			allocated = false;
+			arrlen = 0;
+		}
+	}
+	
+	Mesh::~Mesh(){
+		Free();
+	}
+}
+
+namespace cbpp{ //TriangulatedMesh
+	TriangulatedMesh::TriangulatedMesh(uint32_t cnt){
+		Allocate(std::max((uint32_t)3, cnt));
+	}
+	
+	void TriangulatedMesh::Allocate(uint32_t cnt){
+		if(allocated){
+			Free();
+		}
+		
+		if(cnt >= 3){
+			mesharr = cbpp::Allocate<Mesh*>(cnt);
+			meshcnt = cnt;
+			
+			allocated = true;
+		}
+	}
+	
+	void TriangulatedMesh::Free(){
+		if(allocated){
+			for(uint32_t i = 0; i < meshcnt; i++){
+				if(mesharr[i] != nullptr){
+					mesharr[i]->Free();
+					delete mesharr[i];
+				}
+			}
+			delete[] mesharr;
+			mesharr = nullptr;
+			meshcnt = 0;
+			
+			allocated = false;
+		}
+	}
+	
+	Mesh* TriangulatedMesh::At(uint32_t index){
+		if(index < meshcnt && allocated){
+			return mesharr[index];
+		}else{
+			return nullptr;
+		}
+	}
+	
+	Mesh* TriangulatedMesh::operator[](uint32_t index){
+		return At(index);
+	}
 }

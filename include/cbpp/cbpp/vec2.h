@@ -38,6 +38,8 @@ namespace cbpp{
 		
 		float Project(Vec2 other);
 		
+		float VectorMul(Vec2 other);
+		
 		Vec2 operator+(Vec2 other);
 		Vec2 operator+(float other);
 		Vec2 operator+(int other);
@@ -55,6 +57,7 @@ namespace cbpp{
 		Vec2 operator/(int other);
 		
 		bool operator==(Vec2 other);
+		bool operator!=(Vec2 other);
 		float operator[](std::size_t index);
 		friend std::ostream& operator << (std::ostream &o, Vec2 const& t);
 	};

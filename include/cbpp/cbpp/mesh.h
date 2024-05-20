@@ -1,81 +1,79 @@
-#ifndef CBPP_MESH
-#define CBPP_MESH
+#ifndef CBPP_MESH_H
+#define CBPP_MESH_H
 
-#include <vector>
 #include <cstdint>
-#include <cmath>
+#include <vector>
 
 #include "cbpp/vec2.h"
-#include "cbpp/misc.h"
 
 namespace cbpp{
-	extern "C" class Triplex{ //треугольник для триангулированных мешей
-		public:
-			Triplex();
-			Triplex(std::vector<Vec2> verts);
-			Triplex(Vec2 p1, Vec2 p2, Vec2 p3);
-			
-			bool CollidePoint(Vec2 p);
-			bool CollideTriplex(Triplex tripx);
-			Vec2 operator[](short index);
-			
-		private:
-			Vec2 pos1,pos2,pos3;
-	};
+	struct TriangulatedMesh;
 	
 	extern "C" class Mesh{
-		public:			
+		public:
 			Mesh();
-			Mesh(std::size_t size);
-			Mesh(std::vector<Vec2> verts);
+			Mesh(uint32_t len);
+			Mesh(Vec2* varr, uint32_t vlen);
+			Mesh(const std::vector<Vec2>& vvec);
 			
-			Vec2& operator[](std::size_t index);
-			Vec2& At(std::size_t index);
-			void Set(std::size_t index, Vec2 p);
+			Mesh(Mesh& other);
 			
-			void SetMesh(std::vector<Vec2> verts);
-			void SetMesh(Mesh* msh);
+			void Set(Mesh* src);
+			void Set(Vec2* varr, uint32_t vlen);
 			
-			std::size_t Size();
-			void SetSize(std::size_t sz);
+			bool IsValid();
+			uint32_t Size();
 			
-			void GetConvexHull(Mesh* target); //-
-			void MakeConvex(); //-
+			void AdjustVertex(Vec2 vtx);
+			void InsertVertex(uint32_t index, Vec2 vtx);
+			void PopVertex(uint32_t vid);
 			
-			std::vector<Triplex> GetTriangulated();
-			std::vector<Vec2> GetLineIntersections(Vec2 pos1, Vec2 pos2);
-			
-			bool CollidePoint(Vec2 p);
-			bool CollideMesh(Vec2 p);
-			
-			void AdjustVertex(Vec2 p);
-			void PopVertex(std::size_t index);
-			void Clear();
-			
-			void GetRotatedByCenter(Mesh* target, float ang);
 			void RotateByCenter(float ang);
+			Mesh GetRotatedByCenter(float ang);
 			
-			void GetRotatedByOffset(Mesh* target, float ang, Vec2 p);
-			void RotateByOffset(float ang, Vec2 p);
+			void RotateByOffset(float ang, Vec2 offset);
+			Mesh GetRotatedByOffset(float ang, Vec2 offset);
 			
-			void Scale(float scal);
-			void GetScaled(Mesh* target, float scal);
+			void MakeConvex();
+			Mesh GetConvex();			
 			
-			void Clip(Vec2 pos1, Vec2 pos2, int dir);
-			void GetClipped(Mesh* target, Vec2 pos1, Vec2 pos2, int dir);
+			void Clip(Vec2 pos1, Vec2 pos2, int8_t dir);
+			Mesh GetClipped(Vec2 pos1, Vec2 pos2, int8_t dir);
 			
-			int16_t* GetXArray();
-			int16_t* GetYArray();
-			void BuildArrays();
+			void Triangulate();
+			TriangulatedMesh* GetTriangulated();
 			
-			Mesh& operator=(Mesh& other);
+			bool CollidePoint(Vec2 pt);			
+			
+			Vec2& operator[](uint32_t index);
+			Vec2& At(uint32_t index);
+			
+			void Allocate(uint32_t length);
+			void Free();
+			
+			~Mesh();
 			
 		private:
-			void _validate();
-		
-			std::vector<Vec2> mesh;
+			bool allocated = false;
+			Vec2* vecarr = nullptr;
+			uint32_t arrlen = 0;
 			
-			bool valid = false;
+			Vec2 nullvec = Vec2(0);
+	};
+	
+	extern "C" struct TriangulatedMesh{
+		TriangulatedMesh(TriangulatedMesh& other);
+		TriangulatedMesh(uint32_t cnt);
+		
+		Mesh** mesharr = nullptr;
+		uint32_t meshcnt = 0;
+		bool allocated = false;
+		
+		void Allocate(uint32_t cnt);
+		void Free();
+		
+		Mesh* operator[](uint32_t index);
+		Mesh* At(uint32_t index);
 	};
 }
 

@@ -1,3 +1,7 @@
+/*
+Эта штука не используется, лежит тут чтоб было
+*/
+
 #include "cbasset/sfx_asm.h"
 
 namespace cbasset{

@@ -49,7 +49,6 @@ namespace cbutil{
 		code = code && SDL_Init(SDL_INIT_EVERYTHING);
 		code = code && IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
 		code = code && TTF_Init();
-		code = code && SDLNet_Init();
 		
 		w_window = SDL_CreateWindow(title.c_str(), std::abs((int)pos.x), std::abs((int)pos.y), std::abs((int)size.x), std::abs((int)size.y), flags);
 		w_render = SDL_CreateRenderer(w_window, -1, SDL_RENDERER_TARGETTEXTURE);

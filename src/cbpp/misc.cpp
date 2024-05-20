@@ -3,6 +3,34 @@
 #include <iomanip>
 
 namespace cbpp{
+	uint32_t GetNumLength(int64_t val){
+		uint32_t out = 0;
+		
+		while(val){
+			val = val/10;
+			out++;
+		}
+		
+		return out;
+	}
+	
+	std::string IntToString(int64_t val){
+		uint32_t numlen = GetNumLength(val);
+		char* buff = new char[numlen+1];
+		memset(buff, 0, numlen+1);
+		
+		itoa(val, buff, 10);
+		
+		std::string out(buff);
+		delete[] buff;
+		
+		return out;
+	}
+	
+	int64_t StringToInt(std::string val){
+		return atoi(val.c_str());
+	}
+	
 	float Clampf(float a, float mx, float mn){
 		if(a > mx){
 			return mx;

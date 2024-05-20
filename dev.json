@@ -37,8 +37,7 @@
 			
 			"src":[
 				"src/cbasset/font.cpp", "src/cbasset/texture.cpp",
-				"src/cbasset/sound.cpp", "src/cbasset/sfx_asm.cpp",
-				"src/cbasset/cmfbase.cpp", 
+				"src/cbasset/sound.cpp", "src/cbasset/cmfbase.cpp", 
 				
 				"src/cbasset/entity/BaseEntity.cpp",
 				
@@ -121,23 +120,44 @@
 			],
 			
 			"add_static":[],
-			"add_lib":["SDL2_net.lib"],
+			"add_lib":["SDL2_net.lib", "cbpp.lib"],
 			
 			"compiler_params":"-m64",
 			"builder_params":"-m64"
 		}
 	},
 	
-	"bin":{
-		"main":{
+	"bin":{		
+		"sv_main":{
 			"include":"include/cbpp",
 			"lib":"lib",
 			"static":"static",
 			"out":"bin",
-			"obj":"src/main/obj",
+			"obj":"src/sv_main/obj",
 			
 			"src":[
-				"src/main/main.cpp", "src/main/render.cpp"
+				"src/sv_main/main.cpp"
+			],
+
+			"add_static":[],
+			"add_lib":["cbpp.lib", "cbdraw.lib", "SDL2_ttf.lib",
+						"freetype.lib", "cbasset.lib", "SDL2_mixer.lib",
+						"SDL2.lib", "SDL2_image.lib", "SDL2_net.lib",
+						"cbsv.lib"],
+			
+			"compiler_params":"-m64",
+			"builder_params":"-m64"
+		},
+		
+		"cl_main":{
+			"include":"include/cbpp",
+			"lib":"lib",
+			"static":"static",
+			"out":"bin",
+			"obj":"src/cl_main/obj",
+			
+			"src":[
+				"src/cl_main/main.cpp", "src/cl_main/render.cpp"
 			],
 
 			"add_static":[],

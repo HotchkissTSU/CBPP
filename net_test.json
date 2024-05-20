@@ -1,0 +1,48 @@
+{
+	"name":"sdlnet_test",
+	"libs":{},
+	
+	"bin":{		
+		"sv":{
+			"include":"include/cbpp",
+			"lib":"lib",
+			"static":"static",
+			"out":"bin",
+			"obj":"src/nettest/obj",
+			
+			"src":[
+				"src/nettest/sv_main.cpp"
+			],
+
+			"add_static":[],
+			"add_lib":["cbpp.lib", "cbdraw.lib", "SDL2_ttf.lib",
+						"freetype.lib", "cbasset.lib", "SDL2_mixer.lib",
+						"SDL2.lib", "SDL2_image.lib", "SDL2_net.lib",
+						"cbsv.lib"],
+			
+			"compiler_params":"-m64",
+			"builder_params":"-m64"
+		},
+		
+		"cl":{
+			"include":"include/cbpp",
+			"lib":"lib",
+			"static":"static",
+			"out":"bin",
+			"obj":"src/nettest/obj",
+			
+			"src":[
+				"src/nettest/cl_main.cpp"
+			],
+
+			"add_static":[],
+			"add_lib":["cbpp.lib", "cbdraw.lib", "SDL2_ttf.lib",
+						"freetype.lib", "cbasset.lib", "SDL2_mixer.lib",
+						"SDL2.lib", "SDL2_image.lib", "SDL2_net.lib",
+						"cbsv.lib"],
+			
+			"compiler_params":"-m64",
+			"builder_params":"-m64"
+		}
+	}
+}

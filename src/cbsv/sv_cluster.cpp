@@ -2,6 +2,13 @@
 
 namespace cbsv{	
 	UserCluster::UserCluster(uint16_t size){
+		if(cluster_arr == nullptr){
+			cluster_arr = new UserCluster*[CBSV_CLUSTERS];
+			for(int i = 0; i < CBSV_CLUSTERS; i++){
+				cluster_arr[i] = nullptr;
+			}
+		}
+		
 		if(size > 0){
 			usercount = size;
 		}else{
@@ -16,6 +23,8 @@ namespace cbsv{
 		cluster_counter++;
 		
 		_allocate();
+		
+		std::thread cluster_thr(TickThread, this);
 	}
 	
 	int32_t UserCluster::AddUser(User* us){
@@ -73,21 +82,38 @@ namespace cbsv{
 			delete[] user_array;
 			
 			allocated = false;
+			
+			if(cluster_arr != nullptr){
+				for(int i = 0; i < CBSV_CLUSTERS; i++){
+					if(cluster_arr[i] == this){
+						cluster_arr[i] = nullptr;
+					}
+				}
+			}
+			
 		}
 	}
 	
 	void UserCluster::_allocate(){
-		if(allocated){
-			_free();
+		if(cluster_arr != nullptr){
+			if(allocated){
+				_free();
+			}
+			
+			user_array = new User*[usercount];
+			
+			for(uint16_t i = 0; i < usercount; i++){
+				user_array[i] = nullptr;
+			}
+			
+			allocated = true;
+		
+			for(int i = 0; i < CBSV_CLUSTERS; i++){
+				if(cluster_arr[i] == nullptr){
+					cluster_arr[i] = this;
+				}
+			}
 		}
-		
-		user_array = new User*[usercount];
-		
-		for(uint16_t i = 0; i < usercount; i++){
-			user_array[i] = nullptr;
-		}
-		
-		allocated = true;
 	}
 	
 	void UserCluster::TickThread(){
@@ -96,7 +122,7 @@ namespace cbsv{
 				User* us = user_array[i];
 				
 				if(us != nullptr){
-					//тут надо почесать список необработанных пакетов со всех клиентов, найти свои и покумекать над ними
+					Packet pkg;
 				}
 			}
 		}

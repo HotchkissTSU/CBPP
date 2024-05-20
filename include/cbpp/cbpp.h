@@ -6,8 +6,6 @@
 #include "cbasset/cbasset.h"
 #include "cbsv/cbsv.h"
 
-#include "cb_main/settings.h"
-
 #ifdef main
 	#undef main
 #endif

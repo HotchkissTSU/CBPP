@@ -1,6 +1,7 @@
 #include "cbpp.h"
 
 #include "cb_main/render.h"
+#include "cb_main/settings.h"
 
 #include <iostream>
 

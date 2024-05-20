@@ -21,7 +21,22 @@ namespace cbpp{
 	float Vec2::Length(){ return std::pow(std::pow(x, 2.0f) + std::pow(y, 2.0f), 0.5f); }
 	Vec2 Vec2::Norm(){ return (*this/this->Length()); }
 	float Vec2::Dot(Vec2 other){ Vec2 v1 = other.Norm(); Vec2 v2 = this->Norm(); return (v1.x*v2.x + v1.y*v2.y); }
-	float Vec2::Angle(){ return acos(this->Dot( Vec2(1.0f,0.0f) )); }
+	
+	float Vec2::Angle(){
+		int addon;
+		//арккосинус - чмо, просирает, в какой четверти был угол, чистим за ним
+		if(x >= 0 && y >= 0){ //1
+			addon = 0;
+		}else if(x >= 0 && y < 0){//4       переделай это в радианы
+			addon = -90;
+		}else if(x < 0 && y >= 0){//2
+			addon = 90;
+		}else if(x < 0 && y < 0){//3
+			addon = 180;
+		}
+		
+		return acos(this->Dot( Vec2(1.0f,0.0f) )) + addon;
+	}
 	
 	Vec2 Vec2::GetRotated(float ang){
 		float nx = x*std::cos(ang) - y*std::sin(ang);

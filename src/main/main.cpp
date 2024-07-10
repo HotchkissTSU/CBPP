@@ -1,0 +1,137 @@
+#include "cbpp/cbpp.h"
+#include "json/json.h"
+
+#include "cb_main/error.h"
+#include "cb_main/interface.h"
+#include "cb_main/settings.h"
+#include "cb_main/glfw_callbacks.h"
+#include "cb_main/shader_parser.h"
+
+#include <windows.h>
+#include <fstream>
+#include <iostream>
+#include <ctime>
+
+using namespace cbpp;
+
+const CBPP_ModuleInfo& (*CBPP_GetModuleInfo)( void ) = nullptr;
+bool (*CBPP_ModuleMain)( int argc, char* argv[] ) = nullptr;
+bool (*CBPP_MainLoopCheck)( void ) = nullptr;
+
+GLFWwindow* CBPP_MainWindow = nullptr;
+
+float CBPP_tick_timing = 0.1f;
+clock_t CBPP_tick_start, CBPP_tick_end, CBPP_tick_delta;
+
+CBPP_ModuleInfo CBPP_CurrentModuleInfo;
+
+const char* CBPP_GameLibrary = nullptr;
+
+HMODULE CBPP_ModuleLibHandle;
+
+void LoadGameLibrary(){
+	CBPP_ModuleLibHandle = LoadLibrary(CBPP_GameLibrary);
+	
+	if(CBPP_ModuleLibHandle == NULL){
+		cbpp::DisplayError("ERROR", (std::string("Unable to load the specified module: \n") + std::string(CBPP_GameLibrary)).c_str(), true);
+	}
+	
+	CBPP_GetModuleInfo = (const CBPP_ModuleInfo& (*)( void ))GetProcAddress(CBPP_ModuleLibHandle, CBPP_GETFUNKNAME);
+	CBPP_ModuleMain = (bool (*)(int, char**))GetProcAddress(CBPP_ModuleLibHandle, CBPP_MAINFUNCNAME);
+	CBPP_MainLoopCheck = (bool (*)(void))GetProcAddress(CBPP_ModuleLibHandle, CBPP_LOOPCHECKFUNCNAME);
+	
+	if(CBPP_GetModuleInfo == NULL){
+		cbpp::DisplayError("ERROR", "GetProcAddress for CBPP_GetModuleInfo returned NULL", true);
+	}
+	
+	if(CBPP_ModuleMain == NULL){
+		cbpp::DisplayError("ERROR", "GetProcAddress for CBPP_ModuleMain returned NULL", true);
+	}
+	
+	if(CBPP_MainLoopCheck == NULL){
+		cbpp::DisplayError("ERROR", "GetProcAddress for CBPP_MainLoopCheck returned NULL", true);
+	}
+	
+	CBPP_CurrentModuleInfo = CBPP_GetModuleInfo();
+}
+
+void ParseGameFile(){
+	Json::Reader rd;
+	Json::Value root;
+	
+	std::ifstream json_in(CBPP_GAMEFILE_NAME);
+	
+	if(!json_in.is_open()){
+		cbpp::DisplayError("ERROR", "Unable to locate game.json", true);
+	}
+	
+	if(!rd.parse(json_in, root)) {		
+		cbpp::DisplayError("Gamefile parsing error", rd.getFormattedErrorMessages().c_str(), true);
+	}
+	
+	json_in.close();
+	
+	CBPP_GameLibrary = root["base"].asString().c_str();
+}
+
+void InitGL(){
+	glfwInit();
+}
+
+void CBPP_CreateWindow(){
+	int W = (int)CBPP_CurrentModuleInfo.WindowSize.x;
+	int H = (int)CBPP_CurrentModuleInfo.WindowSize.y;
+	
+	CBPP_MainWindow = glfwCreateWindow(W, H, CBPP_CurrentModuleInfo.WindowTitle, NULL, NULL);
+	
+	if(CBPP_MainWindow == NULL){
+		cbpp::DisplayError("ERROR", "Failed to create GLFW window!", true);
+	}
+	
+	glfwMakeContextCurrent(CBPP_MainWindow);
+	
+	glfwSetFramebufferSizeCallback(CBPP_MainWindow, ReshapeHook);  
+}
+
+void MainLoop(){
+	while(!glfwWindowShouldClose(CBPP_MainWindow) && CBPP_MainLoopCheck()){
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		
+		uint32_t current_gs_id = cbpp::GetCurrentGameState();
+		
+		if(current_gs_id != CB_STATEINDEX_MAX){
+			cbpp::GameState* current_gs = cbpp::GetStateRegList()[current_gs_id];
+			if(current_gs != nullptr){
+				current_gs->Tick();
+			}
+		}
+		
+		glfwSwapBuffers(CBPP_MainWindow);
+		glfwPollEvents();
+	}
+}
+
+void Cleanup(){
+	cbpp::CleanupGameStates();
+	
+	glfwTerminate();
+}
+
+int main(int argc, char** argv){
+	InitGL();
+	
+	ParseGameFile();
+	LoadGameLibrary();
+	
+	CBPP_CreateWindow();
+	gladLoadGL((GLADloadfunc)glfwGetProcAddress);
+	
+	if(!CBPP_ModuleMain(argc, argv)){
+		return 1;
+	}
+	
+	MainLoop();
+	
+	Cleanup();
+}

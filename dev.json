@@ -1,0 +1,87 @@
+
+{
+	"base" : 
+	{
+		"comp_params" : "-std=c++17 -m64",
+		"compiler" : "g++",
+		"from_obj" : 0
+	},
+	"name" : "Cuber++ dev project",
+	"targets" : 
+	{
+		"cbep" : 
+		{
+			"dynamic" : [ "lib" ],
+			"include" : [ "include\\cbpp", "include" ],
+			"link_dynamic" : [ "cbpp.lib", "glfw3.lib" ],
+			"link_params" : "",
+			"link_static" : [ "jsoncpp", "gl_4.0" ],
+			"obj" : "obj\\main",
+			"out" : "bin",
+			"out_libfile" : "lib",
+			"src" : [ "src\\main\\*.cpp" ],
+			"static" : [ "static" ],
+			"type" : "EXE"
+		},
+		"cbpp" : 
+		{
+			"dynamic" : [ "lib" ],
+			"from_obj" : 1,
+			"include" : [ "include\\cbpp" ],
+			"link_dynamic" : [],
+			"link_params" : "",
+			"link_static" : [ "jsoncpp" ],
+			"obj" : "obj\\cbpp_base",
+			"out" : "bin",
+			"out_libfile" : "lib",
+			"src" : [ "obj\\cbpp_base\\*.o", "obj\\cbvs\\window.o" ],
+			"static" : [ "static" ],
+			"type" : "DLL"
+		},
+		"cbpp_o" : 
+		{
+			"dynamic" : [ "lib" ],
+			"include" : [ "include\\cbpp", "include\\cbpp\\ttype" ],
+			"link_dynamic" : [],
+			"link_params" : "",
+			"link_static" : [],
+			"obj" : "obj\\cbpp_base",
+			"out" : "bin",
+			"out_libfile" : "lib",
+			"src" : [ "src\\cbpp\\*.cpp" ],
+			"static" : [ "static" ],
+			"type" : "OBJ"
+		},
+		"cbvs_o" : 
+		{
+			"dynamic" : [ "lib" ],
+			"include" : [ "include\\cbpp" ],
+			"link_dynamic" : [],
+			"link_params" : "",
+			"link_static" : [],
+			"obj" : "obj\\cbvs",
+			"out" : "bin",
+			"out_libfile" : "lib",
+			"src" : [ "src\\cbvs\\window.cpp" ],
+			"static" : [ "static" ],
+			"type" : "OBJ"
+		},
+		"libgl_4.0" : 
+		{
+			"comp_params" : "-m64",
+			"compiler" : "gcc",
+			"dynamic" : [],
+			"from_obj" : 0,
+			"include" : [ "include" ],
+			"link_dynamic" : [],
+			"link_params" : "-m64",
+			"link_static" : [],
+			"obj" : "obj",
+			"out" : "static",
+			"out_libfile" : "lib",
+			"src" : [ "src\\gl_4.0.c" ],
+			"static" : [ "static" ],
+			"type" : "STATIC"
+		}
+	}
+}

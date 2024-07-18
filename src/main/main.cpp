@@ -29,6 +29,56 @@ const char* CBPP_GameLibrary = nullptr;
 
 HMODULE CBPP_ModuleLibHandle;
 
+LONG WINAPI CBPP_ExceptHandle(PEXCEPTION_POINTERS exception){
+	EXCEPTION_RECORD* rec = exception->ExceptionRecord;
+	std::string text;
+	
+	switch(rec->ExceptionCode){
+		case EXCEPTION_ACCESS_VIOLATION:
+			text += "EXCEPTION_ACCESS_VIOLATION\n";
+			break;
+		case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
+			text += "EXCEPTION_ARRAY_BOUNDS_EXCEEDED\n";
+			break;
+		case EXCEPTION_BREAKPOINT:
+			text += "EXCEPTION_BREAKPOINT\n";
+			break;
+	}
+	
+	std::size_t exc_addr = (std::size_t)(rec->ExceptionAddress);
+	char addr_text[20];
+	itoa(exc_addr, addr_text, 16);
+	
+	text += "Exception address: ";
+	text += addr_text;
+	text += '\n';
+	
+	int numparams = rec->NumberParameters;
+	if(numparams){
+		text += "\nException information:\n";
+		
+		if(rec->ExceptionCode == EXCEPTION_ACCESS_VIOLATION){
+			switch(rec->ExceptionInformation[0]){
+				case 1:
+					text += "\tAttempt to write in an inaccessible address\n";
+					break;
+				case 0:
+					text += "\tAttempt to read from the inaccessible data\n";
+					break;
+				case 8:
+					text += "\tDEP violation\n";
+					break;
+			}
+		}
+	}
+	
+	text += "\nThe engine will crash right now. It`s over.\n";
+	
+	cbpp::DisplayError("Lethal exception in CBPP", text.c_str(), true);
+	
+	return EXCEPTION_EXECUTE_HANDLER;
+}
+
 void LoadGameLibrary(){
 	CBPP_ModuleLibHandle = LoadLibrary(CBPP_GameLibrary);
 	
@@ -119,6 +169,8 @@ void Cleanup(){
 }
 
 int main(int argc, char** argv){
+	SetUnhandledExceptionFilter(CBPP_ExceptHandle);
+	
 	InitGL();
 	
 	ParseGameFile();
@@ -130,6 +182,10 @@ int main(int argc, char** argv){
 	if(!CBPP_ModuleMain(argc, argv)){
 		return 1;
 	}
+	
+	cbent::Entity test;
+	test.CreateComponent<cbent::TestComponent>();
+	test.GetComponent<cbent::TestComponent>()->Print();
 	
 	MainLoop();
 	

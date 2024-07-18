@@ -13,4 +13,6 @@
 #include "cbpp/ttype.h"
 #include "cbpp/statereg.h"
 
+#include "cbpp/entity/base_entity.h"
+
 #endif

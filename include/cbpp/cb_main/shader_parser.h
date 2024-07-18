@@ -5,7 +5,6 @@
 
 char* ReadShaderText(const char* shader_name) {
 	char* out;
-	
 }
 
 #endif

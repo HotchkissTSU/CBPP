@@ -29,7 +29,6 @@ extern "C" {
 		
 		cbpp::GameState* test_gs = cbpp::CreateGameState("TestState", &TestTick, &TestEvent);
 		uint32_t test_gs_id = cbpp::RegisterGameState(test_gs);
-		
 		cbpp::SetGameState(test_gs_id);
 		
 		return true;

@@ -86,16 +86,12 @@ namespace cbpp {
 		}
 		
 		T& At(size_t index){
-			if( allocated && (index < segs*segsize) ){
-				size_t segid, lindex;
-				
-				segid =  index / segsize; //индекс сегмента
-				lindex = index % segsize; //локальный индекс внутри сегмента
-				
-				return segarr[segid][lindex];
-			}else{
-				return zerov;
-			}
+			size_t segid, lindex;
+			
+			segid =  index / segsize; //индекс сегмента
+			lindex = index % segsize; //локальный индекс внутри сегмента
+			
+			return segarr[segid][lindex];
 		}
 		
 		void RemoveValue(const T& val){
@@ -289,8 +285,10 @@ namespace cbpp {
 			At(index) = zero;
 		}
 		
-		void Emplace(const T& value){
-			if(!allocated){ return; }
+		size_t Emplace(const T& value){
+			if(!allocated){ return -1; }
+			
+			size_t out = -1;
 			
 			T zero;
 			memset(&zero, 0, sizeof(T));
@@ -298,11 +296,13 @@ namespace cbpp {
 			for(size_t i = 0; i < arrlen; i++){ //если находится дырка, кладём элемент туда
 				if(At(i) == zero){
 					At(i) = const_cast<T&>(value);
-					return;
+					return i;
 				}
 			}
 			
 			PushBack(value); //дырки нет, добавляем в конец
+			
+			return Length() - 1;
 		}
 		
 		void Allocate(size_t length, size_t _segsize){

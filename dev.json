@@ -48,7 +48,7 @@
 			"obj" : "obj\\cbpp_base",
 			"out" : "bin",
 			"out_libfile" : "lib",
-			"src" : [ "src\\cbpp\\*.cpp" ],
+			"src" : [ "src\\cbpp\\*.cpp", "src\\cbpp\\entity\\*.cpp" ],
 			"static" : [ "static" ],
 			"type" : "OBJ"
 		},

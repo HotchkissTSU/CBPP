@@ -1,11 +1,10 @@
-#include "cbpp/cbpp.h"
+#include "cbpp.h"
 #include "json/json.h"
 
 #include "cb_main/error.h"
 #include "cb_main/interface.h"
 #include "cb_main/settings.h"
 #include "cb_main/glfw_callbacks.h"
-#include "cb_main/shader_parser.h"
 
 #include <windows.h>
 #include <fstream>
@@ -178,6 +177,8 @@ int main(int argc, char** argv){
 	
 	CBPP_CreateWindow();
 	gladLoadGL((GLADloadfunc)glfwGetProcAddress);
+	
+	Shader test_shader("assets/shaders/test.txt", "assets/shaders/test.txt");
 	
 	if(!CBPP_ModuleMain(argc, argv)){
 		return 1;

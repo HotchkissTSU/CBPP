@@ -12,6 +12,7 @@
 #include "cbpp/logs.h"
 #include "cbpp/ttype.h"
 #include "cbpp/statereg.h"
+#include "cbpp/file_read.h"
 
 #include "cbpp/entity/base_entity.h"
 

@@ -10,7 +10,7 @@ const CBPP_ModuleInfo _INFO {
 };
 
 bool TestTick(){
-	std::cout<<"TEST TICK\n";
+	//std::cout<<"TEST TICK\n";
 	
 	return true;
 }

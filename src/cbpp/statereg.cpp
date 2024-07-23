@@ -37,9 +37,12 @@ namespace cbpp {
 	}
 	
 	void SetGameState(uint32_t id){
-		if(id < CB_STATEINDEX_MAX){
-			if(statereg[current_gs_id] != nullptr){
-				if(statereg[current_gs_id]->ChangeFrom != nullptr){ statereg[current_gs_id]->ChangeFrom(id); }
+		if(id != CB_STATEINDEX_MAX){
+
+			if(current_gs_id != CB_STATEINDEX_MAX){
+				if(statereg[current_gs_id] != nullptr){
+					if(statereg[current_gs_id]->ChangeFrom != nullptr){ statereg[current_gs_id]->ChangeFrom(id); }
+				}
 			}
 			
 			uint32_t old_id = current_gs_id;

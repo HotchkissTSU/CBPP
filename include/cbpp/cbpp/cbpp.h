@@ -9,7 +9,6 @@
 #include "cbpp/bbox/aabb.h"
 #include "cbpp/bbox/obb.h"
 #include "cbpp/physobj.h"
-#include "cbpp/logs.h"
 #include "cbpp/ttype.h"
 #include "cbpp/statereg.h"
 #include "cbpp/file_read.h"

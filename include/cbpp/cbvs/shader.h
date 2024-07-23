@@ -8,7 +8,7 @@
 namespace cbpp {
 	class Shader {
 		public:
-			Shader(const GLchar* vertex_path, const GLchar* frag_path);
+			Shader(const GLchar* vertex_path, const GLchar* frag_path, const GLchar* geom_path = NULL);
 			void Use();
 			
 			GLuint GetProgramID();

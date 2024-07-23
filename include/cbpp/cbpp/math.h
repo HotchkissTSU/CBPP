@@ -10,6 +10,9 @@
 namespace cbpp{	
 	bool fEqual(float a, float b);
 	
+	float Clamp(float x, float min, float max);
+	int Clamp(int x, int min, int max);
+	
 	extern "C" struct mLine {
 		float a,b,c;
 		Vec2 normal, p1, p2;

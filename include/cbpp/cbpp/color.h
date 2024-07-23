@@ -5,10 +5,24 @@
 
 namespace cbpp {
 	struct Color {
-		Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-		Color(uint8_t r, uint8_t g, uint8_t b);
-		Color(uint8_t rgb, uint8_t a);
-		Color(uint8_t rgba);
+		Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : r(r), g(g), b(b), a(a) {};
+		Color(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b), a(255) {};
+		Color(uint8_t rgb, uint8_t a) : r(rgb), g(rgb), b(rgb), a(255) {};
+		Color(uint8_t rgba) : r(rgba), g(rgba), b(rgba), a(rgba) {};
+		
+		Color(Color& clr) : r(clr.r), g(clr.g), b(clr.b), a(clr.a) {};
+		
+		Color operator+(Color other);
+		Color operator+(uint8_t other);
+		
+		Color operator-(Color other);
+		Color operator-(uint8_t other);
+		
+		Color operator*(float other);
+		Color operator*(uint8_t other);
+		
+		Color operator/(float other);
+		Color operator/(uint8_t other);
 		
 		uint8_t r,g,b,a;
 	};

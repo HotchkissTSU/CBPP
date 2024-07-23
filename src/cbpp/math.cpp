@@ -218,4 +218,14 @@ namespace cbpp{
 		out.intersect = false;
 		return out;
 	}
+	
+	float Clamp(float x, float min, float max) {
+		if(x > max){ return max; }
+		if(x < min){ return min; }
+		return max;
+	}
+	
+	int Clamp(int x, int min, int max) {
+		return (int)Clamp( (float)x, (float)min, (float)max );
+	}
 }

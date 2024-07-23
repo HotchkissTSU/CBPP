@@ -110,13 +110,7 @@ namespace cbpp{
 	std::ostream& operator << (std::ostream &o, Vec2 const& t){ return o<<"Vec2("<<(float)t.x<<", "<<(float)t.y<<")"; }
 }
 
-namespace cbpp{
-	extern "C" float Clamp(float v, float min, float max){
-		if(v < min){ return min; }
-		if(v > max){ return max; }
-		return v;
-	}
-	
+namespace cbpp{	
 	extern "C" Vec2 ClampVector(Vec2 v, float min, float max){
 		return v.Norm()*Clamp(v.Length(), min, max);
 	}

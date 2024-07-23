@@ -35,7 +35,7 @@ namespace cbpp {
 			}
 			
 			geom_src = ReadFileText(geom_in);
-			fclose(geom_src);
+			fclose(geom_in);
 		}
 		
 		GLuint vertex, fragment, geometry;

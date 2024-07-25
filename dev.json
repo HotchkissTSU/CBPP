@@ -12,7 +12,7 @@
 		"cbep" : 
 		{
 			"dynamic" : [ "lib" ],
-			"include" : [ "include\\cbpp", "include" ],
+			"include" : [ "include\\cbpp", "include", "include\\png" ],
 			"link_dynamic" : [ "cbpp.lib", "glfw3.lib" ],
 			"link_params" : "",
 			"link_static" : [ "jsoncpp" ],
@@ -30,7 +30,7 @@
 			"include" : [ "include\\cbpp" ],
 			"link_dynamic" : [],
 			"link_params" : "",
-			"link_static" : [ "jsoncpp", "gl_4.0" ],
+			"link_static" : [ "jsoncpp", "gl_4.0", "png", "z" ],
 			"obj" : "obj\\cbpp_base",
 			"out" : "bin",
 			"out_libfile" : "lib",
@@ -41,14 +41,15 @@
 		"cbpp_o" : 
 		{
 			"dynamic" : [ "lib" ],
-			"include" : [ "include\\cbpp", "include\\cbpp\\ttype" ],
+			"include" : [ "include\\cbpp", "include\\cbpp\\ttype", "include" ],
 			"link_dynamic" : [],
 			"link_params" : "",
 			"link_static" : [],
 			"obj" : "obj\\cbpp_base",
 			"out" : "bin",
 			"out_libfile" : "lib",
-			"src" : [ "src\\cbpp\\*.cpp", "src\\cbpp\\entity\\*.cpp", "src\\cbpp\\bbox\\*.cpp" ],
+			"src" : [ "src\\cbpp\\*.cpp", "src\\cbpp\\entity\\*.cpp", "src\\cbpp\\bbox\\*.cpp",
+					  "src\\cbpp\\asset\\*.cpp"],
 			"static" : [ "static" ],
 			"type" : "OBJ"
 		},

@@ -1,5 +1,7 @@
 #include "cbpp.h"
+
 #include "json/json.h"
+#include "png/png.h"
 
 #include "cb_main/error.h"
 #include "cb_main/interface.h"
@@ -10,6 +12,7 @@
 #include <fstream>
 #include <iostream>
 #include <ctime>
+#include <stdio.h>
 
 using namespace cbpp;
 
@@ -71,7 +74,7 @@ LONG WINAPI CBPP_ExceptHandle(PEXCEPTION_POINTERS exception){
 		}
 	}
 	
-	text += "\nThe engine will crash right now. It`s over.\n";
+	text += "\nThe engine will crash right now.\n";
 	
 	cbpp::DisplayError("Lethal exception in CBPP", text.c_str(), true);
 	
@@ -123,10 +126,6 @@ void ParseGameFile(){
 	CBPP_GameLibrary = root["base"].asString().c_str();
 }
 
-void InitGL(){
-	glfwInit();
-}
-
 void CBPP_CreateWindow(){
 	int W = (int)CBPP_CurrentModuleInfo.WindowSize.x;
 	int H = (int)CBPP_CurrentModuleInfo.WindowSize.y;
@@ -140,6 +139,16 @@ void CBPP_CreateWindow(){
 	glfwMakeContextCurrent(CBPP_MainWindow);
 	
 	glfwSetFramebufferSizeCallback(CBPP_MainWindow, ReshapeHook);  
+}
+
+const float test_array[] = {
+	0.0f, -0.5f,
+	-0.5f, -0.5f,
+	0.5f, -0.5f
+};
+
+void RenderFrame() {
+	
 }
 
 void MainLoop(){
@@ -156,6 +165,8 @@ void MainLoop(){
 			}
 		}
 		
+		RenderFrame();
+		
 		glfwSwapBuffers(CBPP_MainWindow);
 		glfwPollEvents();
 	}
@@ -167,10 +178,10 @@ void Cleanup(){
 	glfwTerminate();
 }
 
-int main(int argc, char** argv){
+int main(int argc, char** argv){	
 	SetUnhandledExceptionFilter(CBPP_ExceptHandle);
 	
-	InitGL();
+	glfwInit();
 	
 	ParseGameFile();
 	LoadGameLibrary();
@@ -187,6 +198,13 @@ int main(int argc, char** argv){
 	cbent::Entity test;
 	test.CreateComponent<cbent::TestComponent>();
 	test.GetComponent<cbent::TestComponent>()->Print();
+	
+	try {
+		cbpp::Image test_img("assets/missing.png");
+		std::cout<<"PNG load OK\n";
+	} catch (std::runtime_error exc) {
+		std::cout<<cbpp::GetErrorName()<<'\n'<<cbpp::GetErrorInfo()<<'\n';
+	}
 	
 	MainLoop();
 	

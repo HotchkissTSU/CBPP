@@ -12,6 +12,10 @@
 #include "cbpp/ttype.h"
 #include "cbpp/statereg.h"
 #include "cbpp/file_read.h"
+#include "cbpp/log.h"
+#include "cbpp/error.h"
+
+#include "cbpp/asset/image.h"
 
 #include "cbpp/entity/base_entity.h"
 

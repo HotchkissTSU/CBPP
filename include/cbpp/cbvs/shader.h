@@ -2,7 +2,7 @@
 #define CBVS_SHADER_H
 
 #include <cstdint>
-#include "glad/gl.h"
+#include "gl/gl.h"
 #include "GLFW/glfw3.h"
 
 namespace cbpp {

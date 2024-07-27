@@ -31,6 +31,9 @@ const char* CBPP_GameLibrary = nullptr;
 
 HMODULE CBPP_ModuleLibHandle;
 
+GLuint vao = 0, vbo = 0;
+cbpp::Shader* shader_test;
+
 LONG WINAPI CBPP_ExceptHandle(PEXCEPTION_POINTERS exception){
 	EXCEPTION_RECORD* rec = exception->ExceptionRecord;
 	std::string text;
@@ -141,14 +144,14 @@ void CBPP_CreateWindow(){
 	glfwSetFramebufferSizeCallback(CBPP_MainWindow, ReshapeHook);  
 }
 
-const float test_array[] = {
+static const float test_array[] = {
 	0.0f, -0.5f,
 	-0.5f, -0.5f,
 	0.5f, -0.5f
 };
 
 void RenderFrame() {
-	
+
 }
 
 void MainLoop(){
@@ -187,9 +190,13 @@ int main(int argc, char** argv){
 	LoadGameLibrary();
 	
 	CBPP_CreateWindow();
-	gladLoadGL((GLADloadfunc)glfwGetProcAddress);
+	bool gl_load_status = cbpp::LoadGL();
 	
-	Shader test_shader("assets/shaders/test.txt", "assets/shaders/test.txt");
+	if(!gl_load_status){
+		cbpp::DisplayError("OpenGL error", "Failed to load OpenGL 4.0");
+	}
+	
+	//shader_test = new Shader("assets/shaders/test.vertex", "assets/shaders/test.fragment");
 	
 	if(!CBPP_ModuleMain(argc, argv)){
 		return 1;
@@ -202,11 +209,23 @@ int main(int argc, char** argv){
 	try {
 		cbpp::Image test_img("assets/missing.png");
 		std::cout<<"PNG load OK\n";
-	} catch (std::runtime_error exc) {
+		std::cout<<"W = "<<test_img.Width()<<", H = "<<test_img.Height()<<'\n';
+	} catch (std::runtime_error& exc) {
 		std::cout<<cbpp::GetErrorName()<<'\n'<<cbpp::GetErrorInfo()<<'\n';
 	}
+	
+	int W = (int)CBPP_CurrentModuleInfo.WindowSize.x;
+	int H = (int)CBPP_CurrentModuleInfo.WindowSize.y;
+	
+	printf("glGenVertexArrays = %p\n", glGenVertexArrays);
+	
+	glViewport(0,0,W,H);
+	
+	printf("glGenVertexArrays = %p\n", glGenVertexArrays);
 	
 	MainLoop();
 	
 	Cleanup();
+	
+	return 0;
 }

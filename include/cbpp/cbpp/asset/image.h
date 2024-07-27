@@ -14,6 +14,8 @@ namespace cbpp {
 			
 			bool Valid() { return valid; };
 			
+			~Image();
+			
 		private:
 			bool valid = false;
 			png_bytepp img_rows = NULL;
@@ -21,6 +23,8 @@ namespace cbpp {
 			png_infop img_info = NULL;
 			png_structp img_base = NULL;
 	};
+	
+	Image* LoadImage(const char* path);
 }
 
 #endif

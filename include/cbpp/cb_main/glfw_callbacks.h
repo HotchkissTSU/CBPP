@@ -1,7 +1,7 @@
 #ifndef CBPP_EP_GLFW_CALLBACKS_H
 #define CBPP_EP_GLFW_CALLBACKS_H
 
-#include "glad/gl.h"
+#include "gl/gl.h"
 #include "GLFW/glfw3.h"
 
 void ReshapeHook(GLFWwindow* window, int width, int height);

@@ -15,7 +15,7 @@
 			"include" : [ "include\\cbpp", "include", "include\\png" ],
 			"link_dynamic" : [ "cbpp.lib", "glfw3.lib" ],
 			"link_params" : "",
-			"link_static" : [ "jsoncpp" ],
+			"link_static" : [ "jsoncpp", "gl_loader", "opengl32" ],
 			"obj" : "obj\\main",
 			"out" : "bin",
 			"out_libfile" : "lib",
@@ -30,7 +30,7 @@
 			"include" : [ "include\\cbpp" ],
 			"link_dynamic" : [],
 			"link_params" : "",
-			"link_static" : [ "jsoncpp", "gl_4.0", "png", "z" ],
+			"link_static" : [ "jsoncpp", "gl_loader", "png", "z" ],
 			"obj" : "obj\\cbpp_base",
 			"out" : "bin",
 			"out_libfile" : "lib",
@@ -67,7 +67,7 @@
 			"static" : [ "static" ],
 			"type" : "OBJ"
 		},
-		"libgl_4.0" : 
+		"libgl_loader" : 
 		{
 			"comp_params" : "-m64",
 			"compiler" : "g++",
@@ -76,11 +76,11 @@
 			"include" : [ "include" ],
 			"link_dynamic" : [],
 			"link_params" : "-m64",
-			"link_static" : [],
+			"link_static" : [ "opengl32" ],
 			"obj" : "obj",
 			"out" : "static",
 			"out_libfile" : "lib",
-			"src" : [ "src\\gl_4.0.c" ],
+			"src" : [ "src\\gl.cpp" ],
 			"static" : [ "static" ],
 			"type" : "STATIC"
 		}

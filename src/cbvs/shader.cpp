@@ -1,9 +1,12 @@
 #include "cbvs/shader.h"
+
 #include "cbpp/file_read.h"
+#include "cbpp/error.h"
 
 #include <stdio.h>
 #include <cstring>
 #include <iostream>
+#include <stdexcept>
 
 namespace cbpp {
 	Shader::Shader(const GLchar* vertex_path, const GLchar* frag_path, const GLchar* geom_path) {
@@ -13,7 +16,9 @@ namespace cbpp {
 		//read vertex shader
 		vertex_in = fopen(vertex_path, "r");
 		if(vertex_in == NULL){
-			//log it
+			SetError("Shader Error", "Unable to open vertex shader source file");
+			
+			throw std::runtime_error("");
 		}
 		
 		vertex_src = ReadFileText(vertex_in);
@@ -22,7 +27,9 @@ namespace cbpp {
 		//read fragment shader
 		frag_in = fopen(frag_path, "r");
 		if(frag_in == NULL){
-			//log it
+			SetError("Shader Error", "Unable to open fragment shader source file");
+			fclose(vertex_in);
+			throw std::runtime_error("");
 		}
 		
 		frag_src = ReadFileText(frag_in);
@@ -30,12 +37,12 @@ namespace cbpp {
 		
 		if(geom_path != NULL){
 			geom_in = fopen(geom_path, "r");
-			if(geom_in == NULL){
-				//log it
+			if(geom_in != NULL){
+				geom_src = ReadFileText(geom_in);
+				fclose(geom_in);
+			}else{
+				SetError("Shader Warning", "Unable to open geometry shader source file");
 			}
-			
-			geom_src = ReadFileText(geom_in);
-			fclose(geom_in);
 		}
 		
 		GLuint vertex, fragment, geometry;
@@ -46,10 +53,19 @@ namespace cbpp {
 		glShaderSource(vertex, 1, &vertex_src, NULL);
 		glCompileShader(vertex);
 		
+		delete[] vertex_src;
+		
 		glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
 		if(!success){
 			glGetShaderInfoLog(vertex, 512, NULL, info_log);
-			//log it
+			
+			char error_text[CBPP_ERRORTEXT_LENGTH + 64];
+			strcat(error_text, "Failed to compile vertex shader: ");
+			strcat(error_text, info_log);
+			
+			SetError("Shader Error", error_text);
+			
+			throw std::runtime_error("");
 		}
 		
 		memset(info_log, 0, 512);
@@ -58,10 +74,19 @@ namespace cbpp {
 		glShaderSource(fragment, 1, &frag_src, NULL);
 		glCompileShader(fragment);
 		
+		delete[] frag_src;
+		
 		glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
 		if(!success){
 			glGetShaderInfoLog(fragment, 512, NULL, info_log);
-			//log it
+			
+			char error_text[CBPP_ERRORTEXT_LENGTH + 64];
+			strcat(error_text, "Failed to compile fragment shader: ");
+			strcat(error_text, info_log);
+			
+			SetError("Shader Error", error_text);
+			
+			throw std::runtime_error("");
 		}
 		memset(info_log, 0, 512);
 		
@@ -72,11 +97,20 @@ namespace cbpp {
 			glShaderSource(geometry, 1, &geom_src, NULL);
 			glCompileShader(geometry);
 			
+			delete[] geom_src;
+			
 			glGetShaderiv(geometry, GL_COMPILE_STATUS, &success);
 			if(!success){
 				has_geom = false;
 				glGetProgramInfoLog(geometry, 512, NULL, info_log);
-				//log it
+				
+				char error_text[CBPP_ERRORTEXT_LENGTH + 64];
+				strcat(error_text, "Failed to compile geometry shader: ");
+				strcat(error_text, info_log);
+				
+				SetError("Shader Error", error_text);
+				
+				throw std::runtime_error("");
 			}
 		}
 		
@@ -92,7 +126,12 @@ namespace cbpp {
 		
 		if(!success){
 			glGetProgramInfoLog(ShaderProgram, 512, NULL, info_log);
-			//log it
+			
+			char error_text[CBPP_ERRORTEXT_LENGTH + 64];
+			strcat(error_text, "Failed to link shaders into a shader program: ");
+			strcat(error_text, info_log);
+			
+			SetError("Shader Error", error_text);
 		}
 		
 		glDeleteShader(vertex);

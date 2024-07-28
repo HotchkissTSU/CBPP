@@ -1,7 +1,8 @@
-#include "gl/gl.h"
+#include "cbpp/cbpp_gl.h"
 
 #include <windows.h>
 #include <stdio.h>
+
 
 template<typename T> bool cb_GetProcAddress_(T& ptr_ref, const char* func_name) {
 	ptr_ref = (T)wglGetProcAddress(func_name);
@@ -18,80 +19,6 @@ template<typename T> bool cb_GetProcAddress_(T& ptr_ref, const char* func_name) 
 	
 	return (ptr_ref != (void*)0) && (ptr_ref != (void*)0x1) && (ptr_ref != (void*)0x2) && (ptr_ref != (void*)0x3) && (ptr_ref != (void*)-1);
 }
-
-/* ====================================
- * OpenGL 1.0
- */
-#ifdef GL_VERSION_1_0
-void (GLAPIENTRY* glCullFace)(GLenum mode);
-void (GLAPIENTRY* glFrontFace)(GLenum mode);
-void (GLAPIENTRY* glHint)(GLenum target, GLenum mode);
-void (GLAPIENTRY* glLineWidth)(GLfloat width);
-void (GLAPIENTRY* glPointSize)(GLfloat size);
-void (GLAPIENTRY* glPolygonMode)(GLenum face, GLenum mode);
-void (GLAPIENTRY* glScissor)(GLint x, GLint y, GLsizei width, GLsizei height);
-void (GLAPIENTRY* glTexParameterf)(GLenum target, GLenum pname, GLfloat param);
-void (GLAPIENTRY* glTexParameterfv)(GLenum target, GLenum pname, const GLfloat* params);
-void (GLAPIENTRY* glTexParameteri)(GLenum target, GLenum pname, GLint param);
-void (GLAPIENTRY* glTexParameteriv)(GLenum target, GLenum pname, const GLint* params);
-void (GLAPIENTRY* glTexImage1D)(GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const void* pixels);
-void (GLAPIENTRY* glTexImage2D)(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void* pixels);
-void (GLAPIENTRY* glDrawBuffer)(GLenum buf);
-void (GLAPIENTRY* glClear)(GLbitfield mask);
-void (GLAPIENTRY* glClearColor)(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
-void (GLAPIENTRY* glClearStencil)(GLint s);
-void (GLAPIENTRY* glClearDepth)(GLdouble depth);
-void (GLAPIENTRY* glStencilMask)(GLuint mask);
-void (GLAPIENTRY* glColorMask)(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
-void (GLAPIENTRY* glDepthMask)(GLboolean flag);
-void (GLAPIENTRY* glDisable)(GLenum cap);
-void (GLAPIENTRY* glEnable)(GLenum cap);
-void (GLAPIENTRY* glFinish)(void);
-void (GLAPIENTRY* glFlush)(void);
-void (GLAPIENTRY* glBlendFunc)(GLenum sfactor, GLenum dfactor);
-void (GLAPIENTRY* glLogicOp)(GLenum opcode);
-void (GLAPIENTRY* glStencilFunc)(GLenum func, GLint ref, GLuint mask);
-void (GLAPIENTRY* glStencilOp)(GLenum fail, GLenum zfail, GLenum zpass);
-void (GLAPIENTRY* glDepthFunc)(GLenum func);
-void (GLAPIENTRY* glPixelStoref)(GLenum pname, GLfloat param);
-void (GLAPIENTRY* glPixelStorei)(GLenum pname, GLint param);
-void (GLAPIENTRY* glReadBuffer)(GLenum src);
-void (GLAPIENTRY* glReadPixels)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void* pixels);
-void (GLAPIENTRY* glGetBooleanv)(GLenum pname, GLboolean* data);
-void (GLAPIENTRY* glGetDoublev)(GLenum pname, GLdouble* data);
-GLenum (GLAPIENTRY* glGetError)(void);
-void (GLAPIENTRY* glGetFloatv)(GLenum pname, GLfloat* data);
-void (GLAPIENTRY* glGetIntegerv)(GLenum pname, GLint* data);
-const GLubyte* (GLAPIENTRY* glGetString)(GLenum name);
-void (GLAPIENTRY* glGetTexImage)(GLenum target, GLint level, GLenum format, GLenum type, void* pixels);
-void (GLAPIENTRY* glGetTexParameterfv)(GLenum target, GLenum pname, GLfloat* params);
-void (GLAPIENTRY* glGetTexParameteriv)(GLenum target, GLenum pname, GLint* params);
-void (GLAPIENTRY* glGetTexLevelParameterfv)(GLenum target, GLint level, GLenum pname, GLfloat* params);
-void (GLAPIENTRY* glGetTexLevelParameteriv)(GLenum target, GLint level, GLenum pname, GLint* params);
-GLboolean (GLAPIENTRY* glIsEnabled)(GLenum cap);
-void (GLAPIENTRY* glDepthRange)(GLdouble n, GLdouble f);
-void (GLAPIENTRY* glViewport)(GLint x, GLint y, GLsizei width, GLsizei height);
-#endif /* !GL_VERSION_1_0 */
-
-/* ====================================
- * OpenGL 1.1
- */
-#ifdef GL_VERSION_1_1
-void (GLAPIENTRY* glDrawArrays)(GLenum mode, GLint first, GLsizei count);
-void (GLAPIENTRY* glDrawElements)(GLenum mode, GLsizei count, GLenum type, const void* indices);
-void (GLAPIENTRY* glGetPointerv)(GLenum pname, void** params);
-void (GLAPIENTRY* glPolygonOffset)(GLfloat factor, GLfloat units);
-void (GLAPIENTRY* glCopyTexImage1D)(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLint border);
-void (GLAPIENTRY* glCopyTexImage2D)(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border);
-void (GLAPIENTRY* glCopyTexSubImage1D)(GLenum target, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width);
-void (GLAPIENTRY* glCopyTexSubImage2D)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
-void (GLAPIENTRY* glTexSubImage1D)(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const void* pixels);
-void (GLAPIENTRY* glTexSubImage2D)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void* pixels);
-void (GLAPIENTRY* glBindTexture)(GLenum target, GLuint texture);
-void (GLAPIENTRY* glDeleteTextures)(GLsizei n, const GLuint* textures);
-void (GLAPIENTRY* glGenTextures)(GLsizei n, GLuint* textures);
-GLboolean (GLAPIENTRY* glIsTexture)(GLuint texture);
-#endif /* !GL_VERSION_1_1 */
 
 /* ====================================
  * OpenGL 1.2
@@ -1638,12 +1565,12 @@ bool InitOpenGL_4_6() {
 	return load_result;
 }
 
-#define cb_LoadGL(MAJOR, MINOR) { load_result = load_result | InitOpenGL_##MAJOR##_##MINOR(); if(!load_result){ return false; } }
+#define cb_LoadGL(MAJOR, MINOR) { load_result = load_result | InitOpenGL_##MAJOR##_##MINOR(); }
 
 bool cbpp::LoadGL() {
 	bool load_result = false;
-	cb_LoadGL(1, 0)
-	cb_LoadGL(1, 1)
+	//cb_LoadGL(1, 0)
+	//cb_LoadGL(1, 1)
 	cb_LoadGL(1, 2)
 	cb_LoadGL(1, 3)
 	cb_LoadGL(1, 4)

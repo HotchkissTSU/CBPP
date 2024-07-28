@@ -84,6 +84,28 @@ LONG WINAPI CBPP_ExceptHandle(PEXCEPTION_POINTERS exception){
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
+GLenum CheckError(const char function[], const char file[], size_t line) {
+ GLenum errorCode;
+ while ((errorCode = glGetError()) != GL_NO_ERROR) {
+  const char *error = "";
+  switch (errorCode) {
+   case GL_INVALID_ENUM:                  error = "INVALID_ENUM";     break;
+   case GL_INVALID_VALUE:                 error = "INVALID_VALUE";     break;
+   case GL_INVALID_OPERATION:             error = "INVALID_OPERATION";    break;
+   case GL_STACK_OVERFLOW:                error = "STACK_OVERFLOW";    break;
+   case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW";    break;
+   case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY";     break;
+   case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
+  }
+
+  printf("OpenGL: %s, Line: %i, Function: %s\n", error, line, function);
+ }
+
+ return errorCode;
+}
+
+#define RENDER_CHECK_ERROR() CheckError(__FUNCTION__, __FILE__, __LINE__)
+
 void LoadGameLibrary(){
 	CBPP_ModuleLibHandle = LoadLibrary(CBPP_GameLibrary);
 	
@@ -133,6 +155,10 @@ void CBPP_CreateWindow(){
 	int W = (int)CBPP_CurrentModuleInfo.WindowSize.x;
 	int H = (int)CBPP_CurrentModuleInfo.WindowSize.y;
 	
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	
 	CBPP_MainWindow = glfwCreateWindow(W, H, CBPP_CurrentModuleInfo.WindowTitle, NULL, NULL);
 	
 	if(CBPP_MainWindow == NULL){
@@ -142,31 +168,32 @@ void CBPP_CreateWindow(){
 	glfwMakeContextCurrent(CBPP_MainWindow);
 	
 	glfwSetFramebufferSizeCallback(CBPP_MainWindow, ReshapeHook);  
+	
+	glfwSwapInterval(1);
 }
 
-static const float test_array[] = {
-	0.0f, -0.5f,
-	-0.5f, -0.5f,
-	0.5f, -0.5f
-};
-
 void RenderFrame() {
-
+	shader_test->Use();
+	
+	glBindVertexArray(vao);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		
+	glBindVertexArray(0);
 }
 
 void MainLoop(){
-	while(!glfwWindowShouldClose(CBPP_MainWindow) && CBPP_MainLoopCheck()){
+	while(!glfwWindowShouldClose(CBPP_MainWindow) && CBPP_MainLoopCheck()){		
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		uint32_t current_gs_id = cbpp::GetCurrentGameState();
+		//uint32_t current_gs_id = cbpp::GetCurrentGameState();
 		
-		if(current_gs_id != CB_STATEINDEX_MAX){
-			cbpp::GameState* current_gs = cbpp::GetStateRegList()[current_gs_id];
-			if(current_gs != nullptr){
-				current_gs->Tick();
-			}
-		}
+		//if(current_gs_id != CB_STATEINDEX_MAX){
+			//cbpp::GameState* current_gs = cbpp::GetStateRegList()[current_gs_id];
+			//if(current_gs != nullptr){
+				//current_gs->Tick();
+			//}
+		//}
 		
 		RenderFrame();
 		
@@ -184,13 +211,20 @@ void Cleanup(){
 int main(int argc, char** argv){	
 	SetUnhandledExceptionFilter(CBPP_ExceptHandle);
 	
-	glfwInit();
+	if(!glfwInit()){
+		cbpp::DisplayError("GLFW Error", "Failed to init GLFW");
+	}
+	
+	glfwSetErrorCallback(error_callback);
 	
 	ParseGameFile();
 	LoadGameLibrary();
 	
 	CBPP_CreateWindow();
+	RENDER_CHECK_ERROR();
 	bool gl_load_status = cbpp::LoadGL();
+	RENDER_CHECK_ERROR();
+	
 	
 	if(!gl_load_status){
 		cbpp::DisplayError("OpenGL error", "Failed to load OpenGL 4.0");
@@ -214,14 +248,51 @@ int main(int argc, char** argv){
 		std::cout<<cbpp::GetErrorName()<<'\n'<<cbpp::GetErrorInfo()<<'\n';
 	}
 	
+	
+	try {
+		shader_test = new cbpp::Shader("assets/shaders/test.vertex", "assets/shaders/test.fragment");
+	} catch (std::runtime_error& exc) {
+		shader_test = NULL;
+		printf("%s - %s\n", cbpp::GetErrorName(), cbpp::GetErrorInfo());
+	}
+	
+	const float test_array[] = {
+		0.0f, -0.5f,
+		-0.5f, -0.5f,
+		0.5f, -0.0f
+	};
+	
 	int W = (int)CBPP_CurrentModuleInfo.WindowSize.x;
 	int H = (int)CBPP_CurrentModuleInfo.WindowSize.y;
 	
-	printf("glGenVertexArrays = %p\n", glGenVertexArrays);
+	RENDER_CHECK_ERROR();
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	RENDER_CHECK_ERROR();
 	
 	glViewport(0,0,W,H);
+	RENDER_CHECK_ERROR();
 	
-	printf("glGenVertexArrays = %p\n", glGenVertexArrays);
+	glGenBuffers(1, &vbo);
+	RENDER_CHECK_ERROR();
+	glGenVertexArrays(1, &vao);
+	RENDER_CHECK_ERROR();
+	
+	RENDER_CHECK_ERROR();
+	
+	glBindVertexArray(vao);
+		glEnableVertexAttribArray(0);
+		RENDER_CHECK_ERROR();
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		RENDER_CHECK_ERROR();
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+		RENDER_CHECK_ERROR();
+		glBufferData(GL_ARRAY_BUFFER, sizeof(test_array), test_array, GL_STATIC_DRAW);
+		RENDER_CHECK_ERROR();
+		
+		
+	glBindVertexArray(0);
+	RENDER_CHECK_ERROR();
 	
 	MainLoop();
 	

@@ -5,16 +5,18 @@
 #include "cbpp_gl.h"
 #include "GLFW/glfw3.h"
 
-namespace cbpp {
+namespace cbdraw {
 	class Shader {
 		public:
-			Shader(const GLchar* vertex_path, const GLchar* frag_path, const GLchar* geom_path = NULL);
+			void Load(const GLchar* vertex_path, const GLchar* frag_path, const GLchar* geom_path = NULL);
 			void Use();
 			
 			GLuint GetProgramID();
 		private:
 			GLuint ShaderProgram = 0;
 	};
+	
+	
 }
 
 #endif

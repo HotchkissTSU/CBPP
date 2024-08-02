@@ -32,7 +32,7 @@ const char* CBPP_GameLibrary = nullptr;
 HMODULE CBPP_ModuleLibHandle;
 
 GLuint vao = 0, vbo = 0;
-cbpp::Shader* shader_test;
+cbdraw::Shader* shader_test;
 
 LONG WINAPI CBPP_ExceptHandle(PEXCEPTION_POINTERS exception){
 	EXCEPTION_RECORD* rec = exception->ExceptionRecord;
@@ -83,28 +83,6 @@ LONG WINAPI CBPP_ExceptHandle(PEXCEPTION_POINTERS exception){
 	
 	return EXCEPTION_EXECUTE_HANDLER;
 }
-
-GLenum CheckError(const char function[], const char file[], size_t line) {
- GLenum errorCode;
- while ((errorCode = glGetError()) != GL_NO_ERROR) {
-  const char *error = "";
-  switch (errorCode) {
-   case GL_INVALID_ENUM:                  error = "INVALID_ENUM";     break;
-   case GL_INVALID_VALUE:                 error = "INVALID_VALUE";     break;
-   case GL_INVALID_OPERATION:             error = "INVALID_OPERATION";    break;
-   case GL_STACK_OVERFLOW:                error = "STACK_OVERFLOW";    break;
-   case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW";    break;
-   case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY";     break;
-   case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
-  }
-
-  printf("OpenGL: %s, Line: %i, Function: %s\n", error, line, function);
- }
-
- return errorCode;
-}
-
-#define RENDER_CHECK_ERROR() CheckError(__FUNCTION__, __FILE__, __LINE__)
 
 void LoadGameLibrary(){
 	CBPP_ModuleLibHandle = LoadLibrary(CBPP_GameLibrary);
@@ -158,6 +136,7 @@ void CBPP_CreateWindow(){
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_SAMPLES, 4);
 	
 	CBPP_MainWindow = glfwCreateWindow(W, H, CBPP_CurrentModuleInfo.WindowTitle, NULL, NULL);
 	
@@ -173,12 +152,8 @@ void CBPP_CreateWindow(){
 }
 
 void RenderFrame() {
-	shader_test->Use();
-	
-	glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-		
-	glBindVertexArray(0);
+	cbdraw::SetColor(Color(255,255,0,255));
+	cbdraw::CircleOutline(Vec2(0,0), 10, 2.0f);
 }
 
 void MainLoop(){
@@ -211,26 +186,26 @@ void Cleanup(){
 int main(int argc, char** argv){	
 	SetUnhandledExceptionFilter(CBPP_ExceptHandle);
 	
+	FILE* gl_load_log_f = fopen("logs/OpenGL_load.txt", "w");
+	fclose(gl_load_log_f);
+	
 	if(!glfwInit()){
 		cbpp::DisplayError("GLFW Error", "Failed to init GLFW");
 	}
 	
-	glfwSetErrorCallback(error_callback);
+	glfwSetErrorCallback(ErrorHook);
 	
 	ParseGameFile();
 	LoadGameLibrary();
 	
 	CBPP_CreateWindow();
-	RENDER_CHECK_ERROR();
 	bool gl_load_status = cbpp::LoadGL();
-	RENDER_CHECK_ERROR();
 	
+	glEnable(GL_MULTISAMPLE);
 	
 	if(!gl_load_status){
 		cbpp::DisplayError("OpenGL error", "Failed to load OpenGL 4.0");
 	}
-	
-	//shader_test = new Shader("assets/shaders/test.vertex", "assets/shaders/test.fragment");
 	
 	if(!CBPP_ModuleMain(argc, argv)){
 		return 1;
@@ -247,15 +222,7 @@ int main(int argc, char** argv){
 	} catch (std::runtime_error& exc) {
 		std::cout<<cbpp::GetErrorName()<<'\n'<<cbpp::GetErrorInfo()<<'\n';
 	}
-	
-	
-	try {
-		shader_test = new cbpp::Shader("assets/shaders/test.vertex", "assets/shaders/test.fragment");
-	} catch (std::runtime_error& exc) {
-		shader_test = NULL;
-		printf("%s - %s\n", cbpp::GetErrorName(), cbpp::GetErrorInfo());
-	}
-	
+
 	const float test_array[] = {
 		0.0f, -0.5f,
 		-0.5f, -0.5f,
@@ -265,34 +232,24 @@ int main(int argc, char** argv){
 	int W = (int)CBPP_CurrentModuleInfo.WindowSize.x;
 	int H = (int)CBPP_CurrentModuleInfo.WindowSize.y;
 	
-	RENDER_CHECK_ERROR();
-	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	RENDER_CHECK_ERROR();
 	
 	glViewport(0,0,W,H);
-	RENDER_CHECK_ERROR();
+	cbdraw::SetWH(W, H);
 	
+	/*
 	glGenBuffers(1, &vbo);
-	RENDER_CHECK_ERROR();
 	glGenVertexArrays(1, &vao);
-	RENDER_CHECK_ERROR();
-	
-	RENDER_CHECK_ERROR();
 	
 	glBindVertexArray(vao);
 		glEnableVertexAttribArray(0);
-		RENDER_CHECK_ERROR();
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		RENDER_CHECK_ERROR();
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
-		RENDER_CHECK_ERROR();
 		glBufferData(GL_ARRAY_BUFFER, sizeof(test_array), test_array, GL_STATIC_DRAW);
-		RENDER_CHECK_ERROR();
-		
-		
 	glBindVertexArray(0);
-	RENDER_CHECK_ERROR();
+	*/
+	
+	cbdraw::Init();
 	
 	MainLoop();
 	

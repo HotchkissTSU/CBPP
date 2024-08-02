@@ -8,8 +8,11 @@
 #include <iostream>
 #include <stdexcept>
 
-namespace cbpp {
-	Shader::Shader(const GLchar* vertex_path, const GLchar* frag_path, const GLchar* geom_path) {
+using cbpp::SetError;
+using cbpp::ReadFileText;
+
+namespace cbdraw {
+	void Shader::Load(const GLchar* vertex_path, const GLchar* frag_path, const GLchar* geom_path) {
 		GLchar *vertex_src, *frag_src, *geom_src = NULL;
 		FILE *vertex_in, *frag_in, *geom_in;
 		
@@ -102,12 +105,12 @@ namespace cbpp {
 			glGetShaderiv(geometry, GL_COMPILE_STATUS, &success);
 			if(!success){
 				has_geom = false;
-				glGetProgramInfoLog(geometry, 512, NULL, info_log);
+				glGetShaderInfoLog(geometry, 512, NULL, info_log);
 				
 				char error_text[CBPP_ERRORTEXT_LENGTH + 64];
 				strcat(error_text, "Failed to compile geometry shader: ");
 				strcat(error_text, info_log);
-				
+
 				SetError("Shader Error", error_text);
 				
 				throw std::runtime_error("");

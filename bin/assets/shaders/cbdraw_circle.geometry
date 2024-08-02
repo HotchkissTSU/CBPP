@@ -1,0 +1,25 @@
+#version 400 core
+
+layout (points) in;
+layout (line_strip, max_vertices = 128) out;
+
+uniform int cbdraw_circle_fidelity;
+uniform float cbdraw_screen_ratio;
+uniform float cbdraw_circle_radius;
+
+uniform float cbdraw_cam_scale;
+
+void main() {
+	vec2 centre_pos = vec2(gl_in[0].gl_Position.x, gl_in[0].gl_Position.y);
+	float pi = 3.141592;
+	int fidelity = cbdraw_circle_fidelity;
+	
+	float iteration_step = (2*pi)/fidelity;
+	for(int i = 0; i <= fidelity; i++){
+		float angle = i * iteration_step;
+		gl_Position = vec4(centre_pos + vec2(cos(angle), sin(angle)*cbdraw_screen_ratio)*cbdraw_circle_radius*cbdraw_cam_scale, 0.0, 1.0);
+		EmitVertex();
+	}
+	
+	EndPrimitive();
+}

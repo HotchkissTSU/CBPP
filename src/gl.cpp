@@ -13,9 +13,8 @@ template<typename T> bool cb_GetProcAddress_(T& ptr_ref, const char* func_name) 
 			ptr_ref = (T)GetProcAddress(module, func_name);
 		}
 	
-	FILE* fl = fopen("logs/OpenGL_load.txt", "a");
+	static FILE* fl = fopen("logs/OpenGL_load.txt", "wt");
 	fprintf(fl, "%s: %x\n", func_name, ptr_ref);
-	fclose(fl);
 	
 	return (ptr_ref != (void*)0) && (ptr_ref != (void*)0x1) && (ptr_ref != (void*)0x2) && (ptr_ref != (void*)0x3) && (ptr_ref != (void*)-1);
 }
@@ -1569,8 +1568,7 @@ bool InitOpenGL_4_6() {
 
 bool cbpp::LoadGL() {
 	bool load_result = false;
-	//cb_LoadGL(1, 0)
-	//cb_LoadGL(1, 1)
+	
 	cb_LoadGL(1, 2)
 	cb_LoadGL(1, 3)
 	cb_LoadGL(1, 4)

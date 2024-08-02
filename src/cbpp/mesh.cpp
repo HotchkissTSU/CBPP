@@ -248,7 +248,6 @@ namespace cbpp{ //Mesh
 	}
 	
 	void Triangulate() {
-		
 	}
 	
 	bool Mesh::CollidePoint(Vec2 v){

@@ -52,8 +52,8 @@ namespace cbdraw {
 		width = w;
 		height = h;
 		
-		width_inv = 1.0f / width;
-		height_inv = 1.0f / height;
+		width_inv = 1.0f / (float)width;
+		height_inv = 1.0f / (float)height;
 		
 		screen_ratio = (float)width / (float)height;
 	}
@@ -108,7 +108,7 @@ namespace cbdraw {
 		draw_circle_shader_program.Use();
 		
 		ApplyColor(draw_circle_shader_program);
-		ApplyScale(draw_shader_program);
+		ApplyScale(draw_circle_shader_program);
 		
 		glLineWidth(width);
 		
@@ -125,6 +125,24 @@ namespace cbdraw {
 		glBindVertexArray(def_vao);
 			glBufferData(GL_ARRAY_BUFFER, sizeof(vtx_arr), vtx_arr, GL_DYNAMIC_DRAW);
 			glDrawArrays(GL_POINTS, 0, 1);
+		glBindVertexArray(0);
+	}
+	
+	void TriangleOutline(cbpp::Vec2 a, cbpp::Vec2 b, cbpp::Vec2 c, float width) {
+		float vtx_arr[6];
+		
+		vtx_arr[0] = a.x; vtx_arr[1] = a.y;
+		vtx_arr[2] = b.x; vtx_arr[3] = b.y;
+		vtx_arr[4] = c.x; vtx_arr[5] = c.y;
+		
+		draw_shader_program.Use();
+		
+		ApplyColor(draw_shader_program);
+		ApplyScale(draw_shader_program);
+		
+		glBindVertexArray(def_vao);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(vtx_arr), vtx_arr, GL_DYNAMIC_DRAW);
+			glDrawArrays(GL_LINE_LOOP, 0, 3);
 		glBindVertexArray(0);
 	}
 }

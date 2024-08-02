@@ -247,6 +247,10 @@ namespace cbpp{ //Mesh
 		return out;
 	}
 	
+	void Triangulate() {
+		
+	}
+	
 	bool Mesh::CollidePoint(Vec2 v){
 		return false;
 	}
@@ -274,52 +278,5 @@ namespace cbpp{ //Mesh
 	
 	Mesh::~Mesh(){
 		Free();
-	}
-}
-
-namespace cbpp{ //TriangulatedMesh
-	TriangulatedMesh::TriangulatedMesh(uint32_t cnt){
-		Allocate(std::max((uint32_t)3, cnt));
-	}
-	
-	void TriangulatedMesh::Allocate(uint32_t cnt){
-		if(allocated){
-			Free();
-		}
-		
-		if(cnt >= 3){
-			mesharr = cbpp::Allocate<Mesh*>(cnt);
-			meshcnt = cnt;
-			
-			allocated = true;
-		}
-	}
-	
-	void TriangulatedMesh::Free(){
-		if(allocated){
-			for(uint32_t i = 0; i < meshcnt; i++){
-				if(mesharr[i] != nullptr){
-					mesharr[i]->Free();
-					delete mesharr[i];
-				}
-			}
-			delete[] mesharr;
-			mesharr = nullptr;
-			meshcnt = 0;
-			
-			allocated = false;
-		}
-	}
-	
-	Mesh* TriangulatedMesh::At(uint32_t index){
-		if(index < meshcnt && allocated){
-			return mesharr[index];
-		}else{
-			return nullptr;
-		}
-	}
-	
-	Mesh* TriangulatedMesh::operator[](uint32_t index){
-		return At(index);
 	}
 }

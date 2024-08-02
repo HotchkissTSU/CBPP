@@ -5,11 +5,15 @@
 #include <vector>
 
 #include "cbpp/vec2.h"
+#include "cbpp/ttype/segarr.h"
 
-namespace cbpp{
-	struct TriangulatedMesh;
-	
-	extern "C" class Mesh{
+namespace cbpp {	
+	struct MeshVertex {
+		Vec2 pos;
+		float angle;
+	};
+
+	class Mesh {
 		public:
 			Mesh();
 			Mesh(uint32_t len);
@@ -41,7 +45,7 @@ namespace cbpp{
 			Mesh GetClipped(Vec2 pos1, Vec2 pos2, int8_t dir);
 			
 			void Triangulate();
-			TriangulatedMesh* GetTriangulated();
+			SegArray<Mesh> GetTriangulated();
 			
 			bool CollidePoint(Vec2 pt);			
 			
@@ -59,21 +63,6 @@ namespace cbpp{
 			uint32_t arrlen = 0;
 			
 			Vec2 nullvec = Vec2(0);
-	};
-	
-	extern "C" struct TriangulatedMesh{
-		TriangulatedMesh(TriangulatedMesh& other);
-		TriangulatedMesh(uint32_t cnt);
-		
-		Mesh** mesharr = nullptr;
-		uint32_t meshcnt = 0;
-		bool allocated = false;
-		
-		void Allocate(uint32_t cnt);
-		void Free();
-		
-		Mesh* operator[](uint32_t index);
-		Mesh* At(uint32_t index);
 	};
 }
 

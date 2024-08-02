@@ -154,6 +154,7 @@ void CBPP_CreateWindow(){
 void RenderFrame() {
 	cbdraw::SetColor(Color(255,255,0,255));
 	cbdraw::CircleOutline(Vec2(0,0), 10, 2.0f);
+	cbdraw::TriangleOutline(Vec2(-15,0), Vec2(0,15), Vec2(15,0), 2.0f);
 }
 
 void MainLoop(){
@@ -222,12 +223,6 @@ int main(int argc, char** argv){
 	} catch (std::runtime_error& exc) {
 		std::cout<<cbpp::GetErrorName()<<'\n'<<cbpp::GetErrorInfo()<<'\n';
 	}
-
-	const float test_array[] = {
-		0.0f, -0.5f,
-		-0.5f, -0.5f,
-		0.5f, -0.0f
-	};
 	
 	int W = (int)CBPP_CurrentModuleInfo.WindowSize.x;
 	int H = (int)CBPP_CurrentModuleInfo.WindowSize.y;
@@ -236,18 +231,7 @@ int main(int argc, char** argv){
 	
 	glViewport(0,0,W,H);
 	cbdraw::SetWH(W, H);
-	
-	/*
-	glGenBuffers(1, &vbo);
-	glGenVertexArrays(1, &vao);
-	
-	glBindVertexArray(vao);
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(test_array), test_array, GL_STATIC_DRAW);
-	glBindVertexArray(0);
-	*/
+	cbdraw::SetScale(0.025f);
 	
 	cbdraw::Init();
 	

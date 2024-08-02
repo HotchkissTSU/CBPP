@@ -16,6 +16,7 @@
 #include "cbpp/error.h"
 
 #include "cbpp/asset/image.h"
+#include "cbpp/asset/cmf.h"
 
 #include "cbpp/entity/base_entity.h"
 

@@ -2,6 +2,7 @@
 #define CBVS_DRAW_H
 
 #include "cbpp/vec2.h"
+#include "cbpp/mesh.h"
 #include "cbpp/color.h"
 
 #include "cbpp_gl.h"
@@ -22,7 +23,7 @@ namespace cbdraw {
 	extern int width, height;
 	extern float width_inv, height_inv, screen_ratio, cam_scale;
 	
-	extern cbpp::Color main_color;
+	extern cbpp::NormColor main_color;
 	
 	extern Shader draw_shader_program, draw_circle_shader_program;
 	
@@ -36,6 +37,7 @@ namespace cbdraw {
 	void Line(cbpp::Vec2 pos1, cbpp::Vec2 pos2, float width = 1.0f);
 	void CircleOutline(cbpp::Vec2 pos, float radius, float width = 1.0f);
 	void TriangleOutline(cbpp::Vec2 a, cbpp::Vec2 b, cbpp::Vec2 c, float width = 1.0f);
+	void MeshOutline(cbpp::Mesh& msh, float width = 1.0f);
 }
 
 #endif

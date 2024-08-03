@@ -66,4 +66,22 @@ namespace cbpp {
 	Color Color::operator/(uint8_t other) {
 		return operator/((float)other);
 	}
+	
+	NormColor Color::Normalized() {
+		NormColor out;
+		
+		out.r = (float)r / 255.0f;
+		out.g = (float)g / 255.0f;
+		out.b = (float)b / 255.0f;
+		out.a = (float)a / 255.0f;
+		
+		return out;
+	}
+	
+	Color WHITE(255);
+	Color BLACK(0);
+	Color RED(255,0,0,255);
+	Color BLUE(0,0,255,255);
+	Color YELLOW(255,255,0,255);
+	Color GREEN(0,255,0,255);
 }

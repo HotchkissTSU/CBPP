@@ -4,6 +4,10 @@
 #include <cstdint>
 
 namespace cbpp {
+	struct NormColor {
+		float r, g, b, a;
+	};
+	
 	struct Color {
 		Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : r(r), g(g), b(b), a(a) {};
 		Color(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b), a(255) {};
@@ -26,8 +30,17 @@ namespace cbpp {
 		Color operator/(float other);
 		Color operator/(uint8_t other);
 		
+		NormColor Normalized();
+		
 		uint8_t r,g,b,a;
 	};
+	
+	extern Color WHITE;
+	extern Color BLACK;
+	extern Color RED;
+	extern Color BLUE;
+	extern Color YELLOW;
+	extern Color GREEN;
 }
 
 #endif

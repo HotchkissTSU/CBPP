@@ -5,6 +5,7 @@
 #include "cbvs/error_check.h"
 
 #include <stdio.h>
+#include <cstdint>
 #include <cmath>
 
 using cbpp::Vec2;
@@ -14,7 +15,7 @@ namespace cbdraw {
 	int width = 0, height = 0;
 	float width_inv = 0.0f, height_inv = 0.0f, screen_ratio = 1.0f, cam_scale = 0.05f;
 	
-	cbpp::Color main_color;
+	cbpp::NormColor main_color;
 	
 	GLuint def_vao, def_vbo;
 	
@@ -59,7 +60,7 @@ namespace cbdraw {
 	}
 	
 	void SetColor(Color clr) {
-		main_color = clr;
+		main_color = clr.Normalized();
 	}
 	
 	void SetScale(float scale) {
@@ -77,7 +78,7 @@ namespace cbdraw {
 	
 	void ApplyColor(Shader& shader) {
 		GLint color_unif_id = cb_GetUniformLocation(shader, "cbdraw_color");
-		glUniform4f(color_unif_id, (float)main_color.r, (float)main_color.g, (float)main_color.b, (float)main_color.a);
+		glUniform4f(color_unif_id, main_color.r, main_color.g, main_color.b, main_color.a);
 	}
 	
 	void ApplyScale(Shader& shader) {
@@ -143,6 +144,21 @@ namespace cbdraw {
 		glBindVertexArray(def_vao);
 			glBufferData(GL_ARRAY_BUFFER, sizeof(vtx_arr), vtx_arr, GL_DYNAMIC_DRAW);
 			glDrawArrays(GL_LINE_LOOP, 0, 3);
+		glBindVertexArray(0);
+	}
+	
+	void MeshOutline(cbpp::Mesh& msh, float width) {
+		uint32_t mesh_len = msh.Size()*2;
+		const float* vtx_arr = msh.GetArrayf();
+		
+		draw_shader_program.Use();
+		
+		ApplyColor(draw_shader_program);
+		ApplyScale(draw_shader_program);
+		
+		glBindVertexArray(def_vao);
+			glBufferData(GL_ARRAY_BUFFER, mesh_len*sizeof(float), vtx_arr, GL_DYNAMIC_DRAW);
+			glDrawArrays(GL_LINE_LOOP, 0, mesh_len);
 		glBindVertexArray(0);
 	}
 }

@@ -153,7 +153,6 @@ void CBPP_CreateWindow(){
 
 void RenderFrame() {
 	cbdraw::SetColor(Color(255,255,0,255));
-	cbdraw::CircleOutline(Vec2(0,0), 10, 2.0f);
 	cbdraw::TriangleOutline(Vec2(-15,0), Vec2(0,15), Vec2(15,0), 2.0f);
 }
 

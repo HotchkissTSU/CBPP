@@ -275,6 +275,14 @@ namespace cbpp{ //Mesh
 		}
 	}
 	
+	const float* Mesh::GetArrayf() {
+		return const_cast<const float*>( (float*)vecarr );
+	}
+	
+	const Vec2* Mesh::GetArray() {
+		return const_cast<const Vec2*>( vecarr );
+	}
+	
 	Mesh::~Mesh(){
 		Free();
 	}

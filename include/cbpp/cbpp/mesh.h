@@ -47,7 +47,10 @@ namespace cbpp {
 			void Triangulate();
 			SegArray<Mesh> GetTriangulated();
 			
-			bool CollidePoint(Vec2 pt);			
+			bool CollidePoint(Vec2 pt);		
+
+			const Vec2* GetArray();
+			const float* GetArrayf();
 			
 			Vec2& operator[](uint32_t index);
 			Vec2& At(uint32_t index);

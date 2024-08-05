@@ -5,6 +5,8 @@
 #include "cbpp_gl.h"
 #include "GLFW/glfw3.h"
 
+#define CBVS_SHADER_LOG_PATH "logs/shaders"
+
 namespace cbdraw {
 	class Shader {
 		public:

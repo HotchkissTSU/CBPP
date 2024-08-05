@@ -27,14 +27,14 @@ namespace cbdraw {
 		try {
 			draw_shader_program.Load(CBDRAW_DRAW_VTX_SHADER, CBDRAW_DRAW_FRAG_SHADER, NULL);
 		} catch (std::runtime_error& err) {
-			printf("%s - %s\n", cbpp::GetErrorName(), cbpp::GetErrorInfo());
+			//printf("%s - %s\n", cbpp::GetErrorName(), cbpp::GetErrorInfo());
 			return;
 		}
 		
 		try {
 			draw_circle_shader_program.Load(CBDRAW_DRAW_VTX_SHADER, CBDRAW_DRAW_FRAG_SHADER, CBDRAW_DRAW_CIRCLE_SHADER);
 		} catch (std::runtime_error& err) {
-			printf("%s - %s\n", cbpp::GetErrorName(), cbpp::GetErrorInfo());
+			//printf("%s - %s\n", cbpp::GetErrorName(), cbpp::GetErrorInfo());
 			return;
 		}
 		
@@ -147,7 +147,7 @@ namespace cbdraw {
 		glBindVertexArray(0);
 	}
 	
-	void MeshOutline(cbpp::Mesh& msh, float width) {
+	void MeshOutline(cbpp::Mesh& msh, float width) { /*
 		uint32_t mesh_len = msh.Size()*2;
 		const float* vtx_arr = msh.GetArrayf();
 		
@@ -160,5 +160,5 @@ namespace cbdraw {
 			glBufferData(GL_ARRAY_BUFFER, mesh_len*sizeof(float), vtx_arr, GL_DYNAMIC_DRAW);
 			glDrawArrays(GL_LINE_LOOP, 0, mesh_len);
 		glBindVertexArray(0);
-	}
+	*/}
 }

@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 
-template<typename T> bool cb_GetProcAddress_(T& ptr_ref, const char* func_name) {
+template<typename T> bool cb_GetProcAddress_(T& ptr_ref, const char* func_name) {	
 	ptr_ref = (T)wglGetProcAddress(func_name);
 	if(ptr_ref == 0 ||
 		(ptr_ref == (void*)0x1) || (ptr_ref == (void*)0x2) || (ptr_ref == (void*)0x3) ||
@@ -13,8 +13,9 @@ template<typename T> bool cb_GetProcAddress_(T& ptr_ref, const char* func_name) 
 			ptr_ref = (T)GetProcAddress(module, func_name);
 		}
 	
-	static FILE* fl = fopen("logs/OpenGL_load.txt", "wt");
+	FILE* fl = fopen("logs/gl_load.txt", "at");
 	fprintf(fl, "%s: %x\n", func_name, ptr_ref);
+	fclose(fl);
 	
 	return (ptr_ref != (void*)0) && (ptr_ref != (void*)0x1) && (ptr_ref != (void*)0x2) && (ptr_ref != (void*)0x3) && (ptr_ref != (void*)-1);
 }

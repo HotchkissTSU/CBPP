@@ -177,6 +177,14 @@ void MainLoop(){
 	}
 }
 
+void ClearLogs() {
+	FILE* errlog = fopen("logs/error.txt", "wt");
+	fclose(errlog);
+	
+	FILE* gl_load_log_f = fopen("logs/gl_load.txt", "wt");
+	fclose(gl_load_log_f);
+}
+
 void Cleanup(){
 	cbpp::CleanupGameStates();
 	
@@ -186,8 +194,7 @@ void Cleanup(){
 int main(int argc, char** argv){	
 	SetUnhandledExceptionFilter(CBPP_ExceptHandle);
 	
-	FILE* gl_load_log_f = fopen("logs/OpenGL_load.txt", "w");
-	fclose(gl_load_log_f);
+	ClearLogs();
 	
 	if(!glfwInit()){
 		cbpp::DisplayError("GLFW Error", "Failed to init GLFW");
@@ -215,14 +222,6 @@ int main(int argc, char** argv){
 	test.CreateComponent<cbent::TestComponent>();
 	test.GetComponent<cbent::TestComponent>()->Print();
 	
-	try {
-		cbpp::Image test_img("assets/missing.png");
-		std::cout<<"PNG load OK\n";
-		std::cout<<"W = "<<test_img.Width()<<", H = "<<test_img.Height()<<'\n';
-	} catch (std::runtime_error& exc) {
-		std::cout<<cbpp::GetErrorName()<<'\n'<<cbpp::GetErrorInfo()<<'\n';
-	}
-	
 	int W = (int)CBPP_CurrentModuleInfo.WindowSize.x;
 	int H = (int)CBPP_CurrentModuleInfo.WindowSize.y;
 	
@@ -233,6 +232,8 @@ int main(int argc, char** argv){
 	cbdraw::SetScale(0.025f);
 	
 	cbdraw::Init();
+	
+	CbThrowError("this is error system test");
 	
 	MainLoop();
 	

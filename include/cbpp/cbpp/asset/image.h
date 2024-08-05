@@ -5,26 +5,13 @@
 #include <cstdint>
 
 namespace cbpp {
-	class Image {
-		public:
-			Image(const char* filepath);
-			
-			uint32_t Width();
-			uint32_t Height();
-			
-			bool Valid() { return valid; };
-			
-			~Image();
-			
-		private:
-			bool valid = false;
-			png_bytepp img_rows = NULL;
-			
-			png_infop img_info = NULL;
-			png_structp img_base = NULL;
+	struct Image {
+		uint64_t length = 0;
+		uint8_t** bytes = nullptr;
 	};
 	
-	Image* LoadImage(const char* path);
+	Image LoadImage(const char* path);
+	void FreeImage(Image& target);
 }
 
 #endif

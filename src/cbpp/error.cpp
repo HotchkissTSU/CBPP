@@ -1,38 +1,46 @@
 #include "cbpp/error.h"
 
+#include <stdio.h>
 #include <cstring>
+#include <cstdint>
 
-using std::size_t;
-
-namespace cbpp {
-	const char* GetErrorName() {
-		return const_cast<const char*>(last_error_name);
-	}
-	
-	const char* GetErrorInfo() {
-		return const_cast<const char*>(last_error_msg);
-	}
-	
-	void SetError(const char* name, const char* info) {		
-		memset(last_error_msg, 0, CBPP_ERRORTEXT_LENGTH);
-		memset(last_error_name, 0, CBPP_ERRORNAME_LENGTH);
+namespace cbpp {	
+	Exception::Exception(const char* _what, const char* _file, const char* _func, std::size_t _line) {
+		uint64_t file_len = strlen(_file), func_len = strlen(_func), what_len = strlen(_what);
+		file = new char[file_len+1];
+		strcpy(file, _file);
 		
-		if(name == nullptr || info == nullptr) {
+		func = new char[func_len+1];
+		strcpy(func, _func);
+		
+		text = new char[what_len];
+		strcpy(text, _what);
+		line = _line;
+		
+		errtext = new char[512];
+		memset(errtext, 0, 512);
+		snprintf(errtext, 512, "[File: %s][Function: %s][Line: %i] -> %s\n", file, func, line, text);
+	}
+	
+	const char* Exception::what() const noexcept {
+		return const_cast<const char*>(errtext);
+	}
+	
+	Exception::~Exception() {
+		delete[] errtext, text, func, file;
+	}
+	
+	void _ThrowError(Exception exc) {		
+		FILE* error_log = fopen("logs/error.txt", "at");
+		if(error_log == NULL) {
 			return;
 		}
 		
-		size_t name_ln = strlen(name);
-		size_t text_ln = strlen(info);
+		fprintf(error_log, "%s", exc.what());
+		fclose(error_log);
 		
-		if(name_ln > CBPP_ERRORNAME_LENGTH) {
-			name_ln = CBPP_ERRORNAME_LENGTH - 1;
-		}
-		
-		if(text_ln > CBPP_ERRORTEXT_LENGTH) {
-			text_ln = CBPP_ERRORTEXT_LENGTH - 1;
-		}
-		
-		memcpy(last_error_name, name, name_ln);
-		memcpy(last_error_msg, info, text_ln);
+		#ifdef CBPP_DEBUG
+		throw exc;
+		#endif
 	}
 }

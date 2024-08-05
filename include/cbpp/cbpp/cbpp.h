@@ -8,7 +8,6 @@
 #include "cbpp/mesh.h"
 #include "cbpp/bbox/aabb.h"
 #include "cbpp/bbox/obb.h"
-#include "cbpp/physobj.h"
 #include "cbpp/ttype.h"
 #include "cbpp/statereg.h"
 #include "cbpp/file_read.h"
@@ -16,7 +15,8 @@
 #include "cbpp/error.h"
 
 #include "cbpp/asset/image.h"
-#include "cbpp/asset/cmf.h"
+#include "cbpp/asset/cmf.h"  //map file
+#include "cbpp/asset/cff.h"  //font file
 
 #include "cbpp/entity/base_entity.h"
 

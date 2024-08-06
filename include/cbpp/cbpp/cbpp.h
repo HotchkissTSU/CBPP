@@ -13,6 +13,8 @@
 #include "cbpp/file_read.h"
 #include "cbpp/log.h"
 #include "cbpp/error.h"
+#include "cbpp/fileio.h"
+#include "cbpp/cbstring.h"
 
 #include "cbpp/asset/image.h"
 #include "cbpp/asset/cmf.h"  //map file

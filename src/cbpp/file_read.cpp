@@ -1,6 +1,10 @@
 #include "cbpp/file_read.h"
+
 #include <cstdint>
 #include <cstring>
+#include <string>
+
+#include "cbpp/misc.h"
 
 namespace cbpp {	
 	char* ReadFileText(FILE* stream) {

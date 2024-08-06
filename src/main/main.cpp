@@ -3,7 +3,6 @@
 #include "json/json.h"
 #include "png/png.h"
 
-#include "cb_main/error.h"
 #include "cb_main/interface.h"
 #include "cb_main/settings.h"
 #include "cb_main/glfw_callbacks.h"
@@ -233,7 +232,11 @@ int main(int argc, char** argv){
 	
 	cbdraw::Init();
 	
-	CbThrowError("this is error system test");
+	File test_file(L"assets/shaders/cbdraw_circle.geometry", L"rt");
+	String buff;
+	test_file.IO(buff, 1024, FILE_READ);
+	
+	std::wcout<<L"READ: "<<buff<<L'\n';
 	
 	MainLoop();
 	

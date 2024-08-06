@@ -3,8 +3,14 @@
 #include <stdio.h>
 #include <cstring>
 #include <cstdint>
+#include <windows.h>
 
 namespace cbpp {	
+	void DisplayError(const char* title, const char* text, bool kill){
+		MessageBox(NULL, text, title, MB_OK);
+		if(kill){ exit(1); }
+	}
+
 	Exception::Exception(const char* _what, const char* _file, const char* _func, std::size_t _line) {
 		uint64_t file_len = strlen(_file), func_len = strlen(_func), what_len = strlen(_what);
 		file = new char[file_len+1];
@@ -17,9 +23,8 @@ namespace cbpp {
 		strcpy(text, _what);
 		line = _line;
 		
-		errtext = new char[512];
 		memset(errtext, 0, 512);
-		snprintf(errtext, 512, "[File: %s][Function: %s][Line: %i] -> %s\n", file, func, line, text);
+		snprintf(errtext, 512, "[%s, %i] -> %s\n", func, line, text);
 	}
 	
 	const char* Exception::what() const noexcept {
@@ -27,7 +32,7 @@ namespace cbpp {
 	}
 	
 	Exception::~Exception() {
-		delete[] errtext, text, func, file;
+		delete[] text, func, file;
 	}
 	
 	void _ThrowError(Exception exc) {		
@@ -36,11 +41,32 @@ namespace cbpp {
 			return;
 		}
 		
-		fprintf(error_log, "%s", exc.what());
+		fprintf(error_log, "ERROR: %s", exc.what());
 		fclose(error_log);
-		
 		#ifdef CBPP_DEBUG
-		throw exc;
+			#ifdef CBPP_EXC_MSGBOX
+				char msgbox_text[512];
+				snprintf(msgbox_text, 512, "Function: %s, Line: %i\n%s", exc.func, exc.line, exc.text);
+				DisplayError("CBPP Exception", msgbox_text, false);
+			#endif
+			throw exc;
+		#endif
+	}
+	
+	void _ThrowWarning(Exception exc) {
+		FILE* error_log = fopen("logs/error.txt", "at");
+		if(error_log == NULL) {
+			return;
+		}
+		
+		fprintf(error_log, "ERROR: %s", exc.what());
+		fclose(error_log);
+		#ifdef CBPP_DEBUG
+			#ifdef CBPP_WARN_MSGBOX
+				char msgbox_text[512];
+				snprintf(msgbox_text, 512, "Function: %s, Line: %i\n%s", exc.func, exc.line, exc.text);
+				DisplayError("CBPP Warning", msgbox_text, false);
+			#endif
 		#endif
 	}
 }

@@ -1,12 +1,9 @@
 #ifndef CBPP_STRING_H
 #define CBPP_STRING_H
 
-#include <cstdint>
+#include <string>
 
-typedef uint16_t CbChar;
-
-namespace cbpp {
-	
-}
+typedef wchar_t CbChar;
+typedef std::wstring String;
 
 #endif

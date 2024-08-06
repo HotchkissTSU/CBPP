@@ -5,7 +5,6 @@
 
 namespace cbpp {
 	char* ReadFileText(FILE* stream);
-	
 	char* GetFileName(const char* path);
 }
 

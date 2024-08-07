@@ -38,6 +38,15 @@ namespace cbpp {
 		return fl_length;
 	}
 	
+	std::size_t File::TextLength() {
+		if(!is_open) {
+			CbThrowError("File not open");
+			return -1;
+		}
+		
+		return fl_length / sizeof(wchar_t);
+	}
+	
 	bool File::IO(uint8_t* buffer, std::size_t to_read, CBPP_FILE_OP opcode) {
 		if(!is_open) {
 			CbThrowError("File not open");

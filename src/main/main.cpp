@@ -190,7 +190,9 @@ void Cleanup(){
 	glfwTerminate();
 }
 
-int main(int argc, char** argv){	
+int main(int argc, char** argv) {
+	setlocale(LC_ALL, "rus");
+	
 	SetUnhandledExceptionFilter(CBPP_ExceptHandle);
 	
 	ClearLogs();
@@ -232,11 +234,13 @@ int main(int argc, char** argv){
 	
 	cbdraw::Init();
 	
-	File test_file(L"assets/shaders/cbdraw_circle.geometry", L"rt");
+	File test_file(L"тест.txt", L"rt, ccs=UTF-8");
 	String buff;
-	test_file.IO(buff, 1024, FILE_READ);
+	test_file.IO(buff, test_file.TextLength(), FILE_READ);
 	
-	std::wcout<<L"READ: "<<buff<<L'\n';
+	printf("file length = %i", test_file.Length());
+	
+	std::wcout<<L"text: "<<buff<<L'\n';
 	
 	MainLoop();
 	

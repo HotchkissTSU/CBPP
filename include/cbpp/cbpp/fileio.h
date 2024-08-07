@@ -19,6 +19,7 @@ namespace cbpp {
 			File(File& other) = delete;
 			
 			std::size_t Length();
+			std::size_t TextLength();
 			
 			bool IO(uint8_t* buffer, std::size_t to_read, CBPP_FILE_OP opcode);
 			bool IO(String& buffer, std::size_t to_read, CBPP_FILE_OP opcode);

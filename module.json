@@ -1,0 +1,25 @@
+{
+	"name":"CBPP test module",
+	"base":{
+		"compiler":"g++",
+		"comp_params":"-std=c++17 -m64 -fPIC"
+	},
+	"targets":{
+		"test":{
+			"from_obj":0,
+			"type":"DLL",
+			"include":["include\\cbpp", "module\\include", "include"],
+			"static":["module\\static", "bin"],
+			"dynamic":["module\\lib", "lib"],
+			"out":"bin",
+			"out_libfile":"lib",
+			"src":[
+				"module\\src\\*.cpp"
+			],
+			"obj":"module\\obj",
+			"link_static":[ "cbpp" ],
+			"link_dynamic":[],
+			"link_params":""
+		}
+	}
+}

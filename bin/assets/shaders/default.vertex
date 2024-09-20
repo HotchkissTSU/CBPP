@@ -1,0 +1,7 @@
+#version 400 core
+
+in vec2 inpos;
+
+void main() {
+    gl_Position = vec4(inpos, 0.0, 0.0);
+}

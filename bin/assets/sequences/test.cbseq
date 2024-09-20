@@ -1,0 +1,30 @@
+type sequence;
+
+char _95 "char_095.cbseq";
+char lena "char_lena.cbseq";
+
+block main {
+    autofade 0.8;
+    autoscale 0.8;
+
+    charshow _95 1.0;
+    charshow lena 1.0;
+
+    setsprite _95 default;
+    say _95 "#ep01_map05_095_replica12";
+
+    setsprite lena angry;
+    say lena "#ep01_map05_lena_replica13";
+        
+    callif "$TEST_VAR" test;
+    
+    block test {
+        say lena "REC 1 COM 1";
+        say lena "REC 1 COM 2";
+        
+        block LMAO {
+            say lena "ebaniy rot, recursion!";
+            say lena "ebaniy rot, recursion! #2";
+        };
+    };
+};

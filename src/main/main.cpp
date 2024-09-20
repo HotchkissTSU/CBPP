@@ -102,14 +102,49 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
-	std::string test = "com1 \"arg1 quoted lmao\";\n/newline comment\ncom2 niggar; /after-line comment\n";
-	std::string test_modded;
+	//std::string sanitized;
+	//CBSEQ_Sanitize(ftext, sanitized);
+	//printf("%s\n", sanitized.c_str());
 
-	CBSEQ_Sanitize(test, test_modded);
+	File inp("assets/sequences/test.cbseq", "rt");
+	char* buff = new char[inp.Length()+1];
+	memset(buff, 0, inp.Length()+1);
 
-	printf("Default string:\n%s\n", test.c_str());
-	printf("Modded string:\n%s\n", test_modded.c_str());
+	inp.Read((uint8_t*)buff, inp.Length(), 1);
 
+	std::string ftext(buff);
+
+	printf("FILE TEXT: %s\n", ftext.c_str());
+
+	delete[] buff;
+	
+	SequenceScript test;
+	test.Interprete(ftext, true);
+
+	cbseq_words_t blocks;
+	test.GetBlocksNames(blocks);
+
+	for(int i = 0; i < blocks.size(); i++) {
+		printf("BLOCK : %s\n", blocks[i]);
+		std::string blk_name = blocks[i];
+		CBSEQ_Block_t blk = test.GetBlockCode(blk_name);
+		for(int j = 0; j < blk.prog.size(); j++) {
+			CBSEQ_ccom_t ccom = blk.prog[j];
+			printf("\tComID: %d | ", ccom.comId);
+
+			for(int k = 0; k < ccom.args.size(); k++) {
+				CBSEQ_arg_t arg = ccom.args[k];
+				if(arg.argType == CBSEQ_VTYPE_NUMBER) {
+					printf("%f ", arg.numValue);
+				}else{
+					printf("'%s' ", arg.strValue.c_str());
+				}
+			}
+
+			printf("\n");
+		}
+	}
+	
 	while( !glfwWindowShouldClose(CBPP_MainWindow) || !ModuleData.ModuleLoopCheck() ){		
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

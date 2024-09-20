@@ -14,6 +14,7 @@ namespace cbpp {
         CBSEQ_COM_INVALID,
         CBSEQ_COM_TYPE,
         CBSEQ_COM_INTERP,
+        CBSEQ_COM_WAIT,
 
         CBSEQ_COM_CHAR, //TYPE_SEQUENCE
         CBSEQ_COM_CHARPOS,
@@ -66,19 +67,18 @@ namespace cbpp {
 
     struct CBSEQ_ccom_t { //parsed command line
         CBPP_CBSEQ_COMMAND comId = CBSEQ_COM_INVALID;
-        std::vector< CBSEQ_arg_t > args;
-
-        
+        std::vector< CBSEQ_arg_t > args;  
     };
 
-    typedef std::vector<std::string> cbseq_words_t;
+    typedef std::vector<const char*> cbseq_words_t;
 
     bool CBSEQ_IsNumber(std::string text);
 
-    cbseq_words_t CBSEQ_SplitString(std::string& input); //split string by spaces, taking "quoted like this" parts into account
-    std::string CBSEQ_Sanitize(std::string& text, std::string& out_ref);   //remove all unnecessary characters and commentaries
+    void CBSEQ_SplitString(std::string& input, cbseq_words_t& vector_ref); //split string by spaces, taking "quoted like this" parts into account
+    void CBSEQ_SplitCommands(std::string& input, cbseq_words_t& vector_ref); //split whole source code by semicolons, taking {block;code} into account
+    void CBSEQ_Sanitize(std::string& text, std::string& out_ref);   //remove all unnecessary characters and commentaries
 
-    struct CBSEQ_Block {
+    struct CBSEQ_Block_t {
         std::vector<CBSEQ_ccom_t> prog;
     };
 
@@ -86,9 +86,7 @@ namespace cbpp {
         public:
             SequenceScript() = default;
 
-            bool Interprete(std::string source);
-
-            CBSEQ_ccom_t ParseCommandLine(cbseq_words_t& line);
+            void Interprete(std::string& source, bool do_calls = false);
 
             void Execute();
             void TellCameraSpot(int32_t spot_id, Vec2 spot_pos);
@@ -97,6 +95,10 @@ namespace cbpp {
             void UpdateCameraPos();
 
             void SetProgram();
+            void CallBlock(std::string& block_name);
+
+            void GetBlocksNames(cbseq_words_t& out);
+            CBSEQ_Block_t GetBlockCode(std::string& block_name);
             
         private:
             float interp_time = 1.0f;
@@ -105,8 +107,15 @@ namespace cbpp {
             uint64_t exec_pointer = 0;
             std::string exec_block = "main";
 
+            uint8_t block_recursion_limit = 64;
+
+            CBPP_CBSEQ_SCRIPT_TYPE sc_type = CBSEQ_TYPE_INVALID;
+
             std::map<int32_t, Vec2> sc_spots; //switchable camera spots
-            std::map<std::string, CBSEQ_Block> sc_blocks; //code blocks
+            std::map<std::string, CBSEQ_Block_t> sc_blocks; //code blocks
+
+            CBSEQ_ccom_t ParseCommandLine(cbseq_words_t& line);
+            void ParseCommandBlock(std::string& block_name, std::string& block_src, uint8_t recursion_depth = 0);
     };
 }
 

@@ -1,6 +1,6 @@
 Copyright notice:
 
- (C) 2024-(Until World War III or until my death) Hotchkiss
+ (C) 2024-(Until World War III and until my death) Hotchkiss
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages

@@ -6,33 +6,47 @@
 #include <map>
 #include <cstdint>
 #include <cctype>
+#include <stack>
 
 #include "cbpp/vec2.h"
 
 namespace cbpp {
     enum CBPP_CBSEQ_COMMAND : uint16_t {
         CBSEQ_COM_INVALID,
-        CBSEQ_COM_TYPE,
-        CBSEQ_COM_INTERP,
-        CBSEQ_COM_WAIT,
 
-        CBSEQ_COM_CHAR, //TYPE_SEQUENCE
+        //parse-time commands
+        CBSEQ_COM_BLOCK,
+        CBSEQ_COM_TYPE,
+        CBSEQ_COM_CHAR, 
+        CBSEQ_COM_VERSION,
+
+        //TYPE_SEQUENCE
         CBSEQ_COM_CHARPOS,
         CBSEQ_COM_CHARSHOW,
         CBSEQ_COM_CHARFADE,
         CBSEQ_COM_CHARNAME,
         CBSEQ_COM_CHARNAMECOLOR,
 
+        CBSEQ_COM_INTERP,
+        CBSEQ_COM_WAIT,
+        CBSEQ_COM_AUTOFADE,
+        CBSEQ_COM_AUTOSCALE,
+
         CBSEQ_COM_SETSPOT, 
         CBSEQ_COM_SAY,
         CBSEQ_COM_SETSPRITE,
 
-        CBSEQ_COM_NAME,
-        CBSEQ_COM_CDSPRITES, //TYPE_CHARACTER
-        CBSEQ_COM_SPRITE,
-
-        CBSEQ_COM_BLOCK,
         CBSEQ_COM_CALLIF,
+        CBSEQ_COM_CALLIFN,
+        CBSEQ_COM_CALL,
+        CBSEQ_COM_GOTO,
+        CBSEQ_COM_GOTOMARK,
+        CBSEQ_COM_EXIT,
+
+        //TYPE_CHARACTER
+        CBSEQ_COM_NAME,
+        CBSEQ_COM_CDSPRITES, 
+        CBSEQ_COM_SPRITE,
 
         CBSEQ_NUM_COMMANDS
     };
@@ -71,6 +85,7 @@ namespace cbpp {
     };
 
     typedef std::vector<const char*> cbseq_words_t;
+    void CBSEQ_ClearStrings(cbseq_words_t& words);
 
     bool CBSEQ_IsNumber(std::string text);
 
@@ -80,6 +95,19 @@ namespace cbpp {
 
     struct CBSEQ_Block_t {
         std::vector<CBSEQ_ccom_t> prog;
+    };
+
+    struct CBSEQ_CallPoint_t {
+        std::string block_name;
+        uint64_t block_addr;
+
+        bool operator==(CBSEQ_CallPoint_t& other) {
+            return (block_addr == other.block_addr) && (block_name == other.block_name);
+        }
+
+        bool operator!=(CBSEQ_CallPoint_t& other) {
+            return (block_addr != other.block_addr) || (block_name != other.block_name);
+        }
     };
 
     class SequenceScript {
@@ -92,10 +120,12 @@ namespace cbpp {
             void TellCameraSpot(int32_t spot_id, Vec2 spot_pos);
             Vec2 GetCameraSpot(int32_t spot_id);
 
-            void UpdateCameraPos();
+            bool Update();
+            void Unlock();
 
             void SetProgram();
             void CallBlock(std::string& block_name);
+            void ExecCommand(CBSEQ_ccom_t& cmd);
 
             void GetBlocksNames(cbseq_words_t& out);
             CBSEQ_Block_t GetBlockCode(std::string& block_name);
@@ -104,8 +134,15 @@ namespace cbpp {
             float interp_time = 1.0f;
             Vec2 current_camera_pos, target_camera_pos;
 
+            bool sc_run = false, sc_error = false;
+
+            std::stack<CBSEQ_CallPoint_t> sc_call_stack;
+            CBSEQ_CallPoint_t sc_check_cpt;
+
             uint64_t exec_pointer = 0;
             std::string exec_block = "main";
+
+            std::vector<std::string> sc_errlog;
 
             uint8_t block_recursion_limit = 64;
 

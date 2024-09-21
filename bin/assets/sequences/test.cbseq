@@ -18,6 +18,8 @@ block main {
         
     callif "$TEST_VAR" test;
     
+    say lena "after-call stack test!";
+    
     block test {
         say lena "REC 1 COM 1";
         say lena "REC 1 COM 2";

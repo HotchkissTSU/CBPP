@@ -144,6 +144,8 @@ int main(int argc, char** argv) {
 			printf("\n");
 		}
 	}
+
+	test.Unlock();
 	
 	while( !glfwWindowShouldClose(CBPP_MainWindow) || !ModuleData.ModuleLoopCheck() ){		
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -151,6 +153,8 @@ int main(int argc, char** argv) {
 		
 		//cbdraw::CircleOutline(Vec2(0), 100.0f);
 		ModuleData.ModuleTick();
+
+		test.Update();
 		
 		glfwSwapBuffers(CBPP_MainWindow);
 		glfwPollEvents();

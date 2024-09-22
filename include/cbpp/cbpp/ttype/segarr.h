@@ -81,13 +81,8 @@ namespace cbpp {
 			}
 		}
 		
-		T* AsArray(){
-			T* out = new T[arrlen];
-			for(size_t i = 0; i < arrlen; i++){
-				out[i] = At(i);
-			}
-			
-			return out;
+		const T** AsArray(){
+			return const_cast<const T**>(segarr);
 		}
 		
 		T& operator()(size_t seg_id, size_t local_id){ //обращение напрямую по сегменту и лок. индексу

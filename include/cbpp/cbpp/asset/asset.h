@@ -5,6 +5,8 @@
 
 namespace cbpp {
     extern const char** AssetPaths;
+
+    std::string ResolveAssetPath(std::string& local_path);
 }
 
 #endif

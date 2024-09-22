@@ -11,19 +11,20 @@ namespace cbpp {
         {"type", {CBSEQ_COM_TYPE, 1}},
         {"version", {CBSEQ_COM_VERSION, 1}},
         {"char", {CBSEQ_COM_CHAR, 2}},
+        {"usecg", {CBSEQ_COM_USECG, 2}},
+        {"cg", {CBSEQ_COM_CG, 1}},
         {"wait", {CBSEQ_COM_WAIT, 0}},
         {"charpos", {CBSEQ_COM_CHARPOS, 2}},
         {"interp", {CBSEQ_COM_INTERP, 1}},
         {"charshow", {CBSEQ_COM_CHARSHOW, 1}},
         {"charfade", {CBSEQ_COM_CHARFADE, 1}},
         {"charname", {CBSEQ_COM_CHARNAME, 2}},
-        {"charnamecolor", {CBSEQ_COM_CHARNAMECOLOR, 2}},
+        {"charnamecolor", {CBSEQ_COM_CHARNAMECOLOR, 4}},
         {"setspot", {CBSEQ_COM_SETSPOT, 1}},
-        {"say", {CBSEQ_COM_SAY, 3}},
-        {"setsprite", {CBSEQ_COM_SETSPRITE, 2}},
+        {"say", {CBSEQ_COM_SAY, 2}},
+        {"sprite", {CBSEQ_COM_SPRITE, 2}},
         {"name", {CBSEQ_COM_NAME, 1}},
         {"cdsprites", {CBSEQ_COM_CDSPRITES, 1}},
-        {"sprite", {CBSEQ_COM_SPRITE, 2}},
         {"autofade", {CBSEQ_COM_AUTOFADE, 1}},
         {"autoscale", {CBSEQ_COM_AUTOSCALE, 1}},
 
@@ -33,19 +34,26 @@ namespace cbpp {
         {"call", {CBSEQ_COM_CALL, 1}},
         {"exit", {CBSEQ_COM_EXIT, 0}},
         {"goto", {CBSEQ_COM_GOTO, 1}},
-        {"flag", {CBSEQ_COM_GOTOMARK, 1}}
+        {"flag", {CBSEQ_COM_GOTOMARK, 1}},
+        {"if", {CBSEQ_COM_IF, 2}},
+        {"ifnot", {CBSEQ_COM_IFNOT, 2}}
+        
     };
 
-    bool CBSEQ_IsNumber(std::string text) {
-        for(uint64_t i = 0; i < text.length(); i++) {
-            char cur = text[i];
-
-            if(cur != '-' || cur != '.' || !std::isdigit(cur)) {
-                return false;
+    const char* CBSEQ_GetCommandName(CBPP_CBSEQ_COMMAND comid) {
+        for(auto it = cbseq_commap.begin(); it != cbseq_commap.end(); it++) {
+            if(comid == it->second.comId) {
+                return it->first.c_str();
             }
         }
 
-        return true;
+        return "UNDEFINED";
+    }
+
+    bool CBSEQ_IsNumber(std::string& text) {
+        char* p;
+        strtod(text.c_str(), &p);
+        return *p == 0;
     }
 
     void CBSEQ_SplitString(std::string& input, cbseq_words_t& out) {
@@ -61,19 +69,23 @@ namespace cbpp {
 				break;
 			}
 
-            if(input[i] == '{'){ is_scoped++; }
             if(input[i] == '}'){ is_scoped--; }
 
-            if((input[i] == '"') && ((i > 0 && input[i-1] != '\\') || i == 0)) {
+            if(input[i] == '"') {
                 is_quoted = !is_quoted;
             }
 
             if((input[i] == ' ') && !is_quoted && (is_scoped == 0)) {
                 out.push_back( strdup(tmp.c_str()) );
                 tmp.clear();
-            }else if( (input[i] != '"') && ((i > 0 && input[i-1] != '\\') || i == 0) || (is_scoped != 0)) {
-                if(input[i] != '{' && input[i] != '}' || (is_scoped != 1)){ tmp = tmp + input[i]; }
+            //}else if( (input[i] != '"') && ((i > 0 && input[i-1] != '\\') || i == 0) || (is_scoped != 0)) {
+                //if(input[i] != '{' && input[i] != '}' || (is_scoped != 1)){ tmp = tmp + input[i]; }
+            //}
+            }else if (input[i] != '{' && input[i] != '}' && input[i] != '"' || (is_scoped >= 1)){
+                tmp = tmp + input[i];
             }
+
+            if(input[i] == '{'){ is_scoped++; }
         }
     }
 
@@ -110,6 +122,7 @@ namespace cbpp {
         uint64_t out_ptr = 0;
 
         bool inside_command = false;
+        bool is_quoted = false;
 
         while (string_ptr < input.length()) {
             char current = input[string_ptr];
@@ -117,11 +130,13 @@ namespace cbpp {
                 current = ' ';
             }
 
+            if(current == '"') { is_quoted = !is_quoted; }
+
             if(current != ' ' && current != '\t') {
                 inside_command = true;
             }
 
-            if((current != '\n') && (current != '\t') && (current != '/') && inside_command) {
+            if((current != '\n') && (current != '\t') && (current != '/') && inside_command || is_quoted) {
                 out.push_back(current);
                 out_ptr++;
             }
@@ -130,7 +145,7 @@ namespace cbpp {
                 inside_command = false;
             }
 
-            if(current == '/') {
+            if(current == '/' && !is_quoted) {
                 char tmp = 'a';
                 while (tmp != '\n') {
                     string_ptr++;
@@ -194,7 +209,7 @@ namespace cbpp {
         std::string src_sanitized;
         CBSEQ_Sanitize(block_src, src_sanitized);
 
-        //printf("SANITIZED SRC: %s\n", src_sanitized.c_str());
+        printf("SANITIZED SRC: %s\n", src_sanitized.c_str());
 
         cbseq_words_t coms_raw;
         cbseq_words_t com_decomp;
@@ -223,6 +238,7 @@ namespace cbpp {
 
                 case CBSEQ_COM_BLOCK:
                     if(call_blocks) {
+                        printf( "NIGGER : %s, %s\n", ccom.args[0].strValue.c_str(), ccom.args[1].strValue.c_str() );
                         this->ParseCommandBlock(ccom.args[0].strValue, ccom.args[1].strValue, 1);
                     }
                     break;
@@ -297,6 +313,14 @@ namespace cbpp {
             case CBSEQ_COM_CALLIF:
                 //here we must grab a glob-variable and check its state
                 this->CallBlock(cmd.args[1].strValue);
+                break;
+
+            case CBSEQ_COM_CALL:
+                this->CallBlock(cmd.args[1].strValue);
+                break;
+
+            case CBSEQ_COM_WAIT:
+                sc_run = false;
                 break;
         }
     }

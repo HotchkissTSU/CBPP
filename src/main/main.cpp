@@ -130,7 +130,7 @@ int main(int argc, char** argv) {
 		CBSEQ_Block_t blk = test.GetBlockCode(blk_name);
 		for(int j = 0; j < blk.prog.size(); j++) {
 			CBSEQ_ccom_t ccom = blk.prog[j];
-			printf("\tComID: %d | ", ccom.comId);
+			printf("\t%s | ", CBSEQ_GetCommandName(ccom.comId));
 
 			for(int k = 0; k < ccom.args.size(); k++) {
 				CBSEQ_arg_t arg = ccom.args[k];
@@ -146,7 +146,20 @@ int main(int argc, char** argv) {
 	}
 
 	test.Unlock();
-	
+	/*
+	cbpp::SegArray<int32_t> test2(100, 10);
+	for(int i = 0; i < 90; i++) {
+		if(i % 10 != 0){ test2[i] = 1; }
+	}
+
+	test2.PrintVerbose<int32_t>(10, 2);
+
+	for(int i = 0; i < 15; i++) {
+		printf( "EMP #%d: %d\n", i, test2.Emplace(-1) );
+	}
+
+	test2.PrintVerbose<int32_t>(10, 2);
+	*/
 	while( !glfwWindowShouldClose(CBPP_MainWindow) || !ModuleData.ModuleLoopCheck() ){		
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

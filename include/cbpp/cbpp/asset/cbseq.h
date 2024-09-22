@@ -19,6 +19,7 @@ namespace cbpp {
         CBSEQ_COM_TYPE,
         CBSEQ_COM_CHAR, 
         CBSEQ_COM_VERSION,
+        CBSEQ_COM_USECG,
 
         //TYPE_SEQUENCE
         CBSEQ_COM_CHARPOS,
@@ -34,7 +35,9 @@ namespace cbpp {
 
         CBSEQ_COM_SETSPOT, 
         CBSEQ_COM_SAY,
-        CBSEQ_COM_SETSPRITE,
+        CBSEQ_COM_SPRITE,
+
+        CBSEQ_COM_CG,
 
         CBSEQ_COM_CALLIF,
         CBSEQ_COM_CALLIFN,
@@ -42,14 +45,17 @@ namespace cbpp {
         CBSEQ_COM_GOTO,
         CBSEQ_COM_GOTOMARK,
         CBSEQ_COM_EXIT,
+        CBSEQ_COM_IF,
+        CBSEQ_COM_IFNOT,
 
         //TYPE_CHARACTER
         CBSEQ_COM_NAME,
         CBSEQ_COM_CDSPRITES, 
-        CBSEQ_COM_SPRITE,
 
         CBSEQ_NUM_COMMANDS
     };
+
+    const char* CBSEQ_GetCommandName(CBPP_CBSEQ_COMMAND comid);
 
     struct CBSEQ_command_info_t {
         CBPP_CBSEQ_COMMAND comId;
@@ -87,7 +93,7 @@ namespace cbpp {
     typedef std::vector<const char*> cbseq_words_t;
     void CBSEQ_ClearStrings(cbseq_words_t& words);
 
-    bool CBSEQ_IsNumber(std::string text);
+    bool CBSEQ_IsNumber(std::string& text);
 
     void CBSEQ_SplitString(std::string& input, cbseq_words_t& vector_ref); //split string by spaces, taking "quoted like this" parts into account
     void CBSEQ_SplitCommands(std::string& input, cbseq_words_t& vector_ref); //split whole source code by semicolons, taking {block;code} into account
@@ -116,16 +122,11 @@ namespace cbpp {
 
             void Interprete(std::string& source, bool do_calls = false);
 
-            void Execute();
             void TellCameraSpot(int32_t spot_id, Vec2 spot_pos);
             Vec2 GetCameraSpot(int32_t spot_id);
 
             bool Update();
             void Unlock();
-
-            void SetProgram();
-            void CallBlock(std::string& block_name);
-            void ExecCommand(CBSEQ_ccom_t& cmd);
 
             void GetBlocksNames(cbseq_words_t& out);
             CBSEQ_Block_t GetBlockCode(std::string& block_name);
@@ -153,6 +154,8 @@ namespace cbpp {
 
             CBSEQ_ccom_t ParseCommandLine(cbseq_words_t& line);
             void ParseCommandBlock(std::string& block_name, std::string& block_src, uint8_t recursion_depth = 0);
+            void CallBlock(std::string& block_name);
+            void ExecCommand(CBSEQ_ccom_t& cmd); //execute run-time command
     };
 }
 

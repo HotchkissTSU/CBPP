@@ -1,7 +1,6 @@
 #ifndef CBPP_LOCALES_H
 #define CBPP_LOCALES_H
 
-#include "json/json.h"
 #include "cbpp/cbstring.h"
 
 #include <map>

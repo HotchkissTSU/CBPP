@@ -62,5 +62,6 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "text_encoding": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }

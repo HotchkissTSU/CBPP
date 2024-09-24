@@ -14,6 +14,7 @@
 #endif
 
 using namespace cbpp;
+using namespace cbent;
 
 bool ModuleLoopCheck_default() {
 	return true;
@@ -146,20 +147,7 @@ int main(int argc, char** argv) {
 	}
 
 	test.Unlock();
-	/*
-	cbpp::SegArray<int32_t> test2(100, 10);
-	for(int i = 0; i < 90; i++) {
-		if(i % 10 != 0){ test2[i] = 1; }
-	}
 
-	test2.PrintVerbose<int32_t>(10, 2);
-
-	for(int i = 0; i < 15; i++) {
-		printf( "EMP #%d: %d\n", i, test2.Emplace(-1) );
-	}
-
-	test2.PrintVerbose<int32_t>(10, 2);
-	*/
 	while( !glfwWindowShouldClose(CBPP_MainWindow) || !ModuleData.ModuleLoopCheck() ){		
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

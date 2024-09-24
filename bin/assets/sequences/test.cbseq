@@ -2,15 +2,17 @@ version 1;
 type sequence;
 
 char char_1 "char_test1.cbseq";
-char char_2 "char_test2.cbseq";
+char char_2 "char_test2.cbseq"; /english commentary
 
-usecg cg_test "textures/cg/cg_test.png";
-
-block dummy { nigger; };
+usecg cg_test "textures/cg/cg_test.png"; /комментарий на русском
 
 block main {
-    charshow char_1 "show me please i beg you";
+    charshow char_1 0;
     charshow char_2 0;
     
-    block sub_block {nigger2;};
+    if "$TEST_VAR" {
+        say char_1 "hello";
+        charname char_1 "test char name";
+        charname char_1 "amongus";
+    };
 };

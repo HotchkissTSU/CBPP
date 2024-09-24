@@ -1,3 +1,4 @@
+version 1;
 type character;
 
 name "Test character";

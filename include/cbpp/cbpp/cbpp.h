@@ -24,6 +24,5 @@
 #include "cbpp/asset/cbseq.h" //cutscene sequence scripts
 
 #include "cbpp/entity/base_entity.h"
-#include "cbpp/entity/ent_reg.h"
 
 #endif

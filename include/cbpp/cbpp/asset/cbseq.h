@@ -47,6 +47,9 @@ namespace cbpp {
         CBSEQ_COM_EXIT,
         CBSEQ_COM_IF,
         CBSEQ_COM_IFNOT,
+        CBSEQ_COM_RETURN,
+        CBSEQ_COM_TRIGGER,
+        CBSEQ_COM_CAMFOLLOW,
 
         //TYPE_CHARACTER
         CBSEQ_COM_NAME,
@@ -75,6 +78,12 @@ namespace cbpp {
         CBSEQ_VTYPE_STRING
     };
 
+    enum CBPP_CBSEQ_BLOCK_TYPE : uint8_t {
+        CBSEQ_BTYPE_GENERIC,
+        CBSEQ_BTYPE_IF,
+        CBSEQ_BTYPE_ENUM
+    };
+
     struct CBSEQ_arg_t {
         CBPP_CBSEQ_COM_ARG_TYPE argType = CBSEQ_VTYPE_NUMBER;
         //union {
@@ -90,8 +99,10 @@ namespace cbpp {
         std::vector< CBSEQ_arg_t > args;  
     };
 
-    typedef std::vector<const char*> cbseq_words_t;
-    void CBSEQ_ClearStrings(cbseq_words_t& words);
+    CBSEQ_arg_t CBSEQ_ResolveString(std::string& str);
+
+    typedef std::vector<const char*> cbseq_words_t; //due to STL`s shitness, we can`t store strings inside a vector (something mystical happens and strings corrupt)
+    void CBSEQ_ClearWords(cbseq_words_t& words);    //always clear these vectors after use!
 
     bool CBSEQ_IsNumber(std::string& text);
 
@@ -100,6 +111,7 @@ namespace cbpp {
     void CBSEQ_Sanitize(std::string& text, std::string& out_ref);   //remove all unnecessary characters and commentaries
 
     struct CBSEQ_Block_t {
+        CBPP_CBSEQ_BLOCK_TYPE blk_type = CBSEQ_BTYPE_GENERIC;
         std::vector<CBSEQ_ccom_t> prog;
     };
 
@@ -128,14 +140,20 @@ namespace cbpp {
             bool Update();
             void Unlock();
 
+            void SetTriggerCallback( void (*callback_ptr)( const char* ) );
+
             void GetBlocksNames(cbseq_words_t& out);
             CBSEQ_Block_t GetBlockCode(std::string& block_name);
+
+            ~SequenceScript() = default;
             
         private:
+            void (*trigger_callback)(const char*) = NULL;
+
             float interp_time = 1.0f;
             Vec2 current_camera_pos, target_camera_pos;
 
-            bool sc_run = false, sc_error = false;
+            bool sc_run = false, sc_error = false, sc_terminated = false, sc_allow_recursion = false;
 
             std::stack<CBSEQ_CallPoint_t> sc_call_stack;
             CBSEQ_CallPoint_t sc_check_cpt;
@@ -151,9 +169,11 @@ namespace cbpp {
 
             std::map<int32_t, Vec2> sc_spots; //switchable camera spots
             std::map<std::string, CBSEQ_Block_t> sc_blocks; //code blocks
+            std::map<std::string, CBSEQ_CallPoint_t> sc_flags; //flags for the 'goto' command
+            cbseq_words_t sc_triggers;
 
             CBSEQ_ccom_t ParseCommandLine(cbseq_words_t& line);
-            void ParseCommandBlock(std::string& block_name, std::string& block_src, uint8_t recursion_depth = 0);
+            void ParseCommandBlock(std::string& block_name, std::string& block_src, uint8_t recursion_depth = 0, CBPP_CBSEQ_BLOCK_TYPE blk_typ = CBSEQ_BTYPE_GENERIC);
             void CallBlock(std::string& block_name);
             void ExecCommand(CBSEQ_ccom_t& cmd); //execute run-time command
     };

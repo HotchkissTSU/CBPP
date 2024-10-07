@@ -197,9 +197,7 @@ namespace cbvs { //Shader
 
 		shader_obj_id = glCreateShader(sh_class);
 
-		glShaderSource(shader_obj_id, 1, &shader_src, NULL);
-
-		delete[] shader_src;
+		glShaderSource(shader_obj_id, 1, &shader_src, NULL);		
 
 		glCompileShader(shader_obj_id);
 
@@ -212,6 +210,7 @@ namespace cbvs { //Shader
 			CbThrowError(log);
 		}
 
+		delete[] shader_src;
 		return true;
 	}
 
@@ -274,6 +273,8 @@ namespace cbvs { //ShaderProgram
 			CbThrowError(info_log);
 		}
 
+		shprog_linked = out;
+
 		return out;
 	}
 
@@ -283,6 +284,29 @@ namespace cbvs { //ShaderProgram
 
 	void ShaderProgram::_setRegName(std::string sh_name) {
 		shprog_name = sh_name;
+	}
+
+	GLint ShaderProgram::UniformLocation(const char* uname) {
+		if(!shprog_linked) {
+			CbThrowErrorf("Attempt to get uniform '%s' location from the non-linked shader program '%s'(%d)", uname, shprog_name.c_str(), shader_prog_id);
+		}
+
+		GLint uloc = glGetUniformLocation(shader_prog_id, uname);
+		if(uloc == -1) {
+			CbThrowErrorf("Failed to get uniform '%s' location from the shader program '%s'(%u)", uname, shprog_name.c_str(), shader_prog_id);
+		}
+
+		return uloc;
+	}
+
+	void ShaderProgram::PushUniform(const char* uname, float v1, float v2, float v3, float v4) {
+		if(!shprog_linked) {
+			CbThrowError("Attempt to push uniform value to the non-linked shader program");
+		}
+
+		GLint uloc = this->UniformLocation(uname);
+
+		glUniform4f(uloc, v1, v2, v3, v4);
 	}
 
 	ShaderProgram::~ShaderProgram() {

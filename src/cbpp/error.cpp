@@ -6,7 +6,7 @@
 
 namespace cbpp {	
 	void DisplayError(const char* title, const char* text, bool kill){
-		printf("\n*** THIS IS A MESSAGEBOX! ***\n%s -> %s\n\n", title, text);
+		//printf("\n*** THIS IS A MESSAGEBOX! ***\n%s -> %s\n\n", title, text);
 		//we need messagebox here
 		if(kill){ exit(1); }
 	}

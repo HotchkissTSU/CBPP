@@ -1,6 +1,8 @@
 #ifndef CBVS_ERROR_CHECK
 #define CBVS_ERROR_CHECK
 
+#include "cbpp/error.h"
+
 namespace cbvs {
 	GLenum CheckError(const char function[], const char file[], size_t line) {
 		GLenum errorCode;
@@ -10,19 +12,19 @@ namespace cbvs {
 			case GL_INVALID_ENUM:                  error = "INVALID_ENUM";     break;
 			case GL_INVALID_VALUE:                 error = "INVALID_VALUE";     break;
 			case GL_INVALID_OPERATION:             error = "INVALID_OPERATION";    break;
-			case GL_STACK_OVERFLOW:                error = "STACK_OVERFLOW";    break;
-			case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW";    break;
+			//case GL_STACK_OVERFLOW:                error = "STACK_OVERFLOW";    break;
+			//case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW";    break;
 			case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY";     break;
 			case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
 		}
 
-		printf("OpenGL: %s, Line: %i, Function: %s\n", error, line, function);
+		CbThrowErrorf("OpenGL: %s, Line: %i, Function: %s\n", error, line, function);
 		}
 
 		return errorCode;
 	}
 }
 
-#define RENDER_CHECK_ERROR() cbvs::CheckError(__FUNCTION__, __FILE__, __LINE__)
+#define glCheck() cbvs::CheckError(__PRETTY_FUNCTION__, __FILE__, __LINE__)
 
 #endif

@@ -1,12 +1,10 @@
 #ifndef CBVS_SHADER_H
 #define CBVS_SHADER_H
 
-#include <cstdint>
-#include "cbpp_gl.h"
-#include "cbpp/cbstring.h"
+#include "glad/glad.h"
 
-#define GLFW_INCLUDE_NONE
-#include "GLFW/glfw3.h"
+#include <cstdint>
+#include "cbpp/cbstring.h"
 
 #include <map>
 #include <stdio.h>
@@ -44,6 +42,9 @@ namespace cbvs {
 
 			void Use();
 
+			GLint UniformLocation(const char* uname);
+			void PushUniform(const char* uname, float v1, float v2, float v3, float v4);
+
 			void _setRegName(std::string sh_name);
 
 			~ShaderProgram();
@@ -51,6 +52,7 @@ namespace cbvs {
 		private:
 			GLuint shader_prog_id;
 			std::string shprog_name;
+			bool shprog_linked = false;
 	};
 
 	extern std::map<std::string, ShaderProgram*> ShaderProgramRegistry;

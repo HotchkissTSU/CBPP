@@ -1,7 +1,7 @@
 #ifndef CBPP_TOP_H
 #define CBPP_TOP_H
 
-#include "cbpp_gl.h"
+#include "glad/glad.h"
 #include "cbpp/cbpp.h"
 //#include "cbasset/cbasset.h"
 #include "cbvs/cbvs.h"

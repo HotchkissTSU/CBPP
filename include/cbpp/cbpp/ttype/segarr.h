@@ -12,8 +12,6 @@
 
 #define SEGARR_MAX_SEGLEN (1024) //максимальная длина одного сегмента (в байтах) при автоопределении
 
-#define BSegArray SegArray<uint8_t>
-
 using std::size_t;
 
 namespace cbpp {	
@@ -368,6 +366,8 @@ namespace cbpp {
 			
 			T zerov; //резервное значение, возвращаемое в случае неприятных ситуаций
 	};
+
+	typedef SegArray<uint8_t> BSegArray;
 	
 	extern "C++" template<typename T> void WriteValueToSegArray(BSegArray *sarr, T value, size_t shift){
 		size_t sz = sizeof(T);

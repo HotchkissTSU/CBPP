@@ -7,11 +7,13 @@
 
 #define CbThrowError(err_text) cbpp::_ThrowError(cbpp::Exception( err_text , __FILE__, __PRETTY_FUNCTION__, __LINE__))
 #define CbThrowWarning(warn_text) cbpp::_ThrowWarning(cbpp::Exception( warn_text , __FILE__, __PRETTY_FUNCTION__, __LINE__))
+#define CbThrowErrorf(warn_text, ...) { char err_log[256]; snprintf(err_log, 255, warn_text, __VA_ARGS__); CbThrowError(err_log); }
+#define CbThrowWarningf(warn_text, ...) { char err_log[256]; snprintf(err_log, 255, warn_text, __VA_ARGS__); CbThrowWarning(err_log); }
 
 #include <stdexcept>
 
 namespace cbpp {
-	void DisplayError(const char* title, const char* text, bool kill = false);
+	extern void DisplayError(const char* title, const char* text, bool kill = false);
 	
 	class Exception : public std::exception {
 		public:
@@ -27,8 +29,8 @@ namespace cbpp {
 			std::size_t line;
 	};
 	
-	void _ThrowError(Exception exc);
-	void _ThrowWarning(Exception exc);
+	extern void _ThrowError(Exception exc);
+	extern void _ThrowWarning(Exception exc);
 }
 
 #endif

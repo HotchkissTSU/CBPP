@@ -1,7 +1,9 @@
 #version 400 core
+layout(location = 0) in vec2 inpos;
 
-in vec2 inpos;
+out vec4 vtxColor;
 
 void main() {
     gl_Position = vec4(inpos, 0.0, 0.0);
+    vtxColor = vec4(1.0, 0.0, 0.0, 1.0);
 }

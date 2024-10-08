@@ -6,4 +6,8 @@ char testchar_2 "tchar2.cbseq";
 
 block main {    
     say char1 "bbb";
+    
+    repeat 10 {
+        
+    };
 };

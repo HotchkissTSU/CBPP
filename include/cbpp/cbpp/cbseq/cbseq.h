@@ -9,7 +9,7 @@
 #include <stack>
 
 #include "cbpp/vec2.h"
-#include "cbpp/asset/cbseq_base.h"
+#include "cbpp/cbseq/cbseq_base.h"
 
 namespace cbpp {
     const char* CBSEQ_GetCommandName(CBPP_CBSEQ_COMMAND comid);
@@ -70,6 +70,8 @@ namespace cbpp {
             void ParseCommandBlock(std::string& block_name, std::string& block_src, uint8_t recursion_depth = 0, CBPP_CBSEQ_BLOCK_TYPE blk_typ = CBSEQ_BTYPE_GENERIC, uint16_t exec_counter = 1);
             void CallBlock(std::string& block_name);
             void ExecCommand(CBSEQ_ccom_t& cmd); //execute run-time command
+
+            
     };
 }
 

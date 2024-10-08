@@ -1,4 +1,4 @@
-#include "cbpp/asset/cbseq_base.h"
+#include "cbpp/cbseq/cbseq_base.h"
 #include <cstring>
 
 namespace cbpp {
@@ -82,7 +82,7 @@ namespace cbpp {
             }
 		}
     }
-
+    
     void CBSEQ_Sanitize(std::string& input, std::string& out) {
         out.clear();
 

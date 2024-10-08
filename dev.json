@@ -36,9 +36,22 @@
 			[
 				"src\\cbpp\\*.cpp",
 				"src\\cbpp\\entity\\*.cpp",
-				"src\\cbpp\\bbox\\*.cpp",
-				"src\\cbpp\\asset\\*.cpp"
+				"src\\cbpp\\bbox\\*.cpp"
 			],
+			"static" : [ "static" ],
+			"type" : "OBJ"
+		},
+		"assets" : 
+		{
+			"dynamic" : [ ],
+			"include" : [ "include", "include/cbpp" ],
+			"link_dynamic" : [ ],
+			"link_params" : "-m64",
+			"link_static" : [ ],
+			"obj" : "obj\\cbpp_base",
+			"out" : "bin",
+			"out_libfile" : "lib",
+			"src" : [ "src\\cbpp\\asset\\*.cpp" ],
 			"static" : [ "static" ],
 			"type" : "OBJ"
 		},
@@ -52,7 +65,7 @@
 			"obj" : "obj\\cbpp_base",
 			"out" : "bin",
 			"out_libfile" : "lib",
-			"src" : [ "src\\cbpp\\asset\\cbseq.cpp", "src\\cbpp\\asset\\cbseq_base.cpp" ],
+			"src" : [ "src\\cbpp\\cbseq\\*.cpp" ],
 			"static" : [ "static" ],
 			"type" : "OBJ"
 		},
@@ -84,6 +97,22 @@
 			"static" : [ "static" ],
 			"type" : "OBJ"
 		},
+		"soil" : 
+		{
+			"compiler":"gcc",
+			"comp_params":"-fPIC -D GLFW_INCLUDE_NONE",
+			"dynamic" : [ "lib" ],
+			"include" : [ "include", "include\\SOIL" ],
+			"link_dynamic" : [],
+			"link_params" : "",
+			"link_static" : [],
+			"obj" : "obj\\soil",
+			"out" : "bin",
+			"out_libfile" : "lib",
+			"src" : [ "src\\soil\\*.c" ],
+			"static" : [ "static" ],
+			"type" : "OBJ"
+		},
 		"libcbpp" : 
 		{
 			"dynamic" : [ "lib" ],
@@ -95,7 +124,7 @@
 			"obj" : "obj\\cbpp_base",
 			"out" : "bin",
 			"out_libfile" : "lib",
-			"src" : [ "obj\\cbpp_base\\*.o", "obj\\cbvs\\*.o", "obj\\glad.o" ],
+			"src" : [ "obj\\cbpp_base\\*.o", "obj\\cbvs\\*.o", "obj\\glad.o", "obj\\soil\\*.o" ],
 			"static" : [ "static", "bin" ],
 			"type" : "DLL"
 		}

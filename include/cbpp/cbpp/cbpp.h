@@ -18,10 +18,8 @@
 
 #include "cbpp/locales.h"
 
-#include "cbpp/asset/image.h"
-#include "cbpp/asset/cmf.h"   //map file
-#include "cbpp/asset/cff.h"   //font file
-#include "cbpp/asset/cbseq.h" //cutscene sequence scripts
+#include "cbpp/asset/sprite.h"
+#include "cbpp/cbseq/cbseq.h" //cutscene sequence scripts
 
 #include "cbpp/entity/base_entity.h"
 

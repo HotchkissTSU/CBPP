@@ -1,9 +1,0 @@
-version 1;
-type character;
-
-name "Test character";
-
-cdsprites "textures/sprites/test_character/";
-
-sprite default "default.png";
-sprite happy "happy.png";

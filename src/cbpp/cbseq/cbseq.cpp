@@ -1,4 +1,4 @@
-#include "cbpp/asset/cbseq.h"
+#include "cbpp/cbseq/cbseq.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -22,10 +22,9 @@ namespace cbpp {
         {"charname", CBSEQ_COM_CHARNAME, 2},
         {"charnamecolor", CBSEQ_COM_CHARNAMECOLOR, 4},
         {"camspot", CBSEQ_COM_SETSPOT, 1},
+        {"camfollow", CBSEQ_COM_CAMFOLLOW, 1},
         {"say", CBSEQ_COM_SAY, 2},
-        {"sprite", CBSEQ_COM_SPRITE, 2},
-        {"name", CBSEQ_COM_NAME, 1},
-        {"cdsprites", CBSEQ_COM_CDSPRITES, 1},
+        {"seq", CBSEQ_COM_SEQ, 2},
         {"autofade", CBSEQ_COM_AUTOFADE, 1},
         {"autoscale", CBSEQ_COM_AUTOSCALE, 1},
 
@@ -38,10 +37,16 @@ namespace cbpp {
         {"ifnot", CBSEQ_COM_IFNOT, 2},
         {"return", CBSEQ_COM_RETURN, 0},
         {"trigger", CBSEQ_COM_TRIGGER, 1},
-        {"camfollow", CBSEQ_COM_CAMFOLLOW, 1},
         {"bpoint", CBSEQ_COM_BPOINT, 0},
         {"repeat", CBSEQ_COM_REPEAT, 2},
         {"callback", CBSEQ_COM_CALLBACK, 2},
+
+        {"anim", CHR_COM_ANIM, 2},
+        {"frame", CHR_COM_FRAME, 2},
+        {"loop", CHR_COM_LOOP, 1},
+        {"name", CHR_COM_NAME, 1},
+        {"color", CHR_COM_COLOR, 3},
+        {"cdsprites", CHR_COM_CDSPRITES, 1},
 
         {"music", CBSEQ_COM_MUSIC, 2},
         {"ambient", CBSEQ_COM_AMBIENT, 3}
@@ -164,6 +169,15 @@ namespace cbpp {
                     if(call_blocks) {
                         this->ParseCommandBlock(ccom.args[0].strValue, ccom.args[1].strValue, 1, CBSEQ_BTYPE_GENERIC);
                     }
+                    break;
+
+                case CHR_COM_ANIM:
+                    if(sc_type != CBSEQ_TYPE_CHARACTER) {
+                        CBSEQ_ERR("Command 'anim' cannot be present outside of the 'character' script type", "");
+                    }
+
+                    
+
                     break;
 
                 default:

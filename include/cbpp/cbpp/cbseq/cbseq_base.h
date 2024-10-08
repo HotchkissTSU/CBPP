@@ -5,15 +5,18 @@
 #include <vector>
 #include <cstdint>
 
+#include "cbpp/color.h"
+#include <map>
+
 namespace cbpp {
     enum CBPP_CBSEQ_COMMAND : uint16_t {
         CBSEQ_COM_INVALID,
 
         //parse-time commands
-        CBSEQ_COM_BLOCK,
         CBSEQ_COM_TYPE,
-        CBSEQ_COM_CHAR, 
+        CBSEQ_COM_BLOCK,
         CBSEQ_COM_VERSION,
+        CBSEQ_COM_CHAR, 
         CBSEQ_COM_USECG,
         CBSEQ_COM_USESND,
 
@@ -31,7 +34,7 @@ namespace cbpp {
 
         CBSEQ_COM_SETSPOT, 
         CBSEQ_COM_SAY,
-        CBSEQ_COM_SPRITE,
+        CBSEQ_COM_SEQ,
 
         CBSEQ_COM_CG,
 
@@ -54,9 +57,12 @@ namespace cbpp {
         CBSEQ_COM_MUSIC,
         CBSEQ_COM_AMBIENT,
 
-        //TYPE_CHARACTER
-        CBSEQ_COM_NAME,
-        CBSEQ_COM_CDSPRITES, 
+        CHR_COM_ANIM,
+        CHR_COM_FRAME,
+        CHR_COM_LOOP,
+        CHR_COM_NAME,
+        CHR_COM_COLOR,
+        CHR_COM_CDSPRITES,
 
         CBSEQ_NUM_COMMANDS
     };
@@ -81,7 +87,8 @@ namespace cbpp {
     enum CBPP_CBSEQ_BLOCK_TYPE : uint8_t {
         CBSEQ_BTYPE_GENERIC,
         CBSEQ_BTYPE_IF,
-        CBSEQ_BTYPE_LOOP
+        CBSEQ_BTYPE_LOOP,
+        CBSEQ_BTYPE_ANIM
     };
 
     struct CBSEQ_arg_t {
@@ -121,7 +128,18 @@ namespace cbpp {
         }
     };
 
-    typedef std::vector<const char*> cbseq_words_t; //due to STL`s shitness, we can`t store strings inside a vector (something mystical happens and they corrupt)
+    struct CHR_anim_t {
+
+    };
+
+    struct CHR_character_t {
+        std::string name;
+        Color color;
+
+        std::map<std::string, CHR_anim_t> anims;
+    };
+
+    typedef std::vector<const char*> cbseq_words_t; //due to STL`s shitness, we can`t store strings inside a vector (something mystical happens and they randomly corrupt)
     void CBSEQ_ClearWords(cbseq_words_t& words);    //always clear these vectors after use!
 
     bool CBSEQ_IsNumber(std::string& text);

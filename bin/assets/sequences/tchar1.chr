@@ -1,0 +1,13 @@
+version 1;
+
+cdsprites "textures/sprites/tchar1/";
+
+name #test_character_name;
+color 255 0 0;
+
+anim idle {
+    loop $true;
+    
+    frame 0.1 "sp1.png";
+    frame 0.1 "sp2.png";
+};

@@ -1,11 +1,11 @@
 #include "cbpp/math.h"
 
 namespace cbpp{	
-	bool fEqual(float a, float b){
+	bool fEqual(float_t a, float_t b){
 		return (std::abs(a-b) <= CBPP_MATH_EPSILON);
 	}
 	
-	float LineSubstitute(mLine line, Vec2 pt){
+	float_t LineSubstitute(mLine line, Vec2 pt){
 		return line.a*pt.x + line.b*pt.y + line.c;
 	}
 	
@@ -38,7 +38,7 @@ namespace cbpp{
 	mSegment GetSegment(Vec2 p1, Vec2 p2){
 		mSegment out;
 		
-		float seglen = (p2 - p1).Length();
+		float_t seglen = (p2 - p1).Length();
 		
 		out.start = p1; out.end = p2;
 		out.direction = (p2 - p1) / seglen;
@@ -50,16 +50,16 @@ namespace cbpp{
 	Intersection Intersect_LineLine(mLine l1, mLine l2){
 		Intersection out;
 		
-		float m = l2.a, n = l2.b, k = l2.c;
-		float a = l1.a, b = l1.b, c = l1.c;
+		float_t m = l2.a, n = l2.b, k = l2.c;
+		float_t a = l1.a, b = l1.b, c = l1.c;
 		
 		if( fEqual(l1.normal.VectorMul(l2.normal), 0.0f) ){ //прямые параллельны
 			out.intersect = false;
 			return out;
 		}
 		
-		float y = (m*c - a*k) / (a*n - m*b);
-		float x = (-b*y - c) / a;
+		float_t y = (m*c - a*k) / (a*n - m*b);
+		float_t x = (-b*y - c) / a;
 		
 		out.points.push_back(Vec2(x,y));
 		out.intersect = true;
@@ -72,10 +72,10 @@ namespace cbpp{
 		//упрощаем уравнение круга, убирая оттуда сдвиги центра по осям
 		line = GetLine(line.p1 - circ.pos, line.p2 - circ.pos);
 		
-		float a = line.a, b = line.b, c = line.c;
-		float m = circ.radius;
+		float_t a = line.a, b = line.b, c = line.c;
+		float_t m = circ.radius;
 		
-		float d = a*a*( m*m * (b*b + a*a) - c*c );
+		float_t d = a*a*( m*m * (b*b + a*a) - c*c );
 		
 		Intersection out;
 		
@@ -84,14 +84,14 @@ namespace cbpp{
 			return out;
 			
 		}else if(d > 0){ //две точки пересечения
-			float root = std::sqrt(d); //считаем этот кал только один раз
-			float down = a*a + b*b;
+			float_t root = std::sqrt(d); //считаем этот кал только один раз
+			float_t down = a*a + b*b;
 		
-			float y1 = (-b*c+root)/down;
-			float x1 = -( (b*y1 + c)/a );
+			float_t y1 = (-b*c+root)/down;
+			float_t x1 = -( (b*y1 + c)/a );
 			
-			float y2 = (-b*c-root)/down;
-			float x2 = -( (b*y2 + c)/a );
+			float_t y2 = (-b*c-root)/down;
+			float_t x2 = -( (b*y2 + c)/a );
 			
 			out.intersect = true;
 			out.points.push_back(Vec2(x1,y1) + circ.pos);
@@ -99,8 +99,8 @@ namespace cbpp{
 			return out;
 			
 		}else{ //одна точка пересечения
-			float y = -( (b*c)/(a*a + b*b) );
-			float x = -( (b*y + c)/a );
+			float_t y = -( (b*c)/(a*a + b*b) );
+			float_t x = -( (b*y + c)/a );
 			
 			out.intersect = true;
 			out.points.push_back(Vec2(x,y) + circ.pos);
@@ -171,8 +171,8 @@ namespace cbpp{
 		
 		Intersection out;
 		
-		float x0 = c2.pos.x, y0 = c2.pos.y;
-		float m = c1.radius, k = c2.radius;
+		float_t x0 = c2.pos.x, y0 = c2.pos.y;
+		float_t m = c1.radius, k = c2.radius;
 			
 		if(fEqual(x0, 0.0f) && fEqual(y0, 0.0f) && fEqual(m, k)){
 			out.intersect = true;
@@ -186,20 +186,20 @@ namespace cbpp{
 			x0 = CBPP_MATH_EPSILON; //избегаем деления на ноль вот таким креативным способом
 		}
 		
-		float p = -((k*k - m*m - x0*x0 - y0*y0)/2.0f);
-		float summ = x0*x0 + y0*y0;
+		float_t p = -((k*k - m*m - x0*x0 - y0*y0)/2.0f);
+		float_t summ = x0*x0 + y0*y0;
 		
-		float d_root = std::sqrt( m*m*summ - p*p );
-		float kf = std::abs(2*x0);
+		float_t d_root = std::sqrt( m*m*summ - p*p );
+		float_t kf = std::abs(2*x0);
 		
-		float d = kf*d_root;
+		float_t d = kf*d_root;
 		
 		if(d > 0){
-			float y1 = (p*y0 + x0*d_root)/summ;
-			float y2 = (p*y0 - x0*d_root)/summ;
+			float_t y1 = (p*y0 + x0*d_root)/summ;
+			float_t y2 = (p*y0 - x0*d_root)/summ;
 			
-			float x1 = (p - y1*y0)/x0;
-			float x2 = (p - y2*y0)/x0;
+			float_t x1 = (p - y1*y0)/x0;
+			float_t x2 = (p - y2*y0)/x0;
 			
 			out.intersect = true;
 			out.points.push_back(Vec2(x1,y1) + c1.pos);
@@ -207,8 +207,8 @@ namespace cbpp{
 			return out;
 			
 		}else if(fEqual(d, 0.0f)){
-			float y = (p*y0)/summ;
-			float x = (p-y*y0)/x0;
+			float_t y = (p*y0)/summ;
+			float_t x = (p-y*y0)/x0;
 			
 			out.intersect = true;
 			out.points.push_back(Vec2(x,y) + c1.pos);
@@ -219,13 +219,13 @@ namespace cbpp{
 		return out;
 	}
 	
-	float Clamp(float x, float min, float max) {
+	float_t Clamp(float_t x, float_t min, float_t max) {
 		if(x > max){ return max; }
 		if(x < min){ return min; }
 		return max;
 	}
 	
 	int Clamp(int x, int min, int max) {
-		return (int)Clamp( (float)x, (float)min, (float)max );
+		return (int)Clamp( (float_t)x, (float_t)min, (float_t)max );
 	}
 }

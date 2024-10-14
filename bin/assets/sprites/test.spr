@@ -1,0 +1,19 @@
+version 1;
+
+cdsprites "assets/textures";
+sheet test_sheet "assets";
+
+anim anim_01 {
+    loop 0;
+    
+    frame 0.1 "test_sheet:sprite_1";
+    frame 0.1 "test_sheet:sprite_2";
+};
+
+sequence sequence_01 {
+    loop 0;
+    
+    play anim_01 3; /play anim_01 3 times (overrides 'loop' command)
+    delay 2;
+    play anim_01 0; /play anim_01 infinitely (it has 'loop 0')(will play until sequence changes)
+};

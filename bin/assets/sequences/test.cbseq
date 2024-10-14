@@ -5,9 +5,9 @@ char testchar_1 "tchar1.cbseq";
 char testchar_2 "tchar2.cbseq";
 
 block main {    
-    say char1 "bbb";
+    say testchar_1 "bbb";
     
-    repeat 10 {
+    repeat 7 {
         
     };
 };

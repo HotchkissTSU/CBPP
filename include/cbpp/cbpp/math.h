@@ -8,24 +8,24 @@
 #include <cmath>
 
 namespace cbpp{	
-	bool fEqual(float a, float b);
+	bool fEqual(float_t a, float_t b);
 	
-	float Clamp(float x, float min, float max);
+	float_t Clamp(float_t x, float_t min, float_t max);
 	int Clamp(int x, int min, int max);
 	
 	extern "C" struct mLine {
-		float a,b,c;
+		float_t a,b,c;
 		Vec2 normal, p1, p2;
 	};
 	
 	extern "C" struct mSegment {
 		Vec2 start, end;
 		Vec2 direction;
-		float length;
+		float_t length;
 	};
 	
 	extern "C" struct mCircle {
-		float radius;
+		float_t radius;
 		Vec2 pos;
 	};
 	
@@ -49,8 +49,8 @@ namespace cbpp{
 	bool PointOnLine(mLine line, Vec2 pt);
 	bool PointOnSegment(mSegment seg, Vec2 pt); //ВАЖНО - подразумевается, что точка уже лежит на прямой, образующей отрезок
 	
-	float LineSubstitute(mLine line, Vec2 pt);	//подстановка точки в уравнение Ax+By+C = 0
-	float LinePointDistance(mLine line, Vec2 pt);
+	float_t LineSubstitute(mLine line, Vec2 pt);	//подстановка точки в уравнение Ax+By+C = 0
+	float_t LinePointDistance(mLine line, Vec2 pt);
 }
 
 #endif

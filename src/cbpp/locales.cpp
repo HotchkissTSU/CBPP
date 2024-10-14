@@ -30,7 +30,7 @@ namespace cbpp {
             snprintf(err_log, 256, "Locale '%s' does not have any string labeled as '%s'", cur_locale.c_str(), text_id.c_str());
             CbThrowError(err_log);
 
-            return String(L"[UNDEFINED STRING LABEL]");
+            return String(U"[UNDEFINED STRING LABEL]");
         }
 
         return localemap.at(cur_locale).at(text_id);

@@ -6,64 +6,67 @@
 #include <cstdint>
 
 namespace cbpp{	
-	extern "C" struct Vec2{
-		float x,y;
+	typedef float float_t; //floating-point type, used by CB++
+
+	struct Vec2{
+		float_t x,y;
 	
-		Vec2(float xv, float yv);
-		Vec2(float v);
+		Vec2(float_t xv, float_t yv);
+		Vec2(float_t v);
 		Vec2();
 		Vec2(const cbpp::Vec2& v);
 		Vec2(int xv, int yv);
 		Vec2(int v);
 		
-		float GetX();
-		float GetY();
+		float_t GetX();
+		float_t GetY();
 		
-		void SetX(float xv);
-		void SetY(float yv);
-		void Set(float xv, float yv);
+		void SetX(float_t xv);
+		void SetY(float_t yv);
+		void Set(float_t xv, float_t yv);
 		
-		float Distance(Vec2 other);
+		float_t Distance(Vec2 other);
 		
-		float Length();
+		float_t Length();
 		Vec2 Norm();
-		float Dot(Vec2 other);
+		float_t Dot(Vec2 other);
 		Vec2 Cross(Vec2 other);
-		float Angle();
+		float_t Angle();
 		
-		Vec2 GetRotated(float ang);
+		Vec2 GetRotated(float_t ang);
 		Vec2 GetRotated(int ang);
-		void Rotate(float ang);
+		void Rotate(float_t ang);
 		void Rotate(int ang);
 		
-		float Project(Vec2 other);
+		float_t Project(Vec2 other);
 		
-		float VectorMul(Vec2 other);
+		float_t VectorMul(Vec2 other);
 		
-		Vec2 operator+(Vec2 other);
-		Vec2 operator+(float other);
-		Vec2 operator+(int other);
+		Vec2 operator+(Vec2 other) noexcept;
+		Vec2 operator+(float_t other) noexcept;
+		Vec2 operator+(int other) noexcept;
 		
-		Vec2 operator-(Vec2 other);
-		Vec2 operator-(float other);
-		Vec2 operator-(int other);
+		Vec2 operator-(Vec2 other) noexcept;
+		Vec2 operator-(float_t other) noexcept;
+		Vec2 operator-(int other) noexcept;
 		
-		Vec2 operator*(Vec2 other);
-		Vec2 operator*(float other);
-		Vec2 operator*(int other);
+		Vec2 operator*(Vec2 other) noexcept;
+		Vec2 operator*(float_t other) noexcept;
+		Vec2 operator*(int other) noexcept;
 		
-		Vec2 operator/(Vec2 other);
-		Vec2 operator/(float other);
-		Vec2 operator/(int other);
+		Vec2 operator/(Vec2 other) noexcept;
+		Vec2 operator/(float_t other) noexcept;
+		Vec2 operator/(int other) noexcept;
 		
-		bool operator==(Vec2 other);
-		bool operator!=(Vec2 other);
-		float operator[](std::size_t index);
+		bool operator==(Vec2 other) noexcept;
+		bool operator!=(Vec2 other) noexcept;
+
+		float_t operator[](std::size_t index);
 		friend std::ostream& operator << (std::ostream &o, Vec2 const& t);
 	};
 	
-	extern "C" float Clamp(float v, float min, float max);
-	extern "C" Vec2 ClampVector(Vec2 v, float min, float max);
+	float_t Clamp(float_t v, float_t min, float_t max);
+	Vec2 ClampVector(Vec2 v, float_t min, float_t max);
 }
 
 #endif

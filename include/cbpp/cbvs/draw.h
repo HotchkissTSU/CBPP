@@ -9,6 +9,7 @@
 
 #include "cbpp/vec2.h"
 #include "cbpp/color.h"
+#include "cbvs/shader.h"
 
 #define CBPP_DDRAW_BUFFER_SIZE 512 //calculated in floats
 

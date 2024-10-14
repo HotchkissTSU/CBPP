@@ -14,12 +14,12 @@
 			"include" : [ "include\\cbpp", "include" ],
 			"link_dynamic" : [],
 			"link_params" : "-Wl,-rpath=.",
-			"link_static" : [ "jsoncpp_linux", "glfw3", "cbpp" ],
+			"link_static" : [ "json", "glfw3", "cbpp" ],
 			"obj" : "obj\\main",
 			"out" : "bin",
 			"out_libfile" : "lib",
 			"src" : [ "src\\main\\*.cpp" ],
-			"static" : [ "static", "bin" ],
+			"static" : [ "bin" ],
 			"type" : "EXE"
 		},
 		"cbpp_o" : 
@@ -120,7 +120,7 @@
 			"include" : [ "include\\cbpp" ],
 			"link_dynamic" : [],
 			"link_params" : "",
-			"link_static" : [ "jsoncpp_linux", "glfw3" ],
+			"link_static" : [ "json", "glfw3" ],
 			"obj" : "obj\\cbpp_base",
 			"out" : "bin",
 			"out_libfile" : "lib",

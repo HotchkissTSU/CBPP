@@ -37,6 +37,12 @@ namespace cbpp {
 		return out;
 	}
 
+	void File::Close() {
+		if(is_open) {
+			fclose( io_ptr );
+		}
+	}
+
 	bool File::Write(void* buffer, uint64_t count, uint64_t size) {
 		bool out = true;
 

@@ -1,16 +1,16 @@
 #include "cbpp.h"
 
-#include "json/json.h"
-
-#include "cb_main/interface.h"
-#include "cb_main/settings.h"
+#include "json/libjson.h"
 
 #include "cbvs/error_check.h"
 
 #include <stdio.h>
 #include <typeinfo>
+#include <cstring>
 
 #include "GLFW/glfw3.h"
+
+#include "cb_main/gamedata.h"
 
 #ifdef __linux__
 #include <dlfcn.h>
@@ -19,18 +19,6 @@
 using namespace cbpp;
 using namespace cbent;
 
-bool ModuleLoopCheck_default() {
-	return true;
-}
-
-struct ModuleData_t {
-	bool (*ModuleLoopCheck)( void ) = ModuleLoopCheck_default;
-	bool (*ModuleMain)( int, char** ) = nullptr;
-	void (*ModuleTick)( void ) = nullptr;
-	void (*ModuleWindowHint)( void ) = nullptr;
-	
-} ModuleData;
-
 void error_callback(int error_code, const char* description){
 	char err_log[256];
 	snprintf(err_log, 256, "GLFW error: [%i] -> %s\n", error_code, description);
@@ -38,12 +26,47 @@ void error_callback(int error_code, const char* description){
 }
 
 void ResolveArgs(int argc, char** argv) {
-	
+	for(uint16_t i = 0; i < argc; i++) {
+		char* comm = argv[i];
+		char* next = NULL;
+
+		if( i < argc+1 ) {
+			next = argv[i+1];
+		}
+
+		if( strcmp(comm, "-game") == 0 ) {
+			if(next != NULL) {
+				GameData.Gamefile = strdup(next);
+			}
+		}
+		
+		if( strcmp(comm, "-w") == 0 ) {
+			if(next != NULL) {
+				GameData.WindowW = cbpp::Clamp( atoi(next), 100, 10000 );
+			}
+		}
+
+		if( strcmp(comm, "-h") == 0 ) {
+			if(next != NULL) {
+				GameData.WindowH = cbpp::Clamp( atoi(next) , 100, 10000 );
+			}
+		}
+
+		if( strcmp(comm, "-title") == 0 ) {
+			if(next != NULL) {
+				GameData.WindowTitle = strdup(next);
+			}
+		}
+	}
+
+	if(GameData.Gamefile == NULL) {
+		GameData.Gamefile = strdup( GameData.DefaultGamefile );
+	}
 }
 
 #ifdef __linux__
-bool LoadGameLibrary(const char* lname) {	
-	printf("LNAME = %s\n", lname);
+bool LoadGameLibrary() {	
+	char* lname = GameData.GameLibrary;
 	void* lib_handle = dlopen(lname, RTLD_NOW);
 	
 	if(lib_handle == NULL){
@@ -72,6 +95,46 @@ bool LoadGameLibrary(const char* lname) {
 }
 #endif
 
+bool LoadGamefile() {
+	char* gf = GameData.Gamefile;
+	char* glib = NULL;
+
+	cbpp::File json_input(gf, "rt");
+
+	char* buffer = new char[ json_input.Length() + 1 ];
+	memset(buffer, 0, json_input.Length() + 1);
+
+	json_input.Read( buffer, json_input.Length() );
+
+	JSONNODE* root = json_parse( buffer );
+
+	delete[] buffer;
+
+	if(root == NULL) {
+		CbThrowError("Json root node is NULL");
+		return false;
+	}
+
+	JSONNODE* j_gamelib = json_get(root, JSON_TEXT("gamelib"));
+
+	if(j_gamelib) {
+		json_char* j_text = json_as_string(j_gamelib);
+		glib = strdup((char*)j_text);
+		json_free(j_text);
+	}
+
+	json_delete(root);
+
+	if(glib == NULL) {
+		CbThrowError("Failed to get 'gamelib' value from the gamefile");
+		return false;
+	}else{
+		GameData.GameLibrary = glib;
+	}
+
+	return true;
+}
+
 void PrintGLInfo(FILE* stream = stdout, uint8_t debug_table_width = 55) {
 	uint8_t dtw_left = 11, dtw_right = debug_table_width - dtw_left - 3;
 
@@ -87,175 +150,80 @@ void PrintGLInfo(FILE* stream = stdout, uint8_t debug_table_width = 55) {
 	fprintf(stream, "┘\n");
 }
 
-static const float test_buffer[] = {
-	-0.5f, 0.5f,
-	0.5f, 0.5f,
-	0.0f, -0.5f
-};
+void Cleanup() {
+	glfwTerminate();
 
-int main(int argc, char** argv) {
-	FILE* errlog_ptr = fopen("logs/error.txt", "w");
-	fclose(errlog_ptr);
+	free(GameData.WindowTitle);
+	free(GameData.Gamefile);
+	free(GameData.GameLibrary);
+}
 
+int main( int argc, char** argv ) {
+	ResolveArgs( argc, argv );
 	glfwSetErrorCallback(error_callback);
 
-	if(!glfwInit()) {
-		CbThrowError("Failed to initialize GLFW library");
+	if( !LoadGamefile() ) {
+		CbThrowErrorf("Failed to parse gamefile '%s'", GameData.Gamefile);
 	}
 
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	if( !LoadGameLibrary() ) {
+		CbThrowErrorf("Failed to load game library '%s'", GameData.GameLibrary);
+	}
 
-	GLFWwindow* wnd = glfwCreateWindow(600, 600, "test #2", NULL, NULL);
-	if(wnd == NULL) { CbThrowError("Window is not created"); }
+	if( !glfwInit() ) {
+		CbThrowError("Failed to initialize GLFW library");
+		exit(-1);
+	}
 
-	glfwMakeContextCurrent(wnd);
+	glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
+	glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 0 );
+	glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
 
-	int version = gladLoadGL();
-	if(version == 0) {
+	ModuleData.ModuleWindowHint();
+
+	if(GameData.WindowTitle == NULL) {
+		GameData.WindowTitle = strdup( GameData.DefaultWindowTitle );
+	}
+
+	GameData.MainWindow = glfwCreateWindow( GameData.WindowW, GameData.WindowH, GameData.WindowTitle, NULL, NULL );
+
+	if(GameData.MainWindow == NULL) {
+		CbThrowError("Failed to create GLFW window");
+		exit(-1);
+	}
+
+	glfwMakeContextCurrent( GameData.MainWindow );
+
+	int load_ver = gladLoadGL();
+
+	if(load_ver == 0) {
 		CbThrowError("Failed to load OpenGL 4.0");
-		return -1;
+		exit(-1);
 	}
 
 	PrintGLInfo();
 
-	glViewport(0,0,600,600);
+	bool ddraw_init_res = ddraw::Init();
+	if(!ddraw_init_res) {
+		CbThrowError( "Failed to init DDRAW" );
+		exit(-1);
+	}
 
-	GLuint vao, vbo;
+	ModuleData.ModuleMain( argc, argv );
 
-	cbpp::File inp("assets/sequences/test.cbseq", "rt");
-	char* buff = new char[ inp.Length() + 1 ];
-	memset(buff, 0, inp.Length()+1);
-	inp.Read(buff, inp.Length());
+	ddraw::SetColor( cbpp::Color(255,0,0,255) );
 
-	//printf("%s\n", buff);
-
-	std::string sc_src(buff);
-	delete[] buff;
-
-	cbpp::SequenceScript sc_test;
-	sc_test.Interprete( sc_src, true );
-
-	cbvs::Shader* ddraw_vtx_shader = new cbvs::Shader(GL_VERTEX_SHADER, "assets/shaders/default.vertex");
-    cbvs::Shader* ddraw_frag_shader = new cbvs::Shader(GL_FRAGMENT_SHADER, "assets/shaders/default.fragment");
-    cbvs::ShaderProgram* ddraw_def_prog = new cbvs::ShaderProgram(ddraw_vtx_shader, ddraw_frag_shader, NULL);
-	ddraw_def_prog->LinkProgram();
-
-	cbvs::RegisterProgram(ddraw_def_prog, "ddraw_default");
-
-	ddraw_def_prog->PushUniform("ddraw_COLOR", 1.0f, 0.0f, 0.0f, 1.0f);
-
-	glGenBuffers(1, &vbo);
-	glGenVertexArrays(1, &vao);
-
-	glBindVertexArray(vao);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(test_buffer), test_buffer, GL_DYNAMIC_DRAW);
-		glVertexAttribPointer(0, 2, GL_FLOAT, 0, 0, 0);
-		glEnableVertexAttribArray(0);
-	glBindVertexArray(0);
-
-	sc_test.Unlock();
-
-	printf("%s\n", sc_test.GetErrorLog().c_str());
-
-	sc_test.PrintDebug();
-
-	while( !glfwWindowShouldClose(wnd) ) {
+	while( !glfwWindowShouldClose(GameData.MainWindow) && ModuleData.ModuleLoopCheck() ) {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		ddraw_def_prog->Use();
-
-		glBindVertexArray(vao);
-			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(test_buffer), test_buffer);
-			glDrawArrays(GL_TRIANGLES, 0, 3);
-		glBindVertexArray(0);
-
-		sc_test.Update();
-
+		ModuleData.ModuleTick();
+		
 		glfwPollEvents();
-		glfwSwapBuffers(wnd);
+		glfwSwapBuffers(GameData.MainWindow);
 	}
+
+	Cleanup();
 
 	return 0;
-}
-
-int main2(int argc, char** argv) {	
-	ResolveArgs(argc, argv);
-
-	FILE* errlog_ptr = fopen("logs/error.txt", "w");
-	fclose(errlog_ptr);
-
-	if( !LoadGameLibrary("./test.so") ) {
-		//say something about this
-		CbThrowError("Failed to load game module!");
-		exit(1);
-	}
-	
-	int W = 600;
-	int H = 600;
-	
-	bool api_load = glfwInit();
-
-	if(!api_load) {
-		CbThrowError("Failed to initialize GLFW");
-		exit(1);
-	}
-
-	glfwSetErrorCallback(error_callback);
-	
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	
-	GLFWwindow* CBPP_MainWindow = glfwCreateWindow(W, H, "test", NULL, NULL);
-
-	if(!CBPP_MainWindow) {
-		CbThrowError("Failed to create GLFW window");
-	}
-	
-	glfwMakeContextCurrent(CBPP_MainWindow);
-
-	int version = gladLoadGL();
-	if(version == 0) {
-		CbThrowError("Failed to load OpenGL 4.0");
-		return -1;
-	}
-
-	PrintGLInfo(stdout);
-	
-	glfwSwapInterval(1);
-	
-	glViewport(0,0,W,H);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	
-	if( !ModuleData.ModuleMain(argc, argv) ) {
-		exit(1);
-	}
-
-	if(ddraw::Init() != GL_NO_ERROR) {
-		printf("Failed to init DDRAW\n");
-	}
-
-	while( !glfwWindowShouldClose(CBPP_MainWindow) || !ModuleData.ModuleLoopCheck() ){		
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		//cbdraw::CircleOutline(Vec2(0), 100.0f);
-		//ModuleData.ModuleTick();
-
-		//ddraw::Line(Vec2(0), Vec2(1));
-
-		//test.Update();
-		
-		glfwSwapBuffers(CBPP_MainWindow);
-		glfwPollEvents();
-	}
-
-	glfwTerminate();
-
-	return 0;
-
 }

@@ -1,19 +1,20 @@
 #include <stdio.h>
+#include "cbpp/cbstring.h"
 
 extern "C" {
-    
-bool ModuleMain(int argc, char** argv) {
-    printf("Module entry point!\n");
-    
-    return true;
-}
+    void ModuleWindowHint() {
+        
+    }
 
-void ModuleTick() {
-    return;
-}
+    bool ModuleMain(int argc, char** argv) {
+        printf("Module entry point!\n");
 
-void ModuleWindowHint() {
-    
-}
-    
+        cbpp::String test = "test string";
+        
+        return true;
+    }
+
+    void ModuleTick() {
+        return;
+    }
 }

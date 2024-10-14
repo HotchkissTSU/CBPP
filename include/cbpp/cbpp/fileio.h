@@ -14,6 +14,7 @@ namespace cbpp {
 			File(File& other) = delete;
 
 			bool Open(const char* path, const char* mode);
+			void Close();
 
 			// Input/Output <count> elements to <buffer>, each <size> bytes long
 			bool Write(void* buffer, uint64_t count, uint64_t size = 1);

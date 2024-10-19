@@ -2,7 +2,7 @@
 	"name":"CBPP test module",
 	"base":{
 		"compiler":"g++",
-		"comp_params":"-std=c++17 -m64 -fPIC"
+		"comp_params":"-std=c++17 -fPIC -g3"
 	},
 	"targets":{
 		"test":{
@@ -17,7 +17,7 @@
 				"module\\src\\*.cpp"
 			],
 			"obj":"module\\obj",
-			"link_static":[ "cbpp" ],
+			"link_static":[ "cbpp", "glfw3", "json" ],
 			"link_dynamic":[],
 			"link_params":""
 		}

@@ -95,6 +95,13 @@ bool LoadGameLibrary() {
 }
 #endif
 
+#ifdef _WIN64
+	bool LoadGameLibrary() {
+		static_assert(true, "Windows is not fully supported yet");
+		return false;
+	}
+#endif
+
 bool LoadGamefile() {
 	char* gf = GameData.Gamefile;
 	char* glib = NULL;
@@ -209,8 +216,11 @@ int main( int argc, char** argv ) {
 		exit(-1);
 	}
 
-	ModuleData.ModuleMain( argc, argv );
-
+	if(!ModuleData.ModuleMain( argc, argv )) {
+		CbThrowError("ModuleMain returned FALSE");
+		exit(-1);
+	}
+	
 	ddraw::SetColor( cbpp::Color(255,0,0,255) );
 
 	while( !glfwWindowShouldClose(GameData.MainWindow) && ModuleData.ModuleLoopCheck() ) {

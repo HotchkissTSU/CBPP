@@ -1,7 +1,8 @@
 version 1;
+type sprite;
 
 cdsprites "assets/textures";
-sheet test_sheet "assets";
+sheet test_sheet "tsheet.png";
 
 anim anim_01 {
     loop 0;
@@ -15,5 +16,5 @@ sequence sequence_01 {
     
     play anim_01 3; /play anim_01 3 times (overrides 'loop' command)
     delay 2;
-    play anim_01 0; /play anim_01 infinitely (it has 'loop 0')(will play until sequence changes)
+    play anim_01 0; /play anim_01 infinitely (will play until sequence changes)
 };

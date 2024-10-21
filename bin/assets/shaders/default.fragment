@@ -1,7 +1,0 @@
-#version 400 core
-
-uniform vec4 ddraw_COLOR;
-
-void main() {
-    gl_FragColor = ddraw_COLOR;
-}

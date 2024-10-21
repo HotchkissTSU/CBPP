@@ -25,6 +25,21 @@ void error_callback(int error_code, const char* description){
 	CbThrowError(err_log);
 }
 
+void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
+	cbvs::MousePosition.x = (float_t)(xpos);
+	cbvs::MousePosition.y = (float_t)(ypos);
+}
+
+void window_size_callback(GLFWwindow* window, int width, int height)
+{
+	glViewport(0,0,width,height);
+
+	cbvs::ScreenSize.x = (float_t)width;
+	cbvs::ScreenSize.y = (float_t)height;
+
+	cbvs::ScreenRatio = (float_t)width / (float_t)height;
+}
+
 void ResolveArgs(int argc, char** argv) {
 	for(uint16_t i = 0; i < argc; i++) {
 		char* comm = argv[i];
@@ -158,11 +173,14 @@ void PrintGLInfo(FILE* stream = stdout, uint8_t debug_table_width = 55) {
 }
 
 void Cleanup() {
-	glfwTerminate();
-
 	free(GameData.WindowTitle);
 	free(GameData.Gamefile);
 	free(GameData.GameLibrary);
+
+	ddraw::Cleanup();
+	cbvs::CleanupDefaultShaders();
+
+	glfwTerminate();
 }
 
 int main( int argc, char** argv ) {
@@ -171,10 +189,12 @@ int main( int argc, char** argv ) {
 
 	if( !LoadGamefile() ) {
 		CbThrowErrorf("Failed to parse gamefile '%s'", GameData.Gamefile);
+		exit(-1);
 	}
 
 	if( !LoadGameLibrary() ) {
 		CbThrowErrorf("Failed to load game library '%s'", GameData.GameLibrary);
+		exit(-1);
 	}
 
 	if( !glfwInit() ) {
@@ -208,7 +228,19 @@ int main( int argc, char** argv ) {
 		exit(-1);
 	}
 
+	glfwSetCursorPosCallback(GameData.MainWindow, cursor_position_callback);
+	glfwSetWindowSizeCallback(GameData.MainWindow, window_size_callback);
+
+	cbvs::ScreenSize.x = (float_t)GameData.WindowW;
+	cbvs::ScreenSize.y = (float_t)GameData.WindowH;
+	cbvs::ScreenRatio = cbvs::ScreenSize.x / cbvs::ScreenSize.y;
+	glViewport(0,0,GameData.WindowW, GameData.WindowH);
+
 	PrintGLInfo();
+
+	if(!cbvs::InitDefaultShaders()) {
+		exit(-1);
+	}
 
 	bool ddraw_init_res = ddraw::Init();
 	if(!ddraw_init_res) {
@@ -217,19 +249,20 @@ int main( int argc, char** argv ) {
 	}
 
 	if(!ModuleData.ModuleMain( argc, argv )) {
-		CbThrowError("ModuleMain returned FALSE");
+		CbThrowError("Unable to proceed, ModuleMain returned FALSE");
 		exit(-1);
 	}
 	
 	ddraw::SetColor( cbpp::Color(255,0,0,255) );
 
 	while( !glfwWindowShouldClose(GameData.MainWindow) && ModuleData.ModuleLoopCheck() ) {
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glfwPollEvents();
+
+		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		ModuleData.ModuleTick();
 		
-		glfwPollEvents();
 		glfwSwapBuffers(GameData.MainWindow);
 	}
 

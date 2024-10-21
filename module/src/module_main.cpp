@@ -1,21 +1,22 @@
 #include <stdio.h>
-#include "cbvs/shader.h"
+#include "cbpp.h"
+
+using namespace cbpp;
 
 extern "C" {
     void ModuleWindowHint() { }
 
     bool ModuleMain(int argc, char** argv) {
-        printf("Module entry point!\n");
-
-        cbvs::Shader testv(GL_VERTEX_SHADER, cbvs::default_vtx);
-        cbvs::Shader testf(GL_FRAGMENT_SHADER, cbvs::default_frag);
-
-        cbvs::Pipe testp(&testv, &testf);
-
-        printf("tv:%d, tf:%d, pipe:%d\n", testv.IsValid(), testf.IsValid(), testp.IsValid());
-        
+        printf("Module entry point!\n");        
         return true;
     }
 
-    void ModuleTick() { }
+    void ModuleTick() { 
+        ddraw::SetColor( Color{255,255,0,255} );
+        Vec2 pt = cbvs::GetNormalizedMousePos();
+
+        float_t dist = pt.Length();
+
+        ddraw::Circle( Vec2(0), dist );
+    }
 }

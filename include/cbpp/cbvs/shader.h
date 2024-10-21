@@ -4,7 +4,7 @@
 #include "glad/glad.h"
 
 #include <cstdint>
-#include "cbpp/cbstring.h"
+#include "cbpp/vec2.h"
 
 #include <map>
 #include <stdio.h>
@@ -22,7 +22,11 @@ namespace cbvs {
         public:
             Shader() = default;
             Shader(GLenum type, const char* source);
+            Shader(const char* shname, GLenum type, const char* source);
             Shader(const Shader& other) = delete;
+
+            void SetName(const char* name);
+            const char* Name();
 
             bool Compile(GLenum type, const char* src);
 			GLuint ID();
@@ -32,8 +36,13 @@ namespace cbvs {
             ~Shader();
 
         private:
+            char name[64];
             bool compiled = false;
             GLuint objid;
+    };
+
+    struct PipeData {
+        Shader *vtx, *frag, *geom;
     };
 
     class Pipe {
@@ -41,15 +50,21 @@ namespace cbvs {
             Pipe() = default;
             Pipe(Shader* vtxp, Shader* fragp);
             Pipe(Shader* vtxp, Shader* fragp, Shader* geop);
-            Pipe(Shader** sharr, size_t ln );
+            Pipe(PipeData& data);
             Pipe(const Pipe& other) = delete;
 
-            bool Link(Shader** sharr, size_t ln);
-            const GLuint* GetShaders();
+            bool Link(PipeData& sharr);
             GLuint ID();
 
             bool IsValid();
             void Use();
+
+            GLint GetUniform(const char* uname);
+
+            void PushUniform(const char* name, float_t a, float_t b, float_t c, float_t d);
+            void PushUniform(const char* name, float_t a);
+
+            void PushUniform(const char* name, int32_t a);
 
             ~Pipe();
 
@@ -59,9 +74,17 @@ namespace cbvs {
             GLuint objid;
     };
 
+    extern Shader *DefaultVTX, *DefaultFRAG;
+    extern Pipe* DefaultPipe;
+
+    bool InitDefaultShaders();
+    void CleanupDefaultShaders();
+
     Shader* CreateShader(GLenum type, const char* src);
 
-    Pipe* CreatePipe(Shader** sharr, size_t ln);
+    const char* LoadShader(const char* path, GLenum type = GL_VERTEX_SHADER);
+
+    Pipe* CreatePipe(PipeData& data);
     Pipe* CreatePipe(Shader* vtxp, Shader* fragp);
     Pipe* CreatePipe(Shader* vtxp, Shader* fragp, Shader* geop);
 }

@@ -11,7 +11,7 @@ namespace ddraw {
     cbvs::Shader *ddraw_vtx = nullptr, *ddraw_frag = nullptr, *ddraw_geom_circle = nullptr;
     cbvs::Shader *ddraw_geom_circlef = nullptr;
 
-    cbvs::Pipe* ddraw_pipe_def = nullptr, *ddraw_pipe_circle = nullptr;
+    cbvs::Pipe *ddraw_pipe_def = nullptr, *ddraw_pipe_circle = nullptr;
     cbvs::Pipe *ddraw_pipe_circlef = nullptr;
 
     bool Init() {
@@ -61,7 +61,7 @@ namespace ddraw {
         delete ddraw_vtx, ddraw_frag, ddraw_geom_circle, ddraw_geom_circlef;
         delete ddraw_pipe_circle, ddraw_pipe_circlef, ddraw_pipe_def;
     }
-    
+
     void SetColor(cbpp::Color clr) {
         color = clr.Normalized();
     }
@@ -161,7 +161,7 @@ namespace ddraw {
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(buff), buff);
             glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
-
+        
         glCheck();
     }
 }

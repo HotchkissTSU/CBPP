@@ -2,11 +2,12 @@
 #define CBPP_BASE_ENTITY_H
 
 #include "cbpp/vec2.h"
-#include "cbpp/utils.h"
+#include "cbpp/cbdef.h"
 #include "cbpp/ai.h"
 
 #include <map>
 #include <queue>
+#include <string>
 
 #define ENTITY_COMPONENT(trivial_name) private:\
 static constexpr hash_t comp_uid = Hash(#trivial_name);\

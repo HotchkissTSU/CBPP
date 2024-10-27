@@ -13,8 +13,11 @@
 #include "cb_main/gamedata.h"
 
 #ifdef __linux__
-#include <dlfcn.h>
+	#include <dlfcn.h>
 #endif
+
+#define CBEP_FUNCHK(fname) if(ModuleData.fname == NULL) { CbThrowErrorf( "Game module has no '%s' function", #fname ); return false; }
+#define CBEP_LOGC(lname) { char path[128]; snprintf(path, 128, "logs/%s.txt", #lname); FILE* io_ptr = fopen( path, "wt" ); fclose(io_ptr); }
 
 using namespace cbpp;
 using namespace cbent;
@@ -28,6 +31,27 @@ void error_callback(int error_code, const char* description){
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
 	cbvs::MousePosition.x = (float_t)(xpos);
 	cbvs::MousePosition.y = (float_t)(ypos);
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    cbpp::Event ev;
+
+	ev.Type = CBPP_KEYBOARD_EVENT;
+
+	ev.ButtonEvent.Action = action;
+	ev.ButtonEvent.Key = key;
+	ev.ButtonEvent.Scancode = scancode;
+	ev.ButtonEvent.Mods = mods;
+
+	cbpp::PushEvent( ev );
+}
+
+void text_input_callback(GLFWwindow* window, unsigned int codepoint) {
+	cbpp::Event ev;
+
+	ev.Type = CBPP_TEXTINPUT_EVENT;
+
+	ev.TextInputEvent.Charcode = (char32_t)codepoint;
 }
 
 void window_size_callback(GLFWwindow* window, int width, int height)
@@ -63,7 +87,7 @@ void ResolveArgs(int argc, char** argv) {
 
 		if( strcmp(comm, "-h") == 0 ) {
 			if(next != NULL) {
-				GameData.WindowH = cbpp::Clamp( atoi(next) , 100, 10000 );
+				GameData.WindowH = cbpp::Clamp( atoi(next), 100, 10000 );
 			}
 		}
 
@@ -91,6 +115,8 @@ bool LoadGameLibrary() {
 		CbThrowError(errlog);
 		return false;
 	}
+
+	ModuleData.LibHandle = lib_handle;
 	
 	bool (*ModuleLoopCheck_)( void ) = ( bool (*)() )dlsym(lib_handle, "ModuleLoopCheck");
 	if(ModuleLoopCheck_ != NULL) {
@@ -100,11 +126,12 @@ bool LoadGameLibrary() {
 	ModuleData.ModuleMain = ( bool (*)(int, char**) )dlsym(lib_handle, "ModuleMain");
 	ModuleData.ModuleTick = ( void (*)() )dlsym(lib_handle, "ModuleTick");
 	ModuleData.ModuleWindowHint = ( void (*)() )dlsym(lib_handle, "ModuleWindowHint");
-	
-	if(ModuleData.ModuleMain == NULL || ModuleData.ModuleTick == NULL || ModuleData.ModuleWindowHint == NULL) {
-		CbThrowError("Game module lacks neccesary functions");
-		return false;
-	}
+	ModuleData.ModuleEventCallback = ( bool (*)(cbpp::Event&) )dlsym(lib_handle, "ModuleEventCallback");
+
+	CBEP_FUNCHK(ModuleMain);
+	CBEP_FUNCHK(ModuleTick);
+	CBEP_FUNCHK(ModuleWindowHint);
+	CBEP_FUNCHK(ModuleEventCallback);
 	
 	return true;
 }
@@ -172,6 +199,10 @@ void PrintGLInfo(FILE* stream = stdout, uint8_t debug_table_width = 55) {
 	fprintf(stream, "┘\n");
 }
 
+void ClearLogs() {
+	CBEP_LOGC(error);
+}
+
 void Cleanup() {
 	free(GameData.WindowTitle);
 	free(GameData.Gamefile);
@@ -181,9 +212,15 @@ void Cleanup() {
 	cbvs::CleanupDefaultShaders();
 
 	glfwTerminate();
+
+	if(ModuleData.LibHandle != NULL) {
+		dlclose(ModuleData.LibHandle);
+	}
 }
 
 int main( int argc, char** argv ) {
+	ClearLogs();
+
 	ResolveArgs( argc, argv );
 	glfwSetErrorCallback(error_callback);
 
@@ -230,6 +267,7 @@ int main( int argc, char** argv ) {
 
 	glfwSetCursorPosCallback(GameData.MainWindow, cursor_position_callback);
 	glfwSetWindowSizeCallback(GameData.MainWindow, window_size_callback);
+	glfwSetKeyCallback(GameData.MainWindow, key_callback);
 
 	cbvs::ScreenSize.x = (float_t)GameData.WindowW;
 	cbvs::ScreenSize.y = (float_t)GameData.WindowH;
@@ -255,9 +293,17 @@ int main( int argc, char** argv ) {
 	
 	ddraw::SetColor( cbpp::Color(255,0,0,255) );
 
+	cbpp::Event ev;
+
 	while( !glfwWindowShouldClose(GameData.MainWindow) && ModuleData.ModuleLoopCheck() ) {
 		glfwPollEvents();
 
+		if( cbpp::GetLastEvent(ev) ) {
+			if( ModuleData.ModuleEventCallback(ev) ){
+				//send this event to other engine systems
+			}
+		}
+		
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -265,7 +311,7 @@ int main( int argc, char** argv ) {
 		
 		glfwSwapBuffers(GameData.MainWindow);
 	}
-
+	
 	Cleanup();
 
 	return 0;

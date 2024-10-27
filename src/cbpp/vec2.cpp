@@ -1,4 +1,3 @@
-//#include "pch.h"
 #include "cbpp/vec2.h"
 
 namespace cbpp{
@@ -106,8 +105,6 @@ namespace cbpp{
 	bool Vec2::operator!=(Vec2 other) noexcept { return ((x != other.x) || (y != other.y)); }
 	
 	float_t Vec2::operator[](std::size_t index){ if(index == 0){ return x; }else{ return y; } }
-	
-	std::ostream& operator << (std::ostream &o, Vec2 const& t){ return o<<"Vec2("<<(float_t)t.x<<", "<<(float_t)t.y<<")"; }
 }
 
 namespace cbpp{	

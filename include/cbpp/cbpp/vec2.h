@@ -1,13 +1,10 @@
 #ifndef CBPP_VECTOR
 #define CBPP_VECTOR
 
+#include "cbpp/cbdef.h"
 #include <math.h>
-#include <iostream>
-#include <cstdint>
 
 namespace cbpp{	
-	typedef float float_t; //floating-point type, used by CB++
-
 	struct Vec2{
 		float_t x,y;
 	
@@ -62,7 +59,6 @@ namespace cbpp{
 		bool operator!=(Vec2 other) noexcept;
 
 		float_t operator[](std::size_t index);
-		friend std::ostream& operator << (std::ostream &o, Vec2 const& t);
 	};
 	
 	float_t Clamp(float_t v, float_t min, float_t max);

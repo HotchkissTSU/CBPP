@@ -1,3 +1,3 @@
 {
-    "gamelib" : "./test.so"
+    "gamelib" : "./modules/test.so"
 }

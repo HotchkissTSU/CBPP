@@ -11,10 +11,12 @@
 #define CBPP_EXC_MSGBOX  //show messageboxes upon exceptions
 #define CBPP_WARN_MSGBOX //show messageboxes upon warnings
 
+#define CBPP_ERROR_LOG_SIZE 256
+
 #define CbThrowError(err_text) cbpp::_ThrowError(cbpp::Exception( err_text , __FILE__, __PRETTY_FUNCTION__, __LINE__))
 #define CbThrowWarning(warn_text) cbpp::_ThrowWarning(cbpp::Exception( warn_text , __FILE__, __PRETTY_FUNCTION__, __LINE__))
-#define CbThrowErrorf(warn_text, ...) { char err_log[256]; snprintf(err_log, 255, warn_text, __VA_ARGS__); CbThrowError(err_log); }
-#define CbThrowWarningf(warn_text, ...) { char err_log[256]; snprintf(err_log, 255, warn_text, __VA_ARGS__); CbThrowWarning(err_log); }
+#define CbThrowErrorf(warn_text, ...) { char err_log[CBPP_ERROR_LOG_SIZE]; snprintf(err_log, CBPP_ERROR_LOG_SIZE, warn_text, __VA_ARGS__); CbThrowError(err_log); }
+#define CbThrowWarningf(warn_text, ...) { char err_log[CBPP_ERROR_LOG_SIZE]; snprintf(err_log, CBPP_ERROR_LOG_SIZE, warn_text, __VA_ARGS__); CbThrowWarning(err_log); }
 
 #include <stdexcept>
 #include <stdio.h>

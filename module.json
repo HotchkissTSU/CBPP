@@ -11,7 +11,7 @@
 			"include":["include\\cbpp", "module\\include", "include"],
 			"static":["module\\static", "bin"],
 			"dynamic":["module\\lib", "lib"],
-			"out":"bin",
+			"out":"bin\\modules",
 			"out_libfile":"lib",
 			"src":[
 				"module\\src\\*.cpp"

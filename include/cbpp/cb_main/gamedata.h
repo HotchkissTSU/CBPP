@@ -5,6 +5,7 @@
 #include <cstddef>
 
 #include "GLFW/glfw3.h"
+#include "cbpp/event.h"
 
 bool ModuleLoopCheck_default();
 
@@ -13,6 +14,9 @@ extern struct ModuleData_t {
 	bool (*ModuleMain)( int, char** ) = nullptr;
 	void (*ModuleTick)( void ) = nullptr;
 	void (*ModuleWindowHint)( void ) = nullptr;
+	bool (*ModuleEventCallback) ( cbpp::Event& ) = nullptr;
+
+	void* LibHandle = NULL;
 	
 } ModuleData;
 

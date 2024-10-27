@@ -2,6 +2,7 @@
 #define CBPP_TEMPLATE_TYPE_H
 
 #include "cbpp/ttype/segarr.h"
+#include "cbpp/ttype/list.h"
 #include "cbpp/ttype/tree.h"
 
 #endif

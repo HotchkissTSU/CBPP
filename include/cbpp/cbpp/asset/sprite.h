@@ -3,6 +3,7 @@
 
 #include <cstdint>
 
+#include "GLFW/glfw3.h"
 #include "SOIL/SOIL.h"
 
 namespace cbpp {
@@ -11,7 +12,7 @@ namespace cbpp {
             Sprite() = default;
 
         private:
-            uint16_t width, height, channels;
+            uint16_t width, height;
     };
 }
 

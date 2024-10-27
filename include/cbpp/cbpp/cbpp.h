@@ -1,6 +1,8 @@
 #ifndef CBPP_MAINH
 #define CBPP_MAINH
 
+#include "cbpp/cbdef.h"
+
 #include "cbpp/vec2.h"
 #include "cbpp/matrix.h"
 #include "cbpp/math.h"

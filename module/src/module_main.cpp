@@ -19,7 +19,12 @@ extern "C" {
             printf("\tPhyLength = %i\n", test.LengthPhysical());
         }
 
-        return false;
+        for(int i = 0; i < 10; i++) {
+            printf("%i ", test[i]);
+        }
+        printf("\n");
+
+        return true;
     }
 
     void ModuleTick() { 

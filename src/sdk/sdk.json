@@ -10,7 +10,7 @@
 			"dynamic" : [ "dynamic" ],
 			"from_obj" : 0,
 			"include" : [ "img2sdf", "sdk", "..\\..\\include" ],
-			"link_dynamic" : [ "example_libfile.lib" ],
+			"link_dynamic" : [ ],
 			"link_params" : "-Wl,-rpath=.",
 			"link_static" : [ "cbpp", "glfw3", "json" ],
 			"obj" : "..\\..\\obj\\img2cff",
@@ -27,7 +27,7 @@
 			"dynamic" : [ "dynamic" ],
 			"from_obj" : 0,
 			"include" : [ "sdfview", "sdk", "..\\..\\include" ],
-			"link_dynamic" : [ "example_libfile.lib" ],
+			"link_dynamic" : [],
 			"link_params" : "-Wl,-rpath=.",
 			"link_static" : [ "cbpp", "glfw3", "json" ],
 			"obj" : "..\\..\\obj\\sdfview",
@@ -36,6 +36,23 @@
 			"src" : [ "sdfview\\*.cpp" ],
 			"static" : [ "..\\..\\bin" ],
 			"type" : "DLL"
+		},
+		"img2h" : 
+		{
+			"comp_params" : "-m64",
+			"compiler" : "g++",
+			"dynamic" : [ "dynamic" ],
+			"from_obj" : 0,
+			"include" : [ "img2h", "sdk", "..\\..\\include" ],
+			"link_dynamic" : [ ],
+			"link_params" : "-Wl,-rpath=.",
+			"link_static" : [ "cbpp", "glfw3", "json" ],
+			"obj" : "..\\..\\obj\\img2h",
+			"out" : "..\\..\\bin",
+			"out_libfile" : "lib",
+			"src" : [ "img2h\\*.cpp" ],
+			"static" : [ "..\\..\\bin" ],
+			"type" : "EXE"
 		}
 	}
 }

@@ -16,7 +16,7 @@
 #define CBVS_DDRAW_CIRCLE_FIDELITY 32
 
 namespace ddraw {
-    extern GLuint vao, vbo;
+    extern GLuint vao, vbo, default_texture;
     extern float buffer[];
     extern float scale;
     extern cbpp::NormColor color;

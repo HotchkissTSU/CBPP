@@ -27,6 +27,8 @@ namespace cbpp {
                 }
             }
 
+            //Get element by it`s index
+            //Can throw CB++ exceptions
             T& At( id_t index ) {
                 if(data == NULL) {
                     CbThrowError("The list is not allocated");
@@ -37,7 +39,7 @@ namespace cbpp {
                 }else if(index > len_img - 1) {
                     CbThrowWarningf("Index is inside the allocated chunk, but is outside of the list bounds (%lu/%lu)", index, len_img);
                 }
-                
+
                 return data[index];
             }
 
@@ -72,7 +74,8 @@ namespace cbpp {
 
         private:
             T* data = NULL;
-            size_t len_phy = 0, len_img = 0;
+            id_t len_phy = 0; //amount of allocated memory
+            id_t len_img = 0; //imaginary list length, always less or equal than len_phy
 
             void Reallocate() {
                 if(len_phy < len_img) {
@@ -91,7 +94,7 @@ namespace cbpp {
                     len_phy = len_phy*2;
                 #else
                     #if CBPP_LIST_MEMMODE > 0
-                        len_phy = len_phy + (size_t)CBPP_List_MEMMODE;
+                        len_phy = len_phy + (size_t)CBPP_LIST_MEMMODE;
                     #else
                         #error CBPP_LIST_MEMMODE must be greater or equal than zero
                     #endif

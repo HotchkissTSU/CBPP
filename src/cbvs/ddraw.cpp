@@ -1,8 +1,10 @@
 #include "cbvs/draw.h"
 #include "cbvs/error_check.h"
 
+#include "cbpp/texture_default.h"
+
 namespace ddraw {
-    GLuint vao, vbo;
+    GLuint vao, vbo, default_texture;
     float buffer[CBPP_DDRAW_BUFFER_SIZE];
     float scale = 1.0f;
     cbpp::NormColor color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -36,6 +38,10 @@ namespace ddraw {
 
         ddraw_pipe_circle = cbvs::CreatePipe(ddraw_vtx, ddraw_frag, ddraw_geom_circle);
         ddraw_pipe_circlef = cbvs::CreatePipe(ddraw_vtx, ddraw_frag, ddraw_geom_circlef);
+
+        glGenTextures(1, &default_texture);
+        glBindTexture(GL_TEXTURE_2D, default_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<const unsigned char*>(cbpp::DefaultTexture));
 
         glGenVertexArrays(1, &vao);
         glGenBuffers(1, &vbo);

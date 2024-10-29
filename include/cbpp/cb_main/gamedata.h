@@ -21,7 +21,7 @@ extern struct ModuleData_t {
 } ModuleData;
 
 extern struct GameData_t {
-	constexpr static const char *DefaultWindowTitle = "CB++ Window", *DefaultGamefile = "assets/game.json";
+	constexpr static const char *DefaultWindowTitle = "CB++ Window", *DefaultGamefile = "assets/default.json";
 
 	uint32_t WindowW = 800;
 	uint32_t WindowH = 600;

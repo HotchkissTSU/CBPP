@@ -21,6 +21,7 @@
 #include "cbpp/locales.h"
 
 #include "cbpp/asset/sprite.h"
+#include "cbpp/asset/image.h"
 #include "cbpp/cbseq/cbseq.h" //cutscene sequence scripts
 
 #include "cbpp/entity/base_entity.h"

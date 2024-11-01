@@ -1,0 +1,16 @@
+#version 400 core
+
+layout (location=0) in vec2 pos;
+layout (location=1) in vec2 tex_uv;
+
+out vec2 cbpp_XY;
+out vec2 cbpp_UV;
+
+uniform float cbpp_RATIO;
+
+void main() {
+    gl_Position = vec4(pos.x / cbpp_RATIO, pos.y, 0.0, 1.0);
+    
+    cbpp_XY = pos;
+    cbpp_UV = tex_uv;
+}

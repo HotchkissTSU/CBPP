@@ -77,7 +77,6 @@
 			"link_params" : "",
 			"link_static" : [],
 			"obj" : "obj\\cbvs",
-			"comp_params":"-fPIC -D GLFW_INCLUDE_NONE -Wnarrowing",
 			"out" : "bin",
 			"out_libfile" : "lib",
 			"src" : [ "src\\cbvs\\*.cpp" ],
@@ -101,7 +100,7 @@
 		"soil" : 
 		{
 			"compiler":"gcc",
-			"comp_params":"-fPIC -D GLFW_INCLUDE_NONE",
+			"comp_params":"-fPIC -D GLFW_INCLUDE_NONE -D SOIL_CHECK_FOR_GL_ERRORS",
 			"dynamic" : [ "lib" ],
 			"include" : [ "include", "include\\SOIL" ],
 			"link_dynamic" : [],

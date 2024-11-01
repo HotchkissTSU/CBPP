@@ -20,6 +20,8 @@ namespace cbpp {
 			bool Write(void* buffer, uint64_t count, uint64_t size = 1);
 			bool Read(void* buffer, uint64_t count, uint64_t size = 1);
 
+			char* ReadString();
+
 			void AllocateBuffer(uint8_t*& target);
 
 			uint64_t Length();

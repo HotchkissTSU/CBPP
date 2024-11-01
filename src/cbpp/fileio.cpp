@@ -69,6 +69,13 @@ namespace cbpp {
 		return out;
 	}
 
+	char* File::ReadString() {
+		char* buffer = new char[fl_length+1]();
+		this->Read(buffer, fl_length+1, 1);
+
+		return buffer;
+	}
+
 	void File::AllocateBuffer(uint8_t*& buffer) {
 		buffer = new uint8_t[fl_length];
 	}

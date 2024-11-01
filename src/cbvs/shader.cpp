@@ -255,10 +255,13 @@ namespace cbvs {
         switch(type) {
             case GL_VERTEX_SHADER:
                 strcat(filen, ".vertex");
+                break;
             case GL_FRAGMENT_SHADER:
                 strcat(filen, ".fragment");
+                break;
             case GL_GEOMETRY_SHADER:
                 strcat(filen, ".geometry");
+                break;
         }
 
         cbpp::File inp(filen, "rt");

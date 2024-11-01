@@ -159,7 +159,7 @@ namespace cbpp {
         ln = u32_ln;
         ln_actual = u32_ln;
     }
-
+    
     void String::FromUTF32(const Char* utf32) {
         ln = u32_strlen( utf32 );
         Allocate(ln);

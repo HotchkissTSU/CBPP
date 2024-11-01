@@ -26,7 +26,7 @@ extern "C" {
         }
         printf("\n");
 
-        testi = LoadImage("assets/textures/sdf_test.png", LOAD_RGBA, FLAG_POWER_OF_2 | FLAG_INV_Y);
+        testi = LoadImage("assets/textures/sdf_test2.png", LOAD_RGBA, FLAG_POWER_OF_2 | FLAG_INV_Y);
 
         return true;
     }

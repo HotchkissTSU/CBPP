@@ -292,7 +292,7 @@ int main( int argc, char** argv ) {
 	}
 	
 	ddraw::SetColor( cbpp::Color(255,0,0,255) );
-
+	
 	cbpp::Event ev;
 
 	while( !glfwWindowShouldClose(GameData.MainWindow) && ModuleData.ModuleLoopCheck() ) {
@@ -304,7 +304,7 @@ int main( int argc, char** argv ) {
 			}
 		}
 		
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		ModuleData.ModuleTick();

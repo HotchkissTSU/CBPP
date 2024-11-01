@@ -7,12 +7,14 @@ namespace cbpp {
         Image out;
 
         int w,h;
+        bool is_fallback = false;
 
         unsigned char* data = SOIL_load_image(path, &w, &h, NULL, (int)loadf);
         
         if(!data) {
             data = (uint8_t*)(cbpp::DefaultTexture);
             w = 32; h = 32;
+            is_fallback = true;
         }
 
         out.W = (uint32_t)w;
@@ -21,7 +23,9 @@ namespace cbpp {
         out.objid = SOIL_create_OGL_texture(data, w, h, (int)loadf, 0, (unsigned int)flags);
         glCheck();
 
-        SOIL_free_image_data(data);
+        if(!is_fallback) { //do not attempt to delete static array for the default texture
+            SOIL_free_image_data(data);
+        }
 
         return out;
     }

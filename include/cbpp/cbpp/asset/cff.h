@@ -4,47 +4,72 @@
 #include <cstdint>
 #include <map>
 
-#define CFF_HEADER (uint32_t)(0b01000011010001100100011000000000)
-
 namespace cbpp {
 	struct CFF_Header {
-		uint32_t signature;
-		uint16_t version;
+		char sig[4];
+		uint16_t ver;
+		uint8_t type;
+		uint8_t sorted;
+		uint32_t md;
+		uint8_t sheet;
 	};
-	
-	struct CFF_Text {
-		uint64_t text_length;
-		uint8_t* text;
+	//"*_parse" structs are made for parsing data only, so they have their alignment disabled.
+	//You should use their regular counterparts for anything except parsing.
+	struct CFF_Header_parse { 
+		char sig[4];		  
+		uint16_t ver;
+		uint8_t type;
+		uint8_t sorted;
+		uint32_t md;
+		uint8_t sheet;
+	} __attribute__((packed));
+
+	struct CFF_CharMD {
+		uint32_t code;
+		float advance, bearingy, bbox_ymax, width;
 	};
-	
-	struct CFF_Sheet {
-		uint64_t sheet_length;
-		uint8_t* sheet;
+
+	struct CFF_CharMD_parse {
+		uint32_t code;
+		float advance, bearingy, bbox_ymax, width;
+	} __attribute__((packed));
+
+	struct CFF_Bitmap {
+		char name[33];
+		uint32_t res;
+		uint8_t channels;
+		uint8_t* bitmap;
+	} __attribute__((packed));
+
+	struct CFF_Bitmap_parse {
+		char name[33];
+		uint32_t res;
+		uint8_t channels;
+		uint8_t* bitmap;
 	};
-	
-	struct CFF_CharInfo {
-		uint32_t x, y;
-		uint32_t w, h;
-		int16_t x_offset, y_offset;
-	};
-	
-	class CFF {
+
+	class FontFile {
 		public:
-			CFF(){};
-			CFF(const char* filename);
-			
-			void Open(const char* filename);
-			
-			bool IsCFF();
-			
+			FontFile() = default;
+			FontFile(const char* path);
+
+			bool Load(const char* path);
+			bool Save(const char* path);
+
+			CFF_CharMD GetCharInfo( uint32_t charcode );
+			const char* GetSheetName( uint8_t sheetid );
+
 		private:
-			bool is_open = false;
-			int32_t texid = -1;
-			std::map<uint16_t, CFF_CharInfo> sheetmap;
-			
 			CFF_Header head;
-			CFF_Text text;
-			CFF_Sheet sheet;
+			CFF_Bitmap* maps = NULL;
+			CFF_CharMD* chars_data = NULL;
+
+			uint8_t maps_num = 0;
+			uint32_t md_num = 0;
+
+			char* last_error = NULL;
+
+			static bool char_comparator( CFF_CharMD& first, CFF_CharMD& second );
 	};
 }
 

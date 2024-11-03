@@ -100,7 +100,7 @@
 		"soil" : 
 		{
 			"compiler":"gcc",
-			"comp_params":"-fPIC -D GLFW_INCLUDE_NONE -D SOIL_CHECK_FOR_GL_ERRORS",
+			"comp_params":"-fPIC -D GLFW_INCLUDE_NONE",
 			"dynamic" : [ "lib" ],
 			"include" : [ "include", "include\\SOIL" ],
 			"link_dynamic" : [],

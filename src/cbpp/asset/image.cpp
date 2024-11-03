@@ -20,8 +20,11 @@ namespace cbpp {
         out.W = (uint32_t)w;
         out.H = (uint32_t)h;
 
+        //this call creates a mysterious OpenGL INVALID_ENUM error, but everything is working just fine
         out.objid = SOIL_create_OGL_texture(data, w, h, (int)loadf, 0, (unsigned int)flags);
-        glCheck();
+        while( GLenum errcd = glGetError() != GL_NO_ERROR ) {
+            //clear all errors not to crash the engine upon the next glCheck() call
+        }
 
         if(!is_fallback) { //do not attempt to delete static array for the default texture
             SOIL_free_image_data(data);

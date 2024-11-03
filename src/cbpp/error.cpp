@@ -4,7 +4,14 @@
 #include <cstring>
 #include <cstdint>
 
-namespace cbpp {	
+namespace cbpp {
+	std::stack<ErrorInfo> _cb_errors;
+
+	ErrorInfo _no_error = {
+		ERROR_INVALID,
+		"No errors occured!"
+	};
+
 	void DisplayError(const char* title, const char* text, bool kill){
 		//printf("\n*** THIS IS A MESSAGEBOX! ***\n%s -> %s\n\n", title, text);
 		//we need messagebox here
@@ -68,5 +75,30 @@ namespace cbpp {
 				DisplayError("CBPP Warning", msgbox_text, false);
 			#endif
 		#endif
+	}
+
+	const ErrorInfo& GetLastError() {
+		if( _cb_errors.size() > 0 ) {
+			const ErrorInfo& info = _cb_errors.top();
+			_cb_errors.pop();
+			return info;
+		}else{
+			return const_cast<const ErrorInfo&>(_no_error);
+		}
+	}
+
+	void PushError( ERROR_CODE code, const char* msg ) {
+		ErrorInfo errinf = {
+			code,
+			msg
+		};
+
+		_cb_errors.push(errinf);
+	}
+
+	void ClearErrors() {
+		while(!_cb_errors.empty()) { //i hate std::stack with the all hate that a human being can produce
+			_cb_errors.pop();        //why no `clear` method? why!?
+		}
 	}
 }

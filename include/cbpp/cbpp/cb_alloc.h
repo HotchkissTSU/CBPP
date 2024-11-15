@@ -1,51 +1,76 @@
 #ifndef CBPP_ALLOC_H
 #define CBPP_ALLOC_H
 
-#include <cstring>
+#include <stdlib.h>
+#include <type_traits> 
+#include <stddef.h>
 
 #include "cbpp/misc.h"
+#include "cbpp/error.h"
 
-namespace cbpp{	
-	template<typename T> T* Allocate(std::size_t arrlen){
-		if(arrlen <= 0){ return nullptr; }
-		
-		T* out = new T[arrlen];
-		memset(out, 0, arrlen*sizeof(T));
-		
+/*
+	Type-safe (probably) wrappers for C memory allocation calls
+	Hail to the realloc()!
+*/
+
+namespace cbpp {	
+	template<typename T> struct Pointer {
+		size_t Length = 0;
+		T* Ptr = nullptr;
+	};
+
+	template<typename T> T* Allocate(size_t size) {
+		T* out = (T*) malloc(size * sizeof(T));
+
+		if(out == NULL) {
+			char buffer[128];
+			snprintf(buffer, 128, "Failed to allocate bytes chunk of size %lu", size * sizeof(T));
+			PushError(ERROR_MEM, buffer);
+			return NULL;
+		}
+
+		for(size_t i = 0; i < size; i++) {
+			new(&out[i]) T();
+		}
+
 		return out;
 	}
-	
-	template<typename T> void ArrayPushBack(T*& arr, std::size_t arrlen, const T& value){
-		if(arr == nullptr){
-			arr = Allocate<T>(1);
-			arr[0] = value;
-			return;
+
+	template<typename T> void Free(T*& ptr, size_t ln) {
+		if(ptr == NULL) { return; }
+
+		if(std::is_destructible<T>::value) {
+			for(size_t i = 0; i < ln; i++) {
+				ptr[i].~T();
+			}
 		}
-		
-		T* new_arr = Allocate<T>(arrlen+1);
-		memcpy(new_arr, arr, arrlen*sizeof(T));
-		new_arr[arrlen] = value;
-		
-		delete[] arr;
-		arr = new_arr;
+
+		free(ptr);
+		ptr = NULL;
 	}
 	
-	template<typename T> bool ArrayHasValue(T* arr, std::size_t arrlen, const T& value) {
-		for(std::size_t i = 0; i < arrlen; i++){
-			if(arr[i] == value){
-				return true;
+	template<typename T> T* Reallocate(T* ptr, size_t old_size, size_t new_size) {
+		if(ptr == NULL) {
+			return Allocate<T>(new_size);
+		}
+
+		if(std::is_destructible<T>::value) {
+			if(old_size > new_size && old_size != -1) {
+				for(size_t i = new_size; i < old_size; i++) {
+					ptr[i].~T();
+				}
 			}
 		}
 		
-		return false;
-	}
-	
-	template<typename T> void ArrayPopBack(T*& arr, std::size_t arrlen) {
-		T* new_arr = Allocate<T>(arrlen-1);
-		memcpy(new_arr, arr, (arrlen-1)*sizeof(T));
-		
-		delete[] arr;
-		arr = new_arr;
+		T* new_ptr = (T*)realloc(ptr, new_size*sizeof(T));
+
+		if(new_size > old_size && old_size != -1) {
+			for(size_t i = old_size; i < new_size; i++) {
+				new(&new_ptr[i]) T();
+			}
+		}
+
+		return new_ptr;
 	}
 }
 

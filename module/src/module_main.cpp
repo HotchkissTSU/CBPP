@@ -3,23 +3,38 @@
 
 using namespace cbpp;
 
-static Image testi;
-
 extern "C" {
     void ModuleWindowHint() { }
 
     bool ModuleMain(int argc, char** argv) {
         printf("Module entry point!\n");
 
-        testi = LoadImage("assets/textures/sdf_test.png", LOAD_RGBA, FLAG_POWER_OF_2 | FLAG_INV_Y);
+        DataFile test;
+
+        DataFile::Block blk;
+        blk.SetName("test_block");
+        
+        DataFile::Value val(DataFile::VType::U32);
+        val.SetName("test_value_float");
+        val.Data[0].u32 = 55599;
+
+        blk.PushValue(val);
+
+        blk.Data[0].Print();
+
+        test.PushBlock(blk);
+
+        if( !test.Save("test.cdf") ) {
+            while(HasErrors()) {
+                const ErrorInfo& err = GetLastError();
+                printf("ERROR: %s", err.Msg);
+            }
+        }
 
         return true;
     }
 
     void ModuleTick() { 
-        ddraw::SetColor( Color{255,255,0,255} );
-        Vec2 pt = cbvs::GetNormalizedMousePos() * Vec2(cbvs::ScreenRatio, 1.0f);
-        ddraw::Image(pt, Vec2(0.3f), testi);
     }
 
     bool ModuleEventCallback( cbpp::Event& ev ) { return true; }

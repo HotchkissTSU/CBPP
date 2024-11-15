@@ -10,14 +10,21 @@
 #include <cstdint>
 #include <stddef.h>
 #include <stdlib.h>
+#include <cstring>
 
 #include "cbpp/cbdef.h"
 #include "cbpp/error.h"
+#include "cbpp/cb_alloc.h"
 
 namespace cbpp {
     template <typename T> class List {
         public:
             List() = default;
+
+            List( size_t sz ) {
+                this->Reserve(sz);
+            }
+
             List( const List<T>& other ) {
                 len_phy = other.LengthPhysical();
                 len_img = other.Length();
@@ -60,6 +67,13 @@ namespace cbpp {
                 this->Reallocate();
             }
 
+            void Clear() {
+                cbpp::Free<T>(data, len_phy);
+                len_img = 0;
+                len_phy = 0;
+                data = NULL;
+            }
+
             size_t Length() const {
                 return len_img;
             }
@@ -69,7 +83,7 @@ namespace cbpp {
             }
 
             ~List() {
-                free(data);
+                cbpp::Free<T>( data, len_phy );
             }
 
         private:
@@ -78,6 +92,8 @@ namespace cbpp {
             id_t len_img = 0; //imaginary list length, always less or equal than len_phy
 
             void Reallocate() {
+                id_t old_phy = len_phy;
+
                 if(len_phy < len_img) {
                     len_phy = len_img;
                 }
@@ -100,7 +116,7 @@ namespace cbpp {
                     #endif
                 #endif
 
-                data = (T*)realloc(data, len_phy * sizeof(T));
+                data = cbpp::Reallocate<T>(data, old_phy, len_phy);
 
                 if(data == NULL) {
                     CbThrowErrorf("Failed to re-allocate memory chunk of size %lu", len_phy);

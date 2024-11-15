@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <cstdint>
+#include <stddef.h>
 
 #include "cbpp/cbstring.h"
 
@@ -16,9 +17,9 @@ namespace cbpp {
 			bool Open(const char* path, const char* mode);
 			void Close();
 
-			// Input/Output <count> elements to <buffer>, each <size> bytes long
-			bool Write(void* buffer, uint64_t count, uint64_t size = 1);
-			bool Read(void* buffer, uint64_t count, uint64_t size = 1);
+			// Output <count> elements to <buffer>, each <size> bytes long
+			size_t Write(void* buffer, uint64_t count, uint64_t size = 1);
+			size_t Read(void* buffer, uint64_t count, uint64_t size = 1);
 
 			char* ReadString();
 

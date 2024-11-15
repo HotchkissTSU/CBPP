@@ -10,4 +10,8 @@ block main {
     repeat 7 {
         
     };
+    
+    if TEST {
+        say testchar_1 "$test_string";
+    };
 };

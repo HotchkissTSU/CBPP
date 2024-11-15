@@ -9,7 +9,8 @@ namespace cbpp {
         int w,h;
         bool is_fallback = false;
 
-        unsigned char* data = SOIL_load_image(path, &w, &h, NULL, (int)loadf);
+        int channels;
+        unsigned char* data = SOIL_load_image(path, &w, &h, &channels, SOIL_LOAD_AUTO);
         
         if(!data) {
             data = (uint8_t*)(cbpp::DefaultTexture);

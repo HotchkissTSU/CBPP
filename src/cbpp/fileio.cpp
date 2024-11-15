@@ -43,28 +43,34 @@ namespace cbpp {
 		}
 	}
 
-	bool File::Write(void* buffer, uint64_t count, uint64_t size) {
-		bool out = true;
+	size_t File::Write(void* buffer, uint64_t count, uint64_t size) {
+		size_t out = -1;
 
 		if(!is_open) {
-			out = false;
+			out = -1;
 			CbThrowError("File not open!");
+			return out;
 		}
 
-		out = out && fwrite(buffer, size, count, io_ptr);
+		out = fwrite(buffer, size, count, io_ptr);
 
 		return out;
 	}
 
-	bool File::Read(void* buffer, uint64_t count, uint64_t size) {
-		bool out = true;
+	size_t File::Read(void* buffer, uint64_t count, uint64_t size) {
+		size_t out = -1;
 
 		if(!is_open) {
-			out = false;
+			out = -1;
 			CbThrowError("File not open!");
+			return out;
 		}
+		
+		out = fread(buffer, size, count, io_ptr);
 
-		out = out && fread(buffer, size, count, io_ptr);
+		if(out < count) {
+			PushError(ERROR_IO, "Unexpected EOF");
+		}
 
 		return out;
 	}

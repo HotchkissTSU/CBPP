@@ -11,7 +11,7 @@
 	These macro`s exist for decapitating your runtime if you encounter something so terrible
 	and impossible to comprehend, that you think it is a good reason to crash the game
 
-	(I insist: the only one maybe "good" reason for the game crash is a complete physical destruction of your computer)
+	(I insist: the only one (barely forgivable) reason for the game crash is a complete physical destruction of your computer)
 
 	Also, they will create a log output
 */
@@ -28,13 +28,14 @@
 
 namespace cbpp {
 	enum ERROR_CODE : uint8_t {
-		ERROR_INVALID, //no errors, everything is probably cool
-		ERROR_IO       //error within the Input/Output system
+		ERROR_INVALID, //No errors, everything is probably cool
+		ERROR_IO,      //Error within the Input/Output system
+		ERROR_MEM      //Error with the memory management (NULL-pointer, invalid size etc.)
 	};
 
 	struct ErrorInfo {
 		ERROR_CODE Code = ERROR_INVALID;
-		const char* Msg;
+		char* Msg;
 	};
 
 	extern void DisplayError(const char* title, const char* text, bool kill = false);
@@ -65,6 +66,8 @@ namespace cbpp {
 	*/
 	void PushError(ERROR_CODE errcd, const char* msg);
 	const ErrorInfo& GetLastError();
+	bool HasErrors();
+	void PopError();
 	void ClearErrors();
 }
 

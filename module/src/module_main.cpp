@@ -23,15 +23,6 @@ extern "C" {
     bool ModuleMain(int argc, char** argv) {
         printf("Module entry point!\n");
 
-        Array<STest> A(5);
-        Array<STest> B(5);
-
-        Array<STest> C = A + B;
-
-        for(int i = 0; i < C.Length(); i++) {
-            printf("%d, %d\n", C.At(i).a, C.At(i).b);
-        }
-
         return true;
     }
 

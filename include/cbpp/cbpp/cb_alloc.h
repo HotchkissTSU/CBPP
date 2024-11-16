@@ -13,7 +13,7 @@
 	Hail to the realloc()!
 */
 
-namespace cbpp {	
+namespace cbpp {
 	template<typename T> struct Pointer {
 		size_t Length = 0;
 		T* Ptr = nullptr;
@@ -48,7 +48,7 @@ namespace cbpp {
 		free(ptr);
 		ptr = NULL;
 	}
-	
+
 	template<typename T> T* Reallocate(T* ptr, size_t old_size, size_t new_size) {
 		if(ptr == NULL) {
 			return Allocate<T>(new_size);

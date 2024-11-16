@@ -34,13 +34,23 @@ namespace cbpp {
                 Fill(fill_value);
             }
 
+            Array(const Array<T>& other) {
+                Resize(other.Length());
+
+                if(!std::is_trivially_copy_assignable<T>::value) {
+                    for(size_t i = 0; i < m_length; i++) {
+                        At(i) = other.At(i);
+                    }
+                }else {
+                    memcpy(m_array, other.m_array, sizeof(T) * m_length);
+                }
+            }
+
             explicit Array(const T* other, size_t ln) {
                 if(other == NULL || ln == 0) {
                     CbThrowError("Invalid pointer is passed to the Array constructor");
                 }
             }
-
-            
 
             Array<T>& operator = (const Array<T>& other) {
                 if(!other.IsValid()) {
@@ -53,7 +63,7 @@ namespace cbpp {
 
                 m_array = Allocate<T>(other.Length());
                 if(m_array == NULL) {
-                    CbThrowErrorf("Failed to allocate bytes chunk of size %lu", other.Length());
+                    CbThrowErrorf("Failed to allocate Array of size %lu", other.Length());
                 }
 
                 memcpy(m_array, other.CArr(), sizeof(T)*other.Length());
@@ -66,6 +76,7 @@ namespace cbpp {
             bool Resize(size_t new_size) {
                 T* tmp_ptr = Reallocate(m_array, m_length, new_size);
                 if(tmp_ptr == NULL) {
+                    CbThrowWarningf("Array resizing from %lu to %lu failed", m_length, new_size);
                     return false; //something terrible it is
                 }
 
@@ -73,6 +84,14 @@ namespace cbpp {
                 m_length = new_size;
 
                 return true;
+            }
+
+            //Append value to the end of the array. If you are planning to do this frequently, please use cbpp::List instead
+            bool PushBack(const T& value) {
+                bool result = Resize(m_length+1);
+                if(result){ m_length++; }
+
+                return result;
             }
 
             void Fill(const T& fill_value) {
@@ -121,7 +140,7 @@ namespace cbpp {
                     m_length = 0;
                 }
             }
-
+            
             template <typename T2> friend Array<T2> operator+(const Array<T2>&, const Array<T2>&); //fren ^-^
 
         private:

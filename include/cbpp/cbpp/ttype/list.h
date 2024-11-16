@@ -5,129 +5,116 @@
     0   - allocate two times more memory each time (like std::vector does)
     N>0 - add N pieces upon each re-allocation
 */
-#define CBPP_LIST_MEMMODE 0 
+#define CBPP_LIST_MODE 0 
 
-#include <cstdint>
-#include <stddef.h>
-#include <stdlib.h>
-#include <cstring>
-
-#include "cbpp/cbdef.h"
-#include "cbpp/error.h"
-#include "cbpp/cb_alloc.h"
+#include "cbpp/ttype/array.h"
 
 namespace cbpp {
+    //Array-like container with push optimisations
     template <typename T> class List {
         public:
             List() = default;
 
-            List( size_t sz ) {
-                this->Reserve(sz);
-            }
-
-            List( const List<T>& other ) {
-                len_phy = other.LengthPhysical();
-                len_img = other.Length();
-
-                for(id_t i = 0; i < len_img; i++) {
-                    At(i) = other.At(i);
+            List(const List<T>& other) {
+                m_array.Resize(other.Length());
+                m_len_imag = m_array.Length();
+                for(size_t i = 0; i < m_len_imag; i++) {
+                    m_array.At(i) = other.At(i);
                 }
             }
 
-            //Get element by it`s index
-            //Can throw CB++ exceptions
-            T& At( id_t index ) {
-                if(data == NULL) {
-                    CbThrowError("The list is not allocated");
+            List(const Array<T>& other) {
+                m_array(other);
+                m_len_imag = m_array.Length();
+            }
+
+            List(const T* ptr, size_t ptr_ln) {
+                m_array(ptr, ptr_ln);
+                m_len_imag = m_array.Length();
+            }
+            
+            List(size_t ln) {
+                m_array(ln);
+                m_len_imag = m_array.Length();
+            }
+
+            bool PushBack(const T& value) {
+                m_len_imag++;
+                bool result = true;
+                if(m_len_imag > m_array.Length()) { //we need to up-allocate
+                    #if CBPP_LIST_MODE == 0
+                        size_t new_len;
+                        if(m_array.Length() != 0) {
+                            new_len = m_array.Length() * 2;
+                        }else{
+                            new_len = 1;
+                        }
+                    #else
+                        size_t new_len = m_array.Length() + (size_t)CBPP_LIST_MODE;
+                    #endif
+
+                    result = m_array.Resize(new_len);
                 }
 
-                if(index < 0 || index > len_phy - 1) {
-                    CbThrowErrorf("Index is out of bounds (%lu/%lu)", index, len_phy);
-                }else if(index > len_img - 1) {
-                    CbThrowWarningf("Index is inside the allocated chunk, but is outside of the list bounds (%lu/%lu)", index, len_img);
+                m_array.At(m_len_imag-1) = value;
+
+                return result;
+            }
+
+            bool PopBack() {
+                if(m_len_imag >= 1) {
+                    m_len_imag--;
+                }else{
+                    return false;
+                }
+                
+                bool result = true;
+
+                if(m_len_imag*2 < m_array.Length() && m_len_imag != 0) { //the physical memory buffer is way bigger than the actual data, so shrink it
+                    result = m_array.Resize(m_len_imag);
+
+                    if(!result && std::is_destructible<T>::value) {
+                        m_array[m_len_imag].~T(); //it`s so over, the realloc compromised, so we must manually destroy the popped object (hold your ground! leave no quarter!)
+                    }
+
+                }else{
+                    if( std::is_destructible<T>::value ) {
+                        m_array[m_len_imag].~T(); //if no shrink happened, we need to manually destroy the popped object
+                    }
                 }
 
-                return data[index];
+                return result;
             }
 
-            T& operator[]( id_t index ) {
-                return this->At( index );
-            }
-
-            void PushBack( const T& value ) {
-                len_img++;
-                if(len_img > len_phy) {
-                    this->Reallocate();
+            T& At(size_t index) {
+                if(index >= m_len_imag) {
+                    CbThrowWarningf("Index %lu is inside the allocated chunk, but is outside of the list bounds (%lu)", index, m_len_imag);
                 }
-                data[len_img-1] = value;
+
+                return m_array.At(index);
             }
 
-            void Reserve( id_t size ) {
-                len_img = size;
-                this->Reallocate();
+            T& operator[](size_t index) {
+                return At(index);
+            }
+            
+            bool IsValid() const noexcept {
+                return (m_array.IsValid() && (m_len_imag <= m_array.Length()) && m_len_imag != 0);
             }
 
-            id_t Find( const T& comp ) {
-                for(id_t i = 0; i < len_img; i++) {
-
-                }
+            //Length of the actually used part of the allocated chunk
+            size_t Length() const noexcept {
+                return m_len_imag;
             }
 
-            void Clear() {
-                cbpp::Free<T>(data, len_phy);
-                len_img = 0;
-                len_phy = 0;
-                data = NULL;
-            }
-
-            size_t Length() const {
-                return len_img;
-            }
-
-            size_t LengthPhysical() const {
-                return len_phy;
-            }
-
-            ~List() {
-                cbpp::Free<T>( data, len_phy );
+            //The full length of the physically alocated memory
+            size_t LengthPhys() const noexcept {
+                return m_array.Length();
             }
 
         private:
-            T* data = NULL;
-            id_t len_phy = 0; //amount of allocated memory
-            id_t len_img = 0; //imaginary list length, always less or equal than len_phy
-
-            void Reallocate() {
-                id_t old_phy = len_phy;
-
-                if(len_phy < len_img) {
-                    len_phy = len_img;
-                }
-
-                if(len_phy <= 0) { 
-                    len_phy = 1;
-                }
-
-                if(len_img*2 < len_phy) {
-                    len_phy = len_img;
-                }
-
-                #if CBPP_LIST_MEMMODE == 0
-                    len_phy = len_phy*2;
-                #else
-                    #if CBPP_LIST_MEMMODE > 0
-                        len_phy = len_phy + (size_t)CBPP_LIST_MEMMODE;
-                    #else
-                        #error CBPP_LIST_MEMMODE must be greater or equal than zero
-                    #endif
-                #endif
-
-                data = cbpp::Reallocate<T>(data, old_phy, len_phy);
-
-                if(data == NULL) {
-                    CbThrowErrorf("Failed to re-allocate memory chunk of size %lu", len_phy);
-                }
-            }
+            size_t m_len_imag = 0;
+            Array<T> m_array;
     };
 }
 

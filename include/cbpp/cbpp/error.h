@@ -8,7 +8,7 @@
 #define CBPP_ERROR_LOG_SIZE 256
 
 /*
-	These macro`s exist for decapitating your runtime if you encounter something so terrible
+	These macros exist for decapitating your runtime if you encounter something so terrible
 	and impossible to comprehend, that you think it is a good reason to crash the game
 
 	(I insist: the only one (barely forgivable) reason for the game crash is a complete physical destruction of your computer)
@@ -59,9 +59,9 @@ namespace cbpp {
 	
 	extern void _ThrowError(Exception exc);
 	extern void _ThrowWarning(Exception exc);
-
+	
 	/*
-		These three following pals are meant to be used upon non-lethal errors,
+		These following pals are meant to be used upon non-lethal errors,
 		if we also need some sort of callback from the class of function
 	*/
 	void PushError(ERROR_CODE errcd, const char* msg);

@@ -22,7 +22,7 @@
 
 #include "cbpp/asset/sprite.h"
 #include "cbpp/asset/image.h"
-#include "cbpp/asset/cdf.h"   //Cuber Data File
+//#include "cbpp/asset/cdf.h"   //Cuber Data File
 #include "cbpp/cbseq/cbseq.h" //cutscene sequence scripts
 
 #include "cbpp/entity/base_entity.h"

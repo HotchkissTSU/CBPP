@@ -84,7 +84,7 @@ namespace cbpp {
                         return NULL;
                     }
                 }
-                
+
                 VData* operator[](uint32_t index) {
                     return At(index);
                 }
@@ -97,6 +97,7 @@ namespace cbpp {
                 Value& operator=(Value& other) {
                     Name = strdup(other.Name);
                     
+                    printf("VALUE data free ptr: %x\n", Data);
                     free(Data);
                     Length = other.Length;
                     Data = (VData*)malloc(sizeof(VData) * Length);
@@ -121,7 +122,6 @@ namespace cbpp {
 
                 ~Value() {
                     free(Name);
-                    free(Data);
                 }
             };
 
@@ -129,8 +129,7 @@ namespace cbpp {
                 uint32_t NID = 0;
                 uint32_t TID = 0;
 
-                uint32_t Length = 0;
-                Value* Data = NULL;
+                List<Value> Data;
                 char* Name = NULL;
 
                 void SetName(const char* nname) {
@@ -167,14 +166,12 @@ namespace cbpp {
 
                 void PushValue(Value& val) {
                     Length++;
-                    Data = Reallocate<Value>(Data, -1, Length); //(Value*)realloc(Data, Length);
+                    Data = (Value*)realloc(Data, Length);
                     Data[Length-1] = val;
                 }
 
                 ~Block() {
                     free(Name);
-                    Free<Value>(Data, Length);
-                }
             };
 
             DataFile() = default;

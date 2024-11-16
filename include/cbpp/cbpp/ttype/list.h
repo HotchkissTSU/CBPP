@@ -67,6 +67,12 @@ namespace cbpp {
                 this->Reallocate();
             }
 
+            id_t Find( const T& comp ) {
+                for(id_t i = 0; i < len_img; i++) {
+
+                }
+            }
+
             void Clear() {
                 cbpp::Free<T>(data, len_phy);
                 len_img = 0;

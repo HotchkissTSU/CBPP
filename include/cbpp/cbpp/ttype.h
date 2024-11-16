@@ -4,5 +4,6 @@
 #include "cbpp/ttype/segarr.h"
 #include "cbpp/ttype/list.h"
 #include "cbpp/ttype/tree.h"
+#include "cbpp/ttype/array.h"
 
 #endif

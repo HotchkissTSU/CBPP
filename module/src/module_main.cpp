@@ -3,32 +3,33 @@
 
 using namespace cbpp;
 
+struct STest {
+    STest() {
+        a = 5;
+        b = 10;
+    }
+
+    ~STest() {
+        a = 0;
+        b = 0;
+    }
+
+    int a, b;
+};
+
 extern "C" {
     void ModuleWindowHint() { }
 
     bool ModuleMain(int argc, char** argv) {
         printf("Module entry point!\n");
 
-        DataFile test;
+        Array<STest> A(5);
+        Array<STest> B(5);
 
-        DataFile::Block blk;
-        blk.SetName("test_block");
-        
-        DataFile::Value val(DataFile::VType::U32);
-        val.SetName("test_value_float");
-        val.Data[0].u32 = 55599;
+        Array<STest> C = A + B;
 
-        blk.PushValue(val);
-
-        blk.Data[0].Print();
-
-        test.PushBlock(blk);
-
-        if( !test.Save("test.cdf") ) {
-            while(HasErrors()) {
-                const ErrorInfo& err = GetLastError();
-                printf("ERROR: %s", err.Msg);
-            }
+        for(int i = 0; i < C.Length(); i++) {
+            printf("%d, %d\n", C.At(i).a, C.At(i).b);
         }
 
         return true;

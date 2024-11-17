@@ -10,7 +10,7 @@
 #include "cbpp/error.h"
 
 /*
-	Type-safe (probably) wrappers for C memory allocation calls
+	Type-safe ( probably :) ) wrappers for C memory allocation calls.
 	Hail to the realloc()!
 */
 
@@ -20,6 +20,10 @@ namespace cbpp {
 		T* Ptr = nullptr;
 	};
 
+	/*
+		Type-safe malloc() wrapper.
+		Returns NULL upon allocation fail.
+	*/
 	template<typename T> T* Allocate(size_t size) {
 		T* out = (T*) malloc(size * sizeof(T));
 
@@ -46,6 +50,12 @@ namespace cbpp {
 		return out;
 	}
 
+	/*
+		Type-safe free() wrapper. Intended to deallocate buffers of
+		complex objects with custom destructors.
+
+		Regular free() can be used on the primitive types` arrays instead
+	*/
 	template<typename T> void Free(T*& ptr, size_t ln) {
 		if(ptr == NULL) { return; }
 
@@ -59,6 +69,17 @@ namespace cbpp {
 		ptr = NULL;
 	}
 
+	/*
+		Type-safe realloc() wrapper. Calls destructors upon shrinks and
+		default constructors upon up-allocations.
+
+		If NULL is passed as the reallocation target, a new buffer will be created.
+
+		If -1 is passed to the 'old_size' parameter, there will be no type-safety checks.
+
+		If reallocation fails, it will not modify the original pointer and
+		will simply return NULL
+	*/
 	template<typename T> T* Reallocate(T* ptr, size_t old_size, size_t new_size) {
 		if(ptr == NULL) {
 			return Allocate<T>(new_size);

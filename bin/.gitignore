@@ -2,3 +2,8 @@ cbep
 logs/
 libcbpp.so
 test.so
+libglfw3.so
+sdfview.sh
+img2h
+img2sdf
+assets/textures/

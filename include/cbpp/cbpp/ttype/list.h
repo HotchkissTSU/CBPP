@@ -23,21 +23,18 @@ namespace cbpp {
                 }
             }
 
-            List(const Array<T>& other) {
-                m_array(other);
+            List(const Array<T>& other) : m_array(other) {
                 m_len_imag = m_array.Length();
             }
 
-            List(const T* ptr, size_t ptr_ln) {
-                m_array(ptr, ptr_ln);
+            List(const T* ptr, size_t ptr_ln) : m_array(ptr, ptr_ln) {
                 m_len_imag = m_array.Length();
             }
             
-            List(size_t ln) {
-                m_array(ln);
+            List(size_t ln) : m_array(ln) {
                 m_len_imag = m_array.Length();
             }
-
+            
             bool PushBack(const T& value) {
                 m_len_imag++;
                 bool result = true;
@@ -116,7 +113,7 @@ namespace cbpp {
                 return m_array.Length();
             }
 
-        private:
+        protected:
             size_t m_len_imag = 0;
             Array<T> m_array;
     };

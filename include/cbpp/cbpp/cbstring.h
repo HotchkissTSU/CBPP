@@ -3,45 +3,34 @@
 
 #include <cstdint>
 #include <cstring>
-
 #include <uchar.h>
 
-#include "cbpp/ttype/segarr.h"
+#include "cbpp/ttype/list.h"
 
 namespace cbpp {
     typedef char32_t Char;
-
-    uint64_t utf8_to_utf32(const char* utf8, Char** utf32);
-
-    uint64_t u32_strlen(const Char* str);
-
-    Char* u32_strcpy(Char* dest, const Char* src);
-    Char* u32_strdup(const Char* src);
+    extern mbstate_t m_mbstate;
 
     class String {
         public:
             String() = default;
-            String(const char* str);
-            String(const Char* str);
-            String(String& other);
+            String(const char* u8);
+            String(const Char* u32);
 
-            void FromUTF8(const char* utf8);
-            void FromUTF32(const Char* utf32);
+            Char& At(size_t index);
+            Char& operator[](size_t index);
 
-            Char& operator[]( uint64_t index );
-            Char& At( uint64_t index );
+            const Char* C32();
+            const char* C8();
 
-            char* AsUTF8();
-            const Char* AsUTF32();
+            //Get length of the null-terminated UTF-32 string
+            static size_t str32len(const Char* u32, size_t maxln = -1);
 
-            ~String();
+            static const char* U32_U8(const Char* u32);
+            static const Char* U8_U32(const char* u8);
 
         private:
-            Char* buffer = NULL;
-            uint64_t ln = 0;         //virtual length, always less then ln_actual
-            uint64_t ln_actual = 0;  //actual allocated buffer size
-
-            void Allocate(uint64_t ln);
+            List<Char> m_array;
     };
 }
 

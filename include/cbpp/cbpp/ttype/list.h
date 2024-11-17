@@ -67,7 +67,7 @@ namespace cbpp {
                 }else{
                     return false;
                 }
-                
+
                 bool result = true;
 
                 if(m_len_imag*2 < m_array.Length() && m_len_imag != 0) { //the physical memory buffer is way bigger than the actual data, so shrink it
@@ -92,6 +92,10 @@ namespace cbpp {
                 }
 
                 return m_array.At(index);
+            }
+
+            const T& At(size_t index) const {
+                return const_cast<const T&>( At(index) );
             }
 
             T& operator[](size_t index) {

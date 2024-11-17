@@ -30,7 +30,8 @@ namespace cbpp {
 	enum ERROR_CODE : uint8_t {
 		ERROR_INVALID, //No errors, everything is probably cool
 		ERROR_IO,      //Error within the Input/Output system
-		ERROR_MEM      //Error with the memory management (NULL-pointer, invalid size etc.)
+		ERROR_MEM,     //Error with the memory management (NULL-pointer, invalid size etc.)
+		ERROR_TCODE    //Error with text encoding
 	};
 
 	struct ErrorInfo {

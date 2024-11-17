@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <type_traits> 
 #include <stddef.h>
+#include <stdexcept>
 
 #include "cbpp/misc.h"
 #include "cbpp/error.h"
@@ -30,7 +31,16 @@ namespace cbpp {
 		}
 
 		for(size_t i = 0; i < size; i++) {
-			new(&out[i]) T();
+			if(std::is_trivially_constructible<T>::value) {
+				new(&out[i]) T();
+			}else{
+				try {
+					new(&out[i]) T();
+				} catch(...) {
+					free(out);
+					throw;
+				}
+			}
 		}
 
 		return out;
@@ -63,6 +73,13 @@ namespace cbpp {
 		}
 		
 		T* new_ptr = (T*)realloc(ptr, new_size*sizeof(T));
+
+		if(new_ptr == NULL) {
+			char buffer[64];
+			snprintf(buffer, 64, "Reallocation from %lu to %lu failed", old_size, new_size);
+			PushError(ERROR_MEM, buffer);
+			return NULL;
+		}
 
 		if(new_size > old_size && old_size != -1) {
 			for(size_t i = old_size; i < new_size; i++) {

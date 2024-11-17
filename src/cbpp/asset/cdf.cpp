@@ -124,16 +124,4 @@ namespace cbpp {
 
         return -1;
     }
-
-    void DataFile::PushBlock(Block& blk) {
-        header.bnum++;
-        blocks = Reallocate<Block>(blocks, -1, header.bnum);
-        blocks[header.bnum-1] = blk;
-
-        header.nnum += blk.Length;
-    }
-
-    void DataFile::PopBlock(const char* bname) {
-
-    }
 }

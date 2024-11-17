@@ -51,74 +51,8 @@ namespace cbpp {
             };
 
             struct Value {
-                void Print() {
-                    if(Name != NULL) { printf("Value '%s':\n", Name); }
-                    else{ return; }
-
-                    printf("\tLength: %u\n", Length);
-                    printf("\tTypeid: %u\n", Type);
-                }
-
-                Value() = default;
-
-                Value(VType typ) {
-                    Length = 1;
-                    Type = typ;
-                    _allocate();
-                }
-
-                Value(VType typ, uint32_t ln) {
-                    Length = ln;
-                    Type = typ;
-                    _allocate();
-                }
-
-                VData* At(uint32_t index) {
-                    if( index < Length ) {
-                        return &Data[index];
-                    }else{
-                        char buff[128];
-                        snprintf(buff, 128, "Array index %u is out of range (%u)", index, Length);
-                        PushError(ERROR_MEM, buff);
-
-                        return NULL;
-                    }
-                }
-
-                VData* operator[](uint32_t index) {
-                    return At(index);
-                }
-
-                void SetName(const char* nname) {
-                    free(Name);
-                    Name = strdup(nname);
-                }
-
-                Value& operator=(Value& other) {
-                    Name = strdup(other.Name);
-                    
-                    printf("VALUE data free ptr: %x\n", Data);
-                    free(Data);
-                    Length = other.Length;
-                    Data = (VData*)malloc(sizeof(VData) * Length);
-                    memcpy(Data, other.Data, Length*sizeof(VData));
-
-                    Type = other.Type;
-                    NID = other.NID;
-
-                    return *this;
-                }
-
-                VType Type = VType::INVALID;
-                uint32_t Length = 0;
-                VData* Data = NULL;
                 char* Name = NULL;
-
-                uint32_t NID = 0;
-
-                void _allocate() {
-                    Data = (VData*)realloc(Data, Length);
-                }
+                Array<VData> Data;
 
                 ~Value() {
                     free(Name);
@@ -172,6 +106,7 @@ namespace cbpp {
 
                 ~Block() {
                     free(Name);
+                }
             };
 
             DataFile() = default;

@@ -50,6 +50,11 @@ namespace cbpp {
                 if(other == NULL || ln == 0) {
                     CbThrowError("Invalid pointer is passed to the Array constructor");
                 }
+
+                Resize(ln);
+                for(size_t i = 0; i < ln; i++) {
+                    m_array[i] = other[i];
+                }
             }
 
             Array<T>& operator = (const Array<T>& other) {
@@ -116,8 +121,12 @@ namespace cbpp {
                 return m_array[index];
             }
 
-            const T& At(size_t index) const {
-                return const_cast<const T&>(At(index));
+            const T& ConstAt(size_t index) const {
+                if(index >= m_length) {
+                    CbThrowErrorf("Index %lu is out of array bounds (%lu)", index, m_length);
+                }
+
+                return m_array[index];
             }
 
             T& operator [] (size_t index) {
@@ -143,7 +152,7 @@ namespace cbpp {
             
             template <typename T2> friend Array<T2> operator+(const Array<T2>&, const Array<T2>&); //fren ^-^
 
-        private:
+        protected:
             T* m_array = NULL;
             size_t m_length = 0;
     };

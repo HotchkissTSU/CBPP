@@ -7,6 +7,12 @@
 */
 #define CBPP_LIST_MODE 0 
 
+/*
+    Add this amount of bytes to the physical buffer size of the result of the
+    List addition operator
+*/
+#define CBPP_LIST_ADDITION_OVERHEAD 16
+
 #include "cbpp/ttype/array.h"
 
 namespace cbpp {
@@ -16,19 +22,23 @@ namespace cbpp {
             List() = default;
 
             List(const List<T>& other) {
-                m_array.Resize(other.Length());
-                m_len_imag = m_array.Length();
+                m_array.Resize(other.LengthPhys());
+                m_len_imag = other.Length();
                 for(size_t i = 0; i < m_len_imag; i++) {
-                    m_array.At(i) = other.At(i);
+                    m_array.At(i) = other.ConstAt(i);
                 }
             }
 
             List(const Array<T>& other) : m_array(other) {
-                m_len_imag = m_array.Length();
+                m_len_imag = other.Length();
             }
 
             List(const T* ptr, size_t ptr_ln) : m_array(ptr, ptr_ln) {
                 m_len_imag = m_array.Length();
+            }
+
+            List(size_t ln, const T& fill_value) : m_array(ln, fill_value) {
+                m_len_imag = ln;
             }
             
             List(size_t ln) : m_array(ln) {
@@ -91,8 +101,12 @@ namespace cbpp {
                 return m_array.At(index);
             }
 
-            const T& At(size_t index) const {
-                return const_cast<const T&>( At(index) );
+            const T& ConstAt(size_t index) const {
+                if(index >= m_len_imag) {
+                    CbThrowWarningf("Index %lu is inside the allocated chunk, but is outside of the list bounds (%lu)", index, m_len_imag);
+                }
+
+                return m_array.ConstAt(index);
             }
 
             T& operator[](size_t index) {
@@ -113,10 +127,26 @@ namespace cbpp {
                 return m_array.Length();
             }
 
+            template<typename T2> friend List<T2> operator+(const List<T2>&, const List<T2>&);
+
         protected:
             size_t m_len_imag = 0;
             Array<T> m_array;
     };
+
+    template<typename T> List<T> operator+(const List<T>& A, const List<T>& B) {
+        List<T> out(A.Length() + B.Length() + CBPP_LIST_ADDITION_OVERHEAD);
+        out.m_len_imag = A.Length() + B.Length();
+        for(size_t i = 0; i < A.Length(); i++) {
+            out.At(i) = A.At(i);
+        }
+
+        for(size_t j = 0; j < B.Length(); j++) {
+            out.At( j+A.Length() ) = B.At(j);
+        }
+
+        return out;
+    }
 }
 
 #endif

@@ -219,6 +219,7 @@ void Cleanup() {
 }
 
 int main( int argc, char** argv ) {
+	setlocale(LC_ALL, "");
 	ClearLogs();
 
 	ResolveArgs( argc, argv );

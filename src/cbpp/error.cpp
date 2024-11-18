@@ -93,6 +93,7 @@ namespace cbpp {
 	}
 
 	void PushError( ERROR_CODE code, const char* msg ) {
+		printf("TIER 2 Error: %d, %s\n", code, msg);
 		ErrorInfo errinf = {
 			code,
 			strdup(msg)

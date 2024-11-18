@@ -7,28 +7,19 @@ extern "C" {
     void ModuleWindowHint() { }
 
     bool ModuleMain(int argc, char** argv) {
-        setlocale(LC_ALL, "");
-
         printf("Module entry point!\n");
 
-        const Char* test_u32 = U"🍑";
+        String test_a(U"готовые движки ");
+        String test_b(U"для слабых и глупых ");
 
-        printf("ASS LETTER (REAL): %ls\n", test_u32);
+        String test = test_a + test_b * 5;
 
-        const char* test_u8 = String::U32_U8(test_u32);
-        const Char* u32_after = String::U8_U32(test_u8);
-
-        if(u32_after == NULL) {
-            printf("error : %s\n", GetLastError().Msg);
-        }
-
-        printf("ASS LETTER: %ls\n", u32_after);
+        test.Print();printf("\n");
 
         return true;
     }
 
-    void ModuleTick() { 
-
+    void ModuleTick() {
     }
 
     bool ModuleEventCallback( cbpp::Event& ev ) { return true; }

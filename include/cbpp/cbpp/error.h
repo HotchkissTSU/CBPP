@@ -8,6 +8,8 @@
 #define CBPP_ERROR_LOG_SIZE 256
 
 /*
+	TIER 1 ERRORS
+
 	These macros exist for decapitating your runtime if you encounter something so terrible
 	and impossible to comprehend, that you think it is a good reason to crash the game
 
@@ -60,10 +62,12 @@ namespace cbpp {
 	
 	extern void _ThrowError(Exception exc);
 	extern void _ThrowWarning(Exception exc);
-	
+
 	/*
+		TIER 2 ERRORS
+
 		These following pals are meant to be used upon non-lethal errors,
-		if we also need some sort of callback from the class of function
+		if we also need some sort of callback from a class or a function
 	*/
 	void PushError(ERROR_CODE errcd, const char* msg);
 	const ErrorInfo& GetLastError();

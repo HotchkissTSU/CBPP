@@ -21,6 +21,25 @@ namespace cbpp {
 	};
 
 	/*
+		Type-safe free() wrapper. Intended to deallocate buffers of
+		complex objects with custom destructors.
+
+		Regular free() can be used on the primitive types` arrays instead
+	*/
+	template<typename T> void Free(T*& ptr, size_t ln) {
+		if(ptr == NULL) { return; }
+
+		if(std::is_destructible<T>::value) {
+			for(size_t i = 0; i < ln; i++) {
+				ptr[i].~T();
+			}
+		}
+
+		free(ptr);
+		ptr = NULL;
+	}
+
+	/*
 		Type-safe malloc() wrapper.
 		Returns NULL upon allocation fail.
 	*/
@@ -41,32 +60,13 @@ namespace cbpp {
 				try {
 					new(&out[i]) T();
 				} catch(...) {
-					free(out);
+					Free<T>(out, i);
 					throw;
 				}
 			}
 		}
-
+		
 		return out;
-	}
-
-	/*
-		Type-safe free() wrapper. Intended to deallocate buffers of
-		complex objects with custom destructors.
-
-		Regular free() can be used on the primitive types` arrays instead
-	*/
-	template<typename T> void Free(T*& ptr, size_t ln) {
-		if(ptr == NULL) { return; }
-
-		if(std::is_destructible<T>::value) {
-			for(size_t i = 0; i < ln; i++) {
-				ptr[i].~T();
-			}
-		}
-
-		free(ptr);
-		ptr = NULL;
 	}
 
 	/*
@@ -104,7 +104,12 @@ namespace cbpp {
 
 		if(new_size > old_size && old_size != -1) {
 			for(size_t i = old_size; i < new_size; i++) {
-				new(&new_ptr[i]) T();
+				try {
+					new(&new_ptr[i]) T();
+				} catch (...) {
+					Free<T>(new_ptr, old_size + i);
+					throw;
+				}
 			}
 		}
 

@@ -66,6 +66,89 @@ namespace cbpp {
 
         return out;
     }
+
+    String& String::operator+=(Char other) {
+        PushBack(other);
+
+        return *this;
+    }
+
+    String* String::Split(size_t& size_ref, const String& str, Char delim ) {
+        size_ref = 0;
+        for(size_t i = 0; i < str.Length(); i++) {
+            if(str[i] == delim) {
+                size_ref++;
+            }
+        }
+        size_ref += 1;
+
+        String* out = Allocate<String>(size_ref);
+        if(out == NULL) {
+            size_ref = 0;
+            return NULL;
+        }
+
+        String tmp;
+        size_t str_counter = 0;
+        for(size_t i = 0; i < str.Length()+1; i++) {
+            if(i == str.Length()) {
+                out[str_counter] = tmp;
+                break;
+            }
+
+            if(str[i] == delim) {
+                out[str_counter] = tmp;
+                str_counter++;
+                tmp.Clear();
+            }else{
+                tmp += str[i];
+            }
+        }
+
+        return out;
+    }
+
+    String* String::SplitEx(size_t& size_ref, const String& str, Char delim, Char quote) {
+        size_ref = 0;
+        bool is_quo = false;
+        for(size_t i = 0; i < str.Length(); i++) {
+            if(str[i] == quote) {
+                is_quo = !is_quo;
+            }else if(!is_quo && str[i] == delim) {
+                size_ref++;
+            }
+        }
+        size_ref += 1;
+
+        is_quo = false;
+
+        String* out = Allocate<String>(size_ref);
+        if(out == NULL) {
+            size_ref = 0;
+            return NULL;
+        }
+
+        String tmp;
+        size_t str_counter = 0;
+        for(size_t i = 0; i < str.Length()+1; i++) {
+            if(i == str.Length()) {
+                out[str_counter] = tmp;
+                break;
+            }
+
+            if(str[i] == quote) {
+                is_quo = !is_quo;
+            }else if(str[i] == delim && !is_quo) {
+                out[str_counter] = tmp;
+                str_counter++;
+                tmp.Clear();
+            }else {
+                tmp += str[i];
+            }
+        }
+
+        return out;
+    }
 }
 
 //The spooky section starts here
@@ -107,7 +190,7 @@ namespace cbpp {
         
         size_t out_sz = p - out;
 
-        //we allocated this buffer with a bit of overhead, so we need to free that leftover memory
+        //we have allocated this buffer with a bit of overhead, so need to free that leftover memory
         char* tmp = Reallocate<char>(out, -1, out_sz + 1);
         if(tmp == NULL) {
             return out;
@@ -150,7 +233,7 @@ namespace cbpp {
             ++p_out;
         }
 
-        //we allocated this buffer with a bit of overhead, so we need to free that leftover memory
+        //we have allocated this buffer with a bit of overhead, so need to free that leftover memory
         size_t out_size = p_out+1 - out;
         Char* tmp = Reallocate<Char>(out, u8_ln, out_size+1);
 

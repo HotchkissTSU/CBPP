@@ -2,30 +2,25 @@
 #define CBPP_ASSET_CDF_H
 
 #include <cstdint>
-#include <stddef.h>
-#include <typeinfo>
 
-#include "cbpp/fileio.h"
+#include "cbpp/cbstring.h"
+#include "cbpp/cb_hash.h"
 #include "cbpp/cbdef.h"
-#include "cbpp/ttype/list.h"
-#include "cbpp/cb_alloc.h"
 
 #define CDF_VERSION_MAJOR 1
 #define CDF_VERSION_MINOR 0
 
-#define CDF_MAX_VNAME_LEN 128
-#define CDF_ID_INVALID (uint32_t)(-1)
-#define CDF_ID_MAX (uint32_t)(-1) - 1
+#define CDF_MAX_NAME_LEN 128
 
 namespace cbpp {
-    class DataFile {
+    class CDF {
         public:
-            enum class VType : uint8_t {
+            enum VType : uint8_t {
                 INVALID,
-                BYTE, CHAR,
-                U16, I16,
-                U32, I32,
-                U64, I64,
+                BYTE, INT8,
+                UINT16, INT16,
+                UINT32, INT32,
+                UINT64, INT64,
                 FLOAT
             };
 
@@ -37,124 +32,32 @@ namespace cbpp {
                 float flt;
             };
 
-            struct BlockValueInfo {
-                uint32_t nid;
-                uint32_t arrb;
-                uint64_t offset;
-                VType type;
-            };
-
-            struct BlockTypeInfo {
-                uint32_t nid;
-                uint32_t vnum;
-                BlockValueInfo* valinf = NULL;
-            };
-
-            struct Value {
-                char* Name = NULL;
+            class Value {
+                VType type = INVALID;
+                String Name;
                 Array<VData> Data;
-
-                ~Value() {
-                    free(Name);
-                }
             };
 
-            struct Block {
-                uint32_t NID = 0;
-                uint32_t TID = 0;
+            class BaseDataType {
+                public:
 
-                List<Value> Data;
-                char* Name = NULL;
+                private:
 
-                void SetName(const char* nname) {
-                    free(Name);
-                    Name = strdup(nname);
-                }
-
-                Value* At(const char* vname) {
-                    for(uint32_t i = 0; i < Length; i++) {
-                        if(strcmp(vname, Data[i].Name) == 0) {
-                            return &Data[i];
-                        }
-                    }
-
-                    return NULL;
-                }
-
-                Block& operator=(Block& other) {
-                    Name = strdup(other.Name);
-
-                    Free<Value>(Data, Length);
-                    Length = other.Length;
-                    Data = Allocate<Value>(Length);
-                    NID = other.NID;
-                    TID = other.TID;
-                    memcpy(Data, other.Data, Length * sizeof(Value));
-
-                    return *this;
-                }
-
-                Value* operator[](const char* vname) {
-                    return At(vname);
-                }
-
-                void PushValue(Value& val) {
-                    Length++;
-                    Data = (Value*)realloc(Data, Length);
-                    Data[Length-1] = val;
-                }
-
-                ~Block() {
-                    free(Name);
-                }
             };
 
-            DataFile() = default;
-            DataFile( const char* path );
+            class Block {
+                String Name;
+                Array<Value> Data;
+            };
 
-            //Load data from the file
-            bool Load( const char* path );
+            CDF() = default;
+            CDF(const char* path);
 
-            //Dump all currently stored data to the file
-            bool Save( const char* path );
-
-            //Get the result of the last CDF::Load() call
-            bool LoadResult();
-
-            Block* At(const char* name);
-            Block* operator[](const char* name);
-
-            void PushBlock(Block& blk);
-            void PopBlock(const char* bname);
-
-            size_t SizeOf(VType typ);
+            bool Load(const char* path);
+            bool Save(const char* path);
 
         private:
-            bool load_result = false;
-
-            struct {
-                union {
-                    char str[4];
-                    uint32_t num = 0;
-                } sig;
-
-                union {
-                    uint16_t whole = 0;
-                    uint8_t major, minor;
-                } version;
-
-                uint32_t nnum = 0;
-                uint32_t bnum = 0;
-            } header;
-
-            Block* blocks = NULL;
-
-            void _allocate(uint32_t bnum);
-
-            bool read_header(File& handle, bool check_version);
-            //Read N tightly packed NULL-terminated strings
-            bool read_strtab(File& handle, char** target, uint32_t ln );
-            bool read_typereg(File& handle, BlockTypeInfo& target);
+            bool rles = false; //the result of the last read/write call
     };
 }
 

@@ -4,30 +4,19 @@
 #include "cbpp/vec2.h"
 #include "cbpp/cbdef.h"
 #include "cbpp/ai.h"
+#include "cbpp/cb_hash.h"
+#include "cbpp/cbstring.h"
 
 #include <map>
 #include <queue>
-#include <string>
 
 #define ENTITY_COMPONENT(trivial_name) private:\
-static constexpr hash_t comp_uid = Hash(#trivial_name);\
+static constexpr cbpp::hash_t comp_uid = cbpp::Hash(#trivial_name);\
 public:\
-static hash_t GetID() { return comp_uid; }\
+static cbpp::hash_t GetID() { return comp_uid; }\
 static const char* GetName() { return #trivial_name; }
 
 namespace cbent {
-	typedef uint32_t hash_t;
-
-	constexpr hash_t Hash ( const char * key ) {
-		hash_t h(3323198485ul);
-		for (;*key;++key) {
-			h ^= *key;
-			h *= 0x5bd1e995;
-			h ^= h >> 15;
-		}
-		return h;
-	}
-
 	class Entity;
 
 	class BaseComponent {
@@ -86,13 +75,13 @@ namespace cbent {
 
 	class Entity {
 		CB_VAR_GET(uint64_t, ID, ent_id);
-		CB_VAR_GETSET(std::string, Name, ent_name);
+		CB_VAR_GETSET(cbpp::String, Name, ent_name);
 
 		public:
 			Entity() = default;
 
 			template<class T> void AttachComponent() {
-				hash_t comp_id = T::GetID();
+				cbpp::hash_t comp_id = T::ID();
 
 				if(ent_comps.count(comp_id) <= 0) {
 					ent_comps[comp_id] = CreateComponent<T>(this);
@@ -101,7 +90,7 @@ namespace cbent {
 
 			template<class T> T* GetComponent() {
 				const char* comp_name = T::GetName();
-				hash_t comp_hash = Hash(comp_name);
+				cbpp::hash_t comp_hash = cbpp::Hash(comp_name);
 				
 				if(ent_comps.count(comp_hash) > 0) {
 					return (T*)( ent_comps.at(comp_hash) );
@@ -111,7 +100,7 @@ namespace cbent {
 			}
 
 		private:
-			std::map<hash_t, BaseComponent*> ent_comps;
+			std::map<cbpp::hash_t, BaseComponent*> ent_comps;
 	};
 }
 

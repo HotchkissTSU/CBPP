@@ -2,28 +2,49 @@
 #define CBPP_LOCALES_H
 
 #include "cbpp/cbstring.h"
+#include "cbpp/cb_hash.h"
 
+#include <uchar.h>
 #include <map>
 
 namespace cbpp {
-    String GetLocaleText(std::string text_id);
+    class Locale {
+        public:
+            Locale();
+            Locale(const char* fname);
+
+            bool Load(const char* fname);
+            bool Save(const char* fname);
+
+            bool HasLabel(const char* label);
+            bool GetIOResult();
+
+            const String& GetString(const char* key);
+            void PushString(const char* label, const String& text);
+
+        private:
+            bool ParseSource(const String& src);
+
+            bool m_io_result = false;
+            String m_default_string;
+            std::map<hash_t, String> m_data;
+    };
 
     class LocaleManager {
         public:
-            std::string GetCurrentLocale();
-            void SetLocale(std::string new_locale_name);
+            LocaleManager() = delete;
+            LocaleManager(const LocaleManager&) = delete;
 
-            String GetString(std::string text_id);
-
-            bool MountLocale(std::string locale_name, std::string file_path);
-            bool MountLocales(std::string locales_def_path);
+            static bool MountLocale(const char* lname, const char* lfname);
+            static Locale& GetCurrentLocale();
+            static void SetLocale(const char* lname);
 
         private:
-            std::string cur_locale;
-            std::map< std::string, std::map<std::string, String> > localemap;
-    };
+            static void SetCurrentLocaleName(const char* farg);
 
-    LocaleManager* Locale();
+            constexpr static char* m_locale_active = NULL;
+            static std::map<hash_t, Locale> m_locales;
+    };
 }
 
 #endif

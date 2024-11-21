@@ -9,12 +9,17 @@ extern "C" {
     bool ModuleMain(int argc, char** argv) {
         printf("Module entry point!\n");
 
-        String test_a(U"готовые движки ");
-        String test_b(U"для слабых и глупых ");
+        String test = U"word1,word2,word3";
 
-        String test = test_a + test_b * 5;
+        size_t split_ln;
+        String* splitted = String::Split(split_ln, test, U',');
 
-        test.Print();printf("\n");
+        printf("split len: %lu\n", split_ln);
+
+        for(size_t i = 0; i < split_ln; i++) {
+            splitted[i].Print();
+            printf("\n");
+        }
 
         return true;
     }

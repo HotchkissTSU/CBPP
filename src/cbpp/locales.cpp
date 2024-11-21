@@ -1,42 +1,44 @@
 #include "cbpp/locales.h"
 
-#include "cbpp/error.h"
-#include "json/json.h"
+#include "cbpp/fileio.h"
+#include "cbpp/cb_alloc.h"
 
 namespace cbpp {
-    LocaleManager* Locale() {
-        static LocaleManager locale_man;
-        return &locale_man;
+    Locale::Locale(const char* fname) {
+        Load(fname);
     }
 
-    std::string LocaleManager::GetCurrentLocale() {
-        return cur_locale;
+    bool Locale::Load(const char* fname) {
+        char fn_buffer[512];
+        snprintf(fn_buffer, 512, "assets/locale/%s.txt", fname);
+
+        File inp(fn_buffer, "rb");
+        char* buffer = Allocate<char>(inp.Length()+1);
+        if(buffer == NULL) { m_io_result = false; return m_io_result; }
+
+        inp.Read(buffer, inp.Length(), 1);
+        inp.Close();
+
+        String file_text = String::FromU8(buffer);
+        free(buffer);
+
+        ParseSource(file_text);
+
+        m_io_result = true;
+        return m_io_result;
     }
 
-    void LocaleManager::SetLocale(std::string new_locale) {
-        if(localemap.count(new_locale) <= 0) {
-            char err_log[256];
-            snprintf(err_log, 256, "Attempt to set unknown locale '%s'", new_locale.c_str());
-            CbThrowError(err_log);
-            return;
+    bool Locale::ParseSource(const String& src) {
+        return false;
+    }
+
+    const String& Locale::GetString(const char* key) {
+        hash_t khash = Hash(key);
+
+        if(m_data.count(khash) == 0) {
+            return m_default_string;
         }
 
-        cur_locale = new_locale;
-    }
-
-    String LocaleManager::GetString(std::string text_id) {
-        if(localemap.at(cur_locale).count(text_id) <= 0) {
-            char err_log[256];
-            snprintf(err_log, 256, "Locale '%s' does not have any string labeled as '%s'", cur_locale.c_str(), text_id.c_str());
-            CbThrowError(err_log);
-
-            return String(U"[UNDEFINED STRING LABEL]");
-        }
-
-        return localemap.at(cur_locale).at(text_id);
-    }
-
-    String GetLocaleString(std::string text_id) {
-        return Locale()->GetString(text_id);
+        return m_data[khash];
     }
 }

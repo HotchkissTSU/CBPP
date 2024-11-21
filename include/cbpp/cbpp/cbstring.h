@@ -34,6 +34,9 @@ namespace cbpp {
 
             void Print(FILE* target = stdout) const;
 
+            bool operator== (const String& other);
+            String& operator+= (Char other);
+
             /*Get string\`s content as a C char32_t* array
             This pointer is malloc`d and you need to free it by yourself*/
             Char* C32() const;
@@ -53,9 +56,17 @@ namespace cbpp {
             The resulting pointer is malloc`d and you need to free it by yourself*/
             static Char* U8_U32(const char* u8);
 
+            /*Split a string by the delimeter.
+            The resulting pointer is to be cleared with cbpp::Free()*/
+            static String* Split(size_t& size_ref, const String& str, Char delim);
+
+            /*Split a string by the delimeter, not including ones inside the quote pairs.
+            The resulting pointer is to be cleared with cbpp::Free()*/
+            static String* SplitEx(size_t& size_ref, const String& str, Char delim, Char quote = U'"');
+
             friend String operator+(const String&, const String&);
             friend String operator*(const String&, size_t);
-    };
+    }
 
     String operator+(const String& A, const String& B);
     String operator*(const String& A, size_t mul);

@@ -8,7 +8,7 @@
 #define CBPP_LIST_MODE 0 
 
 /*
-    Add this amount of bytes to the physical buffer size of the result of the
+    Add this amount of index places to the physical buffer size of the result of the
     List addition operator
 */
 #define CBPP_LIST_ADDITION_OVERHEAD 16
@@ -43,6 +43,15 @@ namespace cbpp {
             
             List(size_t ln) : m_array(ln) {
                 m_len_imag = m_array.Length();
+            }
+
+            bool operator == (const List<T>& other) {
+                return m_array == other.m_array;
+            }
+
+            void Clear() {
+                m_len_imag = 0;
+                m_array.Clear();
             }
             
             bool PushBack(const T& value) {
@@ -111,6 +120,22 @@ namespace cbpp {
 
             T& operator[](size_t index) {
                 return At(index);
+            }
+
+            const T& operator[](size_t index) const {
+                return ConstAt(index);
+            }
+
+            bool Reserve(size_t ln) {
+                if(!m_array.Resize(ln)) {
+                    return false;
+                }
+
+                if(m_len_imag > m_array.Length()) {
+                    m_len_imag = m_array.Length();
+                }
+
+                return true;
             }
             
             bool IsValid() const noexcept {

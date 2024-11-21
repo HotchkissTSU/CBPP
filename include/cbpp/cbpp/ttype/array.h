@@ -77,7 +77,17 @@ namespace cbpp {
                 return *this;
             }
 
-            //Attempt to resize the array, true if everything is OK, false if something terrible happened
+            bool operator == (const Array<T>& other) {
+                for(size_t i = 0; i < m_length; i++) {
+                    if( ConstAt(i) != other.ConstAt(i) ) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            //Attempt to resize the array, true if everything is OK, false if something terrible has happened
             bool Resize(size_t new_size) {
                 T* tmp_ptr = Reallocate(m_array, m_length, new_size);
                 if(tmp_ptr == NULL) {
@@ -131,6 +141,11 @@ namespace cbpp {
 
             T& operator [] (size_t index) {
                 return At(index);
+            }
+
+            void Clear() {
+                if(IsValid()) { Free<T>(m_array, m_length); }
+                m_length = 0;
             }
 
             //Get the const pointer to the underlying C array

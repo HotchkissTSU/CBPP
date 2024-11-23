@@ -18,8 +18,8 @@ namespace cbpp {
 		return h;
     }
     
-    size_t PrintHash(const hash_t& hsh, FILE* target = stdout);
-    size_t SPrintHash(char* buffer, size_t max_write, const hash_t& hsh);
+    size_t PrintHash(hash_t hsh, FILE* target = stdout);
+    size_t SPrintHash(char* buffer, size_t max_write, hash_t hsh);
 }
 
 #endif

@@ -7,6 +7,11 @@
 #include <uchar.h>
 #include <map>
 
+#define CB_LOC_DELIM_LINE    U'\n'
+#define CB_LOC_DELIM_COMMAND U':'
+#define CB_LOC_QUOTE         U'\"'
+#define CB_LOC_SPACE         U' '
+
 namespace cbpp {
     class Locale {
         public:

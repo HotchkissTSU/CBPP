@@ -1,19 +1,25 @@
 #include "cbpp/cb_hash.h"
 
 namespace cbpp {
-    size_t PrintHash(const hash_t& hsh, FILE* target) {
-        uint64_t begin, end; //first and last 8 bytes
-        begin = hsh >> 64;
-        end = hsh & ((hash_t)(-1) >> 64);
+    size_t PrintHash(hash_t hsh, FILE* target) {
+        union {
+            uint64_t first8, last8;
+            hash_t whole16;
+        } _u;
 
-        return fprintf(target, "%x%x", begin, end);
+        _u.whole16 = hsh;
+
+        return fprintf(target, "%x%x", _u.first8, _u.last8);
     }
 
-    size_t SPrintHash(char* buffer, size_t max_write, const hash_t& hsh) {
-        uint64_t begin, end; //first and last 8 bytes
-        begin = hsh >> 64;
-        end = hsh & ((hash_t)(-1) >> 64);
+    size_t SPrintHash(char* buffer, size_t max_write, hash_t hsh) {
+        union {
+            uint64_t first8, last8;
+            hash_t whole16;
+        } _u;
 
-        return snprintf(buffer, max_write, "%x%x", begin, end);
+        _u.whole16 = hsh;
+
+        return snprintf(buffer, max_write, "%x%x", _u.first8, _u.last8);
     }
 }

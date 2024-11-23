@@ -2,30 +2,134 @@
 #include "cbpp/cb_alloc.h"
 
 namespace cbpp {
-    Char* String::C32() const {
-        Char* out = Allocate<Char>(Length()+1);
-        memcpy(out, m_array.CArr(), sizeof(Char)*Length());
+    char* g_string_buffer = NULL;
 
-        return out;
+    void String::Alloc(size_t ln) {
+        m_imag_length = ln;
+
+        if(m_imag_length > m_phys_length) {
+            m_phys_length = m_phys_length + CBPP_STRING_OVERHEAD;
+        }
+
+        if(m_imag_length*2 < m_phys_length) {
+            m_phys_length = m_imag_length + CBPP_STRING_OVERHEAD;
+        }
+
+        Char* tmp_ptr = (Char*) realloc(m_array, m_phys_length*sizeof(Char));
+        if(tmp_ptr == NULL) {
+            free(m_array);
+            CbThrowErrorf("String memory allocation failure (Img:%lu/Phys:%lu)", m_imag_length, m_phys_length);
+        }
+
+        m_array = tmp_ptr;
     }
 
-    char* String::C8() const {
-        char* u8 = U32_U8(m_array.CArr());
-        return u8;
+    String& String::operator=(const String& other) {
+        m_imag_length = other.Length();
+        Alloc(m_imag_length);
+
+        for(size_t i = 0; i < m_imag_length; i++) {
+            m_array[i] = other.ConstAt(i);
+        }
+
+        return *this;
+    }
+
+    String::String(const Char* u32) {
+        size_t ln = str32len(u32);
+        Alloc(ln);
+        memcpy(m_array, u32, sizeof(Char)*ln);
+    }
+
+    String::String(const Char* u32, size_t ln) {
+        Alloc(ln);
+        memcpy(m_array, u32, sizeof(Char)*ln);
+    }
+
+    String::String(const String& other) {
+        
+    }
+
+    String::String(const char* u8) {
+        Char* buffer = U8_U32(u8);
+        size_t u32_ln = str32len(buffer);
+        Alloc(u32_ln);
+        memcpy(m_array, buffer, sizeof(Char)*u32_ln);
+        free(buffer);
+    }
+
+    Char& String::At(size_t index) {
+        if(index >= m_phys_length) {
+            CbThrowErrorf("Invalid string index %lu of maximum %lu", index, m_phys_length);
+        }
+
+        if(index >= m_imag_length) {
+            CbThrowWarningf("Index %lu is inside the allocated chunk, but outside of virtual string bounds (%lu)", index, m_imag_length);
+        }
+
+        return m_array[index];
+    }
+
+    const Char& String::ConstAt(size_t index) const {
+        if(index >= m_phys_length) {
+            CbThrowErrorf("Invalid string index %lu of maximum %lu", index, m_phys_length);
+        }
+
+        if(index >= m_imag_length) {
+            CbThrowWarningf("Index %lu is inside the allocated chunk, but outside of virtual string bounds (%lu)", index, m_imag_length);
+        }
+
+        return m_array[index];
+    }
+
+    Char& String::operator[](size_t index) {
+        return At(index);
+    }
+
+    const Char& String::operator[](size_t index) const {
+        return ConstAt(index);
+    }
+
+    void String::PushBack(Char value) {
+        m_imag_length++;
+        Alloc(m_imag_length);
+        m_array[m_imag_length-1] = value;
+    }
+
+    void String::Clear() {
+        m_imag_length = 0;
+        m_phys_length = 0;
+        free(m_array);
+        m_array = NULL;
+    }
+
+    size_t String::Length() const {
+        return m_imag_length;
+    }
+
+    size_t String::PhysLength() const {
+        return m_phys_length;
     }
 
     void String::Print(FILE* target) const {
-        for(size_t i = 0; i < Length(); i++) {
-            fprintf(target, "%lc", m_array.ConstAt(i));
+        for(size_t i = 0; i < m_imag_length; i++) {
+            fprintf(target, "%lc", m_array[i]);
         }
     }
 
-    String String::FromU8(const char* u8) {
-        Char* u32 = U8_U32(u8);
-        String out(u32);
-        free(u32);
+    Char* String::C32() const {
+        g_string_buffer = (char*) realloc(g_string_buffer, (m_imag_length+1)*sizeof(Char));
+        memset(g_string_buffer, 0, m_imag_length+1);
+        memcpy(g_string_buffer, m_array, m_imag_length);
 
-        return out;
+        return (Char*)g_string_buffer;
+    }
+
+    char* String::C8() const {
+        free(g_string_buffer);
+        g_string_buffer = U32_U8(m_array, m_imag_length);
+
+        return g_string_buffer;
     }
 
     String operator+(const String& A, const String& B) {
@@ -73,10 +177,10 @@ namespace cbpp {
         return *this;
     }
 
-    String* String::Split(size_t& size_ref, const String& str, Char delim ) {
+    String* String::Split(size_t& size_ref, Char delim) {
         size_ref = 0;
-        for(size_t i = 0; i < str.Length(); i++) {
-            if(str[i] == delim) {
+        for(size_t i = 0; i < Length(); i++) {
+            if(At(i) == delim) {
                 size_ref++;
             }
         }
@@ -90,31 +194,31 @@ namespace cbpp {
 
         String tmp;
         size_t str_counter = 0;
-        for(size_t i = 0; i < str.Length()+1; i++) {
-            if(i == str.Length()) {
+        for(size_t i = 0; i < Length()+1; i++) {
+            if(i == Length()) {
                 out[str_counter] = tmp;
                 break;
             }
 
-            if(str[i] == delim) {
+            if(At(i) == delim) {
                 out[str_counter] = tmp;
                 str_counter++;
                 tmp.Clear();
             }else{
-                tmp += str[i];
+                tmp += At(i);
             }
         }
 
         return out;
     }
 
-    String* String::SplitEx(size_t& size_ref, const String& str, Char delim, Char quote) {
+    String* String::SplitEx(size_t& size_ref, Char delim, Char quote) {
         size_ref = 0;
         bool is_quo = false;
-        for(size_t i = 0; i < str.Length(); i++) {
-            if(str[i] == quote) {
+        for(size_t i = 0; i < Length(); i++) {
+            if(At(i) == quote) {
                 is_quo = !is_quo;
-            }else if(!is_quo && str[i] == delim) {
+            }else if(!is_quo && At(i) == delim) {
                 size_ref++;
             }
         }
@@ -130,21 +234,30 @@ namespace cbpp {
 
         String tmp;
         size_t str_counter = 0;
-        for(size_t i = 0; i < str.Length()+1; i++) {
-            if(i == str.Length()) {
+        for(size_t i = 0; i < Length()+1; i++) {
+            if(i == Length()) {
                 out[str_counter] = tmp;
                 break;
             }
 
-            if(str[i] == quote) {
+            if(At(i) == quote) {
                 is_quo = !is_quo;
-            }else if(str[i] == delim && !is_quo) {
+            }else if(At(i) == delim && !is_quo) {
                 out[str_counter] = tmp;
                 str_counter++;
                 tmp.Clear();
             }else {
-                tmp += str[i];
+                tmp += At(i);
             }
+        }
+
+        return out;
+    }
+
+    size_t String::Count(Char to_count) const {
+        size_t out = 0;
+        for(size_t i = 0; i < Length(); i++) {
+            out = out + (size_t)(ConstAt(i) == to_count);
         }
 
         return out;
@@ -166,9 +279,11 @@ namespace cbpp {
     }
 
     char* String::U32_U8(const Char* u32) {
-        char buffer[MB_CUR_MAX]; //buffer to hold UTF-8 bytes for a single UTF-32 character
+        return U32_U8(u32, str32len(u32));
+    }
 
-        size_t u32_ln = str32len(u32);
+    char* String::U32_U8(const Char* u32, size_t u32_ln) {
+        char buffer[MB_CUR_MAX]; //buffer to hold UTF-8 bytes for a single UTF-32 character
 
         char* out = Allocate<char>(MB_CUR_MAX * u32_ln);
 

@@ -24,12 +24,6 @@ namespace cbpp {
 
 		is_open = io_ptr != NULL;
 
-		if( strchr(f_mode, '!') != NULL ) { //using wide text I/O
-			fwide(io_ptr, 1);
-		}else{
-			fwide(io_ptr, -1);
-		}
-
 		fseek(io_ptr, 0, SEEK_END);
 		fl_length = (uint64_t)ftell(io_ptr);
 		fseek(io_ptr, 0, SEEK_SET);
@@ -40,6 +34,7 @@ namespace cbpp {
 	void File::Close() {
 		if(is_open) {
 			fclose( io_ptr );
+			is_open = false;
 		}
 	}
 
@@ -86,7 +81,15 @@ namespace cbpp {
 		buffer = new uint8_t[fl_length];
 	}
 
-	uint64_t File::Length() {
+	uint64_t File::Length() const {
+		if(!is_open) {
+			return -1;
+		}
+
+		return fl_length;
+	}
+
+	uint64_t File::Length(){
 		if(!is_open) {
 			return -1;
 		}
@@ -100,8 +103,12 @@ namespace cbpp {
 		}
 	}
 
-	uint64_t File::GetPos() {
+	uint64_t File::GetPos() const {
 		return ftell(io_ptr);
+	}
+
+	bool File::IsOpen() const {
+		return is_open;
 	}
 
 	bool File::IsOpen() {

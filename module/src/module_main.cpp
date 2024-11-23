@@ -8,11 +8,10 @@ extern "C" {
 
     bool ModuleMain(int argc, char** argv) {
         printf("Module entry point!\n");
-
-        String test = U"word1,word2,word3";
+        String test = U"word1,'word2,word3',word4";
 
         size_t split_ln;
-        String* splitted = String::Split(split_ln, test, U',');
+        String* splitted = test.SplitEx(split_ln, U',', U'\'');
 
         printf("split len: %lu\n", split_ln);
 
@@ -23,7 +22,7 @@ extern "C" {
 
         return true;
     }
-
+    
     void ModuleTick() {
     }
 

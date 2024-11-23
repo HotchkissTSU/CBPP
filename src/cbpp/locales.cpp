@@ -19,7 +19,7 @@ namespace cbpp {
         inp.Read(buffer, inp.Length(), 1);
         inp.Close();
 
-        String file_text = String::FromU8(buffer);
+        String file_text(buffer);
         free(buffer);
 
         ParseSource(file_text);

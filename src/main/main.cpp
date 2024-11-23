@@ -216,6 +216,8 @@ void Cleanup() {
 	if(ModuleData.LibHandle != NULL) {
 		dlclose(ModuleData.LibHandle);
 	}
+
+	free(g_string_buffer);
 }
 
 int main( int argc, char** argv ) {

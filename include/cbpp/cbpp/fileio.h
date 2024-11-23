@@ -12,7 +12,7 @@ namespace cbpp {
 		public:
 			File(){};
 			File(const char* path, const char* mode);
-			File(File& other) = delete;
+			File(const File& other) = delete;
 
 			bool Open(const char* path, const char* mode);
 			void Close();
@@ -21,16 +21,21 @@ namespace cbpp {
 			size_t Write(void* buffer, uint64_t count, uint64_t size = 1);
 			size_t Read(void* buffer, uint64_t count, uint64_t size = 1);
 
+			String ReadUTF8();
+
 			char* ReadString();
 
 			void AllocateBuffer(uint8_t*& target);
 
+			uint64_t Length() const;
 			uint64_t Length();
+			
+			bool IsOpen() const;
 			bool IsOpen();
 
 			void SetPos(uint64_t npos);
-			uint64_t GetPos();
-			
+			uint64_t GetPos() const;
+
 			~File();
 
 		private:

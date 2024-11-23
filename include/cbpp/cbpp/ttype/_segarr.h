@@ -209,9 +209,9 @@ namespace cbpp {
 				tmp[segs] = cbpp::Allocate<T>(segsize);			
 				
 				for(size_t i = 0; i < segs; i++){
-					delete[] segarr[i];
+					Free<T>(segarr[i], segsize);
 				}
-				delete[] segarr;
+				Free<T>(segarr, segs);
 				
 				segarr = tmp;
 				segs++;

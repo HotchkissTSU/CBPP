@@ -8,7 +8,7 @@ namespace cbpp {
         m_imag_length = ln;
 
         if(m_imag_length > m_phys_length) {
-            m_phys_length = m_phys_length + CBPP_STRING_OVERHEAD;
+            m_phys_length = m_imag_length + CBPP_STRING_OVERHEAD;
         }
 
         if(m_imag_length*2 < m_phys_length) {
@@ -149,28 +149,6 @@ namespace cbpp {
         return out;
     }
 
-    String operator*(const String& A, size_t mul) {
-        size_t alen = A.Length();
-        size_t flen = alen*mul;
-
-        Char* out_ptr = Allocate<Char>(flen + 1);
-
-        for(size_t i = 0; i < flen; i++) {
-            out_ptr[i] = A.ConstAt( i % alen );
-        }
-
-        if(mul == 0) {
-            free(out_ptr);
-            Char buffer[] = {U' ',U'\0'};
-            return String(buffer);
-        }
-
-        String out(out_ptr);
-        free(out_ptr);
-
-        return out;
-    }
-
     String& String::operator+=(Char other) {
         PushBack(other);
 
@@ -262,6 +240,20 @@ namespace cbpp {
 
         return out;
     }
+
+    String operator ""_CB (const char* u8, size_t) {
+        String out(u8);
+        return out;
+    }
+
+    String operator ""_CB (const Char* u32, size_t) {
+        String out(u32);
+        return out;
+    }
+    
+    String::~String() {
+        free(m_array);
+    }
 }
 
 //The spooky section starts here
@@ -276,6 +268,15 @@ namespace cbpp {
             ln++;
         }
         return ln;
+    }
+
+    Char* String::str32dup(const Char* u32) {
+        size_t iStrLen = str32len(u32);
+        Char* sOut = (Char*)malloc( sizeof(Char)*(iStrLen+1) );
+        sOut[iStrLen] = U'\0';
+        memcpy(sOut, u32, sizeof(Char)*iStrLen);
+
+        return sOut;
     }
 
     char* String::U32_U8(const Char* u32) {
@@ -317,7 +318,7 @@ namespace cbpp {
 
     Char* String::U8_U32(const char* u8) {
         size_t u8_ln = strlen(u8);
-        Char* out = Allocate<Char>(u8_ln);
+        Char* out = Allocate<Char>(u8_ln*MB_CUR_MAX);
         if(out == NULL) {
             return NULL;
         }

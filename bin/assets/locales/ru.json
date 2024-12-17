@@ -1,0 +1,10 @@
+{
+    "fullname":"Русский",
+    "codename":"russian",
+    "prefix":"ru/",
+
+    "files":[
+        "test.txt",
+        "test2.txt"
+    ]
+}

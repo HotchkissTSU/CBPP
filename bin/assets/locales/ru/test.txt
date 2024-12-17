@@ -1,0 +1,6 @@
+#protector_poem_01 Рождённым сложить свои головы
+#protector_poem_02 сражаясь за истинный Свет
+#protector_poem_03 Не суждено узреть его
+#protector_poem_04 священной красоты,
+#protector_poem_05 Ибо ищет тот спасения
+#protector_poem_06 за их спинами

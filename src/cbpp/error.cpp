@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <cstring>
 #include <cstdint>
+#include <time.h>
+#include <stdlib.h>
 
 namespace cbpp {
 	std::stack<ErrorInfo> _cb_errors;
@@ -41,14 +43,45 @@ namespace cbpp {
 	Exception::~Exception() {
 		delete[] text, func, file;
 	}
-	
+
+	//give user a funny string if his day is all bad :)
+	const char* time_err_table[] = {
+		"At the edge of void",
+		"Nowhere, at no time",
+		"In the very end",
+		"In the Cuber-epoch",
+		"Sometime, somewhere"
+	};
+	constexpr static char time_err_table_ln = sizeof(time_err_table) / sizeof(time_err_table[0]);
+
+	size_t GetTimeString(char* buffer, size_t buffer_ln, const char* format) {
+		time_t cur_time_raw = time(NULL);
+		if( cur_time_raw == (time_t)(-1) ) {
+			snprintf(buffer, buffer_ln, "%s", time_err_table[rand() % time_err_table_ln]);
+			return -1;
+		}
+
+		struct tm* cur_time = localtime(&cur_time_raw);
+		if(cur_time == NULL) {
+			snprintf(buffer, buffer_ln, "%s", time_err_table[rand() % time_err_table_ln]);
+			return -1;
+		}
+
+		return strftime(buffer, buffer_ln, format, cur_time);
+	}
+
 	void _ThrowError(Exception exc) {		
 		FILE* error_log = fopen("logs/error.txt", "at");
 		if(error_log == NULL) {
 			return;
 		}
 		
-		fprintf(error_log, "ERROR: %s", exc.what());
+		char ftime_buff[64];
+		GetTimeString(ftime_buff, 64, "%T");
+
+		fprintf(error_log, "[%s] ERROR: %s", ftime_buff, exc.what());
+
+		//fprintf(error_log, "ERROR: %s", exc.what());
 		fclose(error_log);
 		#ifdef CBPP_DEBUG
 			#ifdef CBPP_EXC_MSGBOX
@@ -65,8 +98,11 @@ namespace cbpp {
 		if(error_log == NULL) {
 			return;
 		}
-		
-		fprintf(error_log, "ERROR: %s", exc.what());
+
+		char ftime_buff[64];
+		GetTimeString(ftime_buff, 64, "%T");
+
+		fprintf(error_log, "[1][%s] WARN  : %s", ftime_buff, exc.what());
 		fclose(error_log);
 		#ifdef CBPP_DEBUG
 			#ifdef CBPP_WARN_MSGBOX
@@ -76,7 +112,7 @@ namespace cbpp {
 			#endif
 		#endif
 	}
-
+	
 	const ErrorInfo& GetLastError() {
 		if( _cb_errors.size() > 0 ) {
 			const ErrorInfo& info = _cb_errors.top();
@@ -103,7 +139,7 @@ namespace cbpp {
 	}
 
 	void ClearErrors() {
-		while(!_cb_errors.empty()) { //i hate std::stack with the all hate that a human being can produce
+		while(!_cb_errors.empty()) { //i hate std::stack with all the hate a human being can produce
 			free(_cb_errors.top().Msg);
 			_cb_errors.pop();        //why no `clear` method? why!?
 		}

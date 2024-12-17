@@ -179,7 +179,7 @@ namespace cbpp {
 
         Array<T> out(A.m_length + B.m_length);
 
-        if(!std::is_trivially_copy_assignable<T>::value) { //T has custom operator=, and we better call him
+        if(!std::is_trivially_copy_assignable<T>::value) { //T has custom operator=, and we better call it
             for(size_t i = 0; i < A.m_length; i++) {
                 out[i] = A.At(i);
             }

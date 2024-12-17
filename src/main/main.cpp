@@ -1,12 +1,13 @@
 #include "cbpp.h"
 
-#include "json/libjson.h"
+#include "cbpp/yyjson.h"
 
 #include "cbvs/error_check.h"
 
 #include <stdio.h>
 #include <typeinfo>
 #include <cstring>
+#include <signal.h>
 
 #include "GLFW/glfw3.h"
 
@@ -21,6 +22,8 @@
 
 using namespace cbpp;
 using namespace cbent;
+
+static sighandler_t _old_sig_handler;
 
 void error_callback(int error_code, const char* description){
 	char err_log[256];
@@ -104,8 +107,9 @@ void ResolveArgs(int argc, char** argv) {
 }
 
 #ifdef __linux__
-bool LoadGameLibrary() {	
+bool LoadGameLibrary() {
 	char* lname = GameData.GameLibrary;
+	printf("Loading game library: '%s'\n", GameData.GameLibrary);
 	void* lib_handle = dlopen(lname, RTLD_NOW);
 	
 	if(lib_handle == NULL){
@@ -148,31 +152,37 @@ bool LoadGamefile() {
 	char* gf = GameData.Gamefile;
 	char* glib = NULL;
 
-	cbpp::File json_input(gf, "rt");
+	cbpp::File hInput(gf, "rt");
+	size_t iFileLen = hInput.Length();
 
-	char* buffer = new char[ json_input.Length() + 1 ];
-	memset(buffer, 0, json_input.Length() + 1);
+	char* sJsonBuffer = (char*)malloc(iFileLen+1);
+	sJsonBuffer[iFileLen] = '\0';
 
-	json_input.Read( buffer, json_input.Length() );
+	hInput.Read( sJsonBuffer, iFileLen );
 
-	JSONNODE* root = json_parse( buffer );
+	yyjson_doc* jDoc = yyjson_read_opts(sJsonBuffer, iFileLen, CBPP_JSONREAD_OPTS, NULL, NULL);
 
-	delete[] buffer;
+	if(jDoc == NULL) {
+		CbThrowError("Failed to parse gamefile JSON");
+	}
 
-	if(root == NULL) {
+	yyjson_val* jRoot = yyjson_doc_get_root(jDoc);
+
+	free(sJsonBuffer);
+
+	if(jRoot == NULL) {
 		CbThrowError("Json root node is NULL");
 		return false;
 	}
 
-	JSONNODE* j_gamelib = json_get(root, JSON_TEXT("gamelib"));
+	yyjson_val* jGamelib = yyjson_obj_get(jRoot, "gamelib");
 
-	if(j_gamelib) {
-		json_char* j_text = json_as_string(j_gamelib);
-		glib = strdup((char*)j_text);
-		json_free(j_text);
+	if(jGamelib != NULL && yyjson_is_str(jGamelib)) {
+		const char* sTmp = yyjson_get_str(jGamelib);
+		glib = strdup(sTmp);
 	}
 
-	json_delete(root);
+	yyjson_doc_free(jDoc);
 
 	if(glib == NULL) {
 		CbThrowError("Failed to get 'gamelib' value from the gamefile");
@@ -220,7 +230,23 @@ void Cleanup() {
 	free(g_string_buffer);
 }
 
+void SetSignalsCallback(sighandler_t cb_sig_handler) {
+	signal(SIGSEGV, cb_sig_handler);
+	signal(SIGTERM, cb_sig_handler);
+	//signal(SIGABRT, cb_sig_handler); never uncomment it
+	signal(SIGFPE, cb_sig_handler);
+	signal(SIGILL, cb_sig_handler);
+	signal(SIGINT, cb_sig_handler);
+}
+
+void cb_sig_handle(int sigid) {
+	CbThrowErrorf("%s (%d)", strsignal(sigid), sigid);
+	exit(-1);
+}
+
 int main( int argc, char** argv ) {
+	SetSignalsCallback(cb_sig_handle);
+
 	setlocale(LC_ALL, "");
 	ClearLogs();
 

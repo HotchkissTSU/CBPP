@@ -8,7 +8,7 @@ namespace cbpp {
         } _u;
 
         _u.whole16 = hsh;
-
+        
         return fprintf(target, "%x%x", _u.first8, _u.last8);
     }
 

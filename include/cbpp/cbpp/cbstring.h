@@ -10,20 +10,23 @@
 #include <cstring>
 #include <uchar.h>
 
-#include "cbpp/ttype/list.h"
+#include <typeinfo>
 
-#define CBPP_STRING_OVERHEAD 32
+#include "cbpp/cbdef.h"
+#include "cbpp/error.h"
 
 namespace cbpp {
     //4-byte character type used by the engine
     typedef char32_t Char;
 
-    //this bro is required by the C unicode-converting functions and i have no idea what it does
+    //This bro is required by the C unicode-converting functions and i have no idea what it does
     extern mbstate_t g_mbstate;
 
+    //This buffer holds the results of String::C8 and String::C32 methods
     extern char* g_string_buffer;
     
-    // CBPP characted string type. Uses UTF-32 to store the data and can convert text from UTF-8 and back
+    // CBPP character string type. Uses UTF-32 to store the data and can convert text from UTF-8 and back.
+    // Use only in the situations where multiple languages are needed.
     class String {
         public:
             String() = default;
@@ -51,14 +54,19 @@ namespace cbpp {
             void PushBack(Char value);
             void Clear();
 
-            //Get string\`s content as a null-terminated, UTF-32 encoded char32_t* array
+            //Get string\`s content as a null-terminated, UTF-32 encoded char32_t* array.
+            //The return pointer is buffered and you must never free() it by yourself.
             Char* C32() const;
 
-            //Get string\`s content as a null-terminated, UTF-8 encoded char* array
+            //Get string\`s content as a null-terminated, UTF-8 encoded char* array.
+            //The return pointer is buffered and you must never free() it by yourself.
             char* C8() const;
 
             //Get length of the null-terminated UTF-32 string
             static size_t str32len(const Char* u32, size_t maxln = -1);
+
+            //Create a copy of the UTF-32 string
+            static Char* str32dup(const Char* src);
 
             /*Convert a null-terminated string from UTF32 to UTF8
             The resulting pointer is malloc`d and you need to free it by yourself*/
@@ -80,7 +88,8 @@ namespace cbpp {
             size_t Count(Char to_count) const;
 
             friend String operator+(const String&, const String&);
-            friend String operator*(const String&, size_t);
+
+            ~String();
 
         private:
             void Alloc(size_t ln);
@@ -90,7 +99,97 @@ namespace cbpp {
     };
 
     String operator+(const String& A, const String& B);
-    String operator*(const String& A, size_t mul);
+
+    String operator ""_CB (const char* u8, size_t);
+    String operator ""_CB (const Char* u32, size_t);
+    
+    /*
+        Character stream object for the more convenient text parsing
+        NOTE: char-templated CharStream is NOT in UTF-8!
+    */
+    template<typename CharT> class CharStream {
+        public:
+            CharStream() = default;
+
+            CharStream(const CharT* c_string) {
+                Set(c_string);
+            }
+
+            //Get the current symbol
+            CharT Current() {
+                if(!IsValid()) {
+                    CbThrowError("Character stream is not allocated");
+                }
+
+                return m_stream[m_pointer];
+            }
+
+            //Get the symbol with the offset from the current one
+            CharT Offset(int64_t ln) {
+                if(m_pointer+ln < m_length && m_pointer+ln >= 0) {
+                    return m_stream[m_pointer+ln];
+                }else{
+                    return (CharT)(0);
+                }
+            }
+
+            //Move the pointer forward
+            bool Advance(size_t dist) {
+                m_pointer += dist;
+
+                if(m_pointer >= m_length) {
+                    m_pointer = m_length-1;
+                    return false;
+                }
+
+                return true;
+            }
+
+            //Set the pointer to the default position
+            void Reset() {
+                m_pointer = 0;
+            }
+
+            bool IsValid() {
+                return (m_stream != NULL) && (m_pointer < m_length);
+            }
+
+            size_t GetIndex() {
+                return m_pointer;
+            }
+
+            ~CharStream() {
+                free(m_stream);
+            }
+
+        private:
+            size_t _cb_cs_strlen(const char* ch) {
+                return strlen(ch);
+            }
+
+            size_t _cb_cs_strlen(const Char* ch) {
+                return String::str32len(ch);
+            }
+
+            void Set(const CharT* c_str) {
+                size_t s_ln = _cb_cs_strlen(c_str);
+
+                CharT* tmp_ptr = (CharT*)realloc(m_stream, s_ln);
+
+                if(tmp_ptr == NULL) {
+                    CbThrowErrorf("CharStream reallocation (%lu->%lu) failed", m_length, s_ln);
+                }
+
+                m_stream = tmp_ptr;
+                m_length = s_ln;
+
+                memcpy(m_stream, c_str, sizeof(CharT)*s_ln);
+            }
+
+            CharT* m_stream = NULL;
+            size_t m_length = 0;
+            size_t m_pointer = 0;
+    };
 }
 
 #endif

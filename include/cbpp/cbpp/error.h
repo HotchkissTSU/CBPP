@@ -41,7 +41,10 @@ namespace cbpp {
 		char* Msg;
 	};
 
-	extern void DisplayError(const char* title, const char* text, bool kill = false);
+	extern const char* time_err_table[];
+	size_t GetTimeString(char* buffer, size_t buffer_ln, const char* format);
+
+	void DisplayError(const char* title, const char* text, bool kill = false);
 
 	extern std::stack<ErrorInfo> _cb_errors;
 	extern ErrorInfo _no_error;
@@ -60,8 +63,8 @@ namespace cbpp {
 			std::size_t line;
 	};
 	
-	extern void _ThrowError(Exception exc);
-	extern void _ThrowWarning(Exception exc);
+	void _ThrowError(Exception exc);
+	void _ThrowWarning(Exception exc);
 
 	/*
 		TIER 2 ERRORS

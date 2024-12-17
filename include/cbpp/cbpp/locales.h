@@ -7,18 +7,18 @@
 #include <uchar.h>
 #include <map>
 
-#define CB_LOC_DELIM_LINE    U'\n'
-#define CB_LOC_DELIM_COMMAND U':'
-#define CB_LOC_QUOTE         U'\"'
-#define CB_LOC_SPACE         U' '
+//The maximal length of the label name
+#define CBPP_LOCALE_MAXNAME 64
+
+//The maximal length of the labeled text
+#define CBPP_LOCALE_MAXTEXT 512
 
 namespace cbpp {
     class Locale {
         public:
-            Locale();
-            Locale(const char* fname);
+            Locale(){};
 
-            bool Load(const char* fname);
+            Char* Load(const char* fname);
             bool Save(const char* fname);
 
             bool HasLabel(const char* label);
@@ -27,29 +27,42 @@ namespace cbpp {
             const String& GetString(const char* key);
             void PushString(const char* label, const String& text);
 
-        private:
-            bool ParseSource(const String& src);
+            bool ParseSource(const Char* src);
+            
+            void SetName(const String& nm);
+            const String& GetName();
 
-            bool m_io_result = false;
-            String m_default_string;
-            std::map<hash_t, String> m_data;
-    };
+            String m_sDefaultEntry;
 
-    class LocaleManager {
-        public:
-            LocaleManager() = delete;
-            LocaleManager(const LocaleManager&) = delete;
-
-            static bool MountLocale(const char* lname, const char* lfname);
-            static Locale& GetCurrentLocale();
-            static void SetLocale(const char* lname);
+            void operator=(Locale& other);
 
         private:
-            static void SetCurrentLocaleName(const char* farg);
+            /*
+                Removes commentaries and newlines
+            */
+            Char* Preprocess(const Char* src);
+            bool ProcessPair(const Char* name, const Char* text);
 
-            constexpr static char* m_locale_active = NULL;
-            static std::map<hash_t, Locale> m_locales;
+            bool m_bRWresult = false, m_bValid = false;
+            String m_sPrettyName;
+            std::map<hash_t, String> m_mData;
     };
+
+    /*
+        Load and store a new locale from a file by it`s short name,
+        like "ru" instead of "assets/locales/ru.json" etc.
+    */
+    void MountLocale(const char* lfname);
+    Locale* GetCurrentLocale() noexcept;
+
+    /*
+        Attempt to change the current locale.
+        A new one must be mounted before this call.
+    */
+    bool SetLocale(const char* lname) noexcept;
+
+    extern Locale* g_pCurrentLocale;
+    extern std::map<hash_t, Locale> g_mLocales;
 }
 
 #endif

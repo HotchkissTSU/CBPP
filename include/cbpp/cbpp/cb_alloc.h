@@ -1,6 +1,9 @@
 #ifndef CBPP_ALLOC_H
 #define CBPP_ALLOC_H
 
+//A lot of memory management info is printed in the log in the memory debug mode
+#define CB_MEMDBG 0
+
 #include <stdlib.h>
 #include <type_traits> 
 #include <stddef.h>
@@ -15,24 +18,46 @@
 */
 
 namespace cbpp {
-	template<typename T> struct Pointer {
-		size_t Length = 0;
-		T* Ptr = nullptr;
-	};
+	/*
+		Attempt to call object`s destructor.
+		Nullifies primitive types.
+	*/
+	template<typename T> void Destruct(T* object) noexcept {
+		if(std::is_destructible<T>::value) {
+			object->~T();
+		}else {
+			memset(object, 0, sizeof(object));
+		}
+	}
+
+	/*
+		Attempt to properly construct an object. Can throw exceptions.
+	*/
+	template<typename T, typename... Args> void Construct(T* object, Args... Fargs) {
+		if(std::is_constructible<T, Args...>::value) {
+			new(object) T( std::forward<Args>(Fargs)... );
+		}else{
+			if(!std::is_trivially_constructible<T>::value) {
+				memset(object, 0, sizeof(object));
+			}else {
+				CbThrowErrorf("Unable to construct object of type '%s'", typeid(T).name());
+			}
+		}
+	}
 
 	/*
 		Type-safe free() wrapper. Intended to deallocate buffers of
 		complex objects with custom destructors.
 
+		This call NULL-ifies the passed pointer automatically.
+
 		Regular free() can be used on the primitive types` arrays instead
 	*/
-	template<typename T> void Free(T*& ptr, size_t ln) {
+	template<typename T> void Free(T*& ptr, size_t ln) noexcept {
 		if(ptr == NULL) { return; }
 
-		if(std::is_destructible<T>::value) {
-			for(size_t i = 0; i < ln; i++) {
-				ptr[i].~T();
-			}
+		for(size_t i = 0; i < ln; i++) {
+			Destruct<T>(&ptr[i]);
 		}
 
 		free(ptr);
@@ -43,7 +68,7 @@ namespace cbpp {
 		Type-safe malloc() wrapper.
 		Returns NULL upon allocation fail.
 	*/
-	template<typename T> T* Allocate(size_t size) {
+	template<typename T, typename ... Args> T* Allocate(size_t size, Args... Fargs) {
 		T* out = (T*) malloc(size * sizeof(T));
 
 		if(out == NULL) {
@@ -54,28 +79,28 @@ namespace cbpp {
 		}
 
 		for(size_t i = 0; i < size; i++) {
-			if(std::is_trivially_constructible<T>::value) {
-				new(&out[i]) T();
-			}else{
-				try {
-					new(&out[i]) T();
-				} catch(...) {
-					Free<T>(out, i);
-					throw;
-				}
+			try {
+				new(&out[i]) T(std::forward<Args>(Fargs)...);
+			} catch (...) {
+				Free<T>(out, size);
+
+				char buffer[128];
+				snprintf(buffer, 128, "Construction failure: %x[%lu]", out, i);
+				PushError(ERROR_MEM, buffer);
+				return NULL;
 			}
 		}
 		
 		return out;
 	}
-
+	
 	/*
 		Type-safe realloc() wrapper. Calls destructors upon shrinks and
 		default constructors upon up-allocations.
 
 		If NULL is passed as the reallocation target, a new buffer will be created.
 
-		If -1 is passed to the 'old_size' parameter, there will be no type-safety checks.
+		If -1 is passed to the 'old_size' parameter, there will be no resize-type-safety checks.
 
 		If reallocation fails, it will not modify the original pointer and
 		will simply return NULL

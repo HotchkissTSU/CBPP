@@ -3,3 +3,4 @@ logs/
 *.so
 sdk/
 assets/textures/
+assets/locales/

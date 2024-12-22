@@ -6,7 +6,7 @@
 namespace cbpp {
     class TestEntity : public BaseEntity {
         private:
-            EntityProperty<float> m_pfTestFloat = EntityProperty<float>(15.0f, "test_float", "test? maybe");
+            EntityProperty<float> m_pfTestFloat = EntityProperty(15.0f, "test_float", "test? maybe");
 
             CB_EPROP_BEGIN
                 &m_pfTestFloat

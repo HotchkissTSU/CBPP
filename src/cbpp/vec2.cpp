@@ -23,7 +23,6 @@ namespace cbpp{
 	
 	float_t Vec2::Angle(){
 		int addon;
-		//арккосинус - чмо, просирает, в какой четверти был угол, чистим за ним
 		if(x >= 0 && y >= 0){ //1
 			addon = 0;
 		}else if(x >= 0 && y < 0){//4       переделай это в радианы
@@ -60,23 +59,14 @@ namespace cbpp{
 		return (x*y + other.x*other.y)/other.Length();
 	}
 	
-	float_t Vec2::VectorMul(Vec2 other){
+	float_t Vec2::Cross(Vec2 other){
 		return x*other.y - y*other.x;
 	}
 	
-	Vec2 Vec2::operator+(Vec2 other) noexcept { return Vec2(x + other.x, y + other.y); }
-	Vec2 Vec2::operator+(float_t other) noexcept { return Vec2(x + other, y + other); }
-	Vec2 Vec2::operator+(int other) noexcept { return Vec2(x + (float_t)other, y + (float_t)other); }
-	
-	Vec2 Vec2::operator-(Vec2 other) noexcept { return Vec2(x - other.x, y - other.y); }
-	Vec2 Vec2::operator-(float_t other) noexcept { return Vec2(x - other, y - other); }
-	Vec2 Vec2::operator-(int other) noexcept { return Vec2(x - (float_t)other, y - (float_t)other); }
-	
-	Vec2 Vec2::operator*(Vec2 other) noexcept { return Vec2(x * other.x, y * other.y); }
-	Vec2 Vec2::operator*(float_t other) noexcept { return Vec2(x * other, y * other); }
-	Vec2 Vec2::operator*(int other) noexcept { return Vec2(x * (float_t)other, y * (float_t)other); }
-	
-	Vec2 Vec2::operator/(Vec2 other) noexcept {
+	Vec2 Vec2::operator+(Vec2 other) const noexcept { return Vec2(x + other.x, y + other.y); }
+	Vec2 Vec2::operator-(Vec2 other) const noexcept { return Vec2(x - other.x, y - other.y); }
+	Vec2 Vec2::operator*(Vec2 other) const noexcept { return Vec2(x * other.x, y * other.y); }
+	Vec2 Vec2::operator/(Vec2 other) const noexcept {
 		float_t ox,oy;
 		if(other.x == 0){
 			ox = 0;
@@ -90,16 +80,6 @@ namespace cbpp{
 		}
 		return Vec2(ox,oy); 
 	}
-	
-	Vec2 Vec2::operator/(float_t other) noexcept {
-		if(other == 0.0f){
-			return Vec2();
-		}else{
-			return Vec2(x/other,y/other);
-		}
-	}
-	
-	Vec2 Vec2::operator/(int other) noexcept { return *this/(float_t)other; }
 	
 	bool Vec2::operator==(Vec2 other) noexcept { return ((x == other.x) && (y == other.y)); }
 	bool Vec2::operator!=(Vec2 other) noexcept { return ((x != other.x) || (y != other.y)); }

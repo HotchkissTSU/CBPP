@@ -1,6 +1,6 @@
 #include "cbpp/color.h"
 
-#include "cbpp/math.h"
+#include "cbpp/geomath.h"
 
 namespace cbpp {	
 	Color Color::operator+(Color other) {
@@ -53,7 +53,7 @@ namespace cbpp {
 	}
 	
 	Color Color::operator/(float other) {
-		if(fEqual(other, 0.0f)) { return Color(255); }
+		if(math::Equal(other, 0.0f)) { return Color(255); }
 		
 		return Color(
 			(uint8_t)Clamp(r/other, 0.0f, 255.0f),

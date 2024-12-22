@@ -1,6 +1,8 @@
 #ifndef CBPP_VECTOR
 #define CBPP_VECTOR
 
+#include <stddef.h>
+
 #include "cbpp/cbdef.h"
 #include <math.h>
 
@@ -27,7 +29,6 @@ namespace cbpp{
 		float_t Length();
 		Vec2 Norm();
 		float_t Dot(Vec2 other);
-		Vec2 Cross(Vec2 other);
 		float_t Angle();
 		
 		Vec2 GetRotated(float_t ang);
@@ -37,23 +38,28 @@ namespace cbpp{
 		
 		float_t Project(Vec2 other);
 		
-		float_t VectorMul(Vec2 other);
+		float_t Cross(Vec2 other);
 		
-		Vec2 operator+(Vec2 other) noexcept;
-		Vec2 operator+(float_t other) noexcept;
-		Vec2 operator+(int other) noexcept;
-		
-		Vec2 operator-(Vec2 other) noexcept;
-		Vec2 operator-(float_t other) noexcept;
-		Vec2 operator-(int other) noexcept;
-		
-		Vec2 operator*(Vec2 other) noexcept;
-		Vec2 operator*(float_t other) noexcept;
-		Vec2 operator*(int other) noexcept;
-		
-		Vec2 operator/(Vec2 other) noexcept;
-		Vec2 operator/(float_t other) noexcept;
-		Vec2 operator/(int other) noexcept;
+		Vec2 operator+(Vec2 other) const noexcept;
+		Vec2 operator-(Vec2 other) const noexcept;
+		Vec2 operator*(Vec2 other) const noexcept;
+		Vec2 operator/(Vec2 other) const noexcept;
+
+		template <typename INT_T> Vec2 operator+(INT_T other) const noexcept {
+			return Vec2( (float_t)(x + other), (float_t)(y + other) );
+		}
+
+		template <typename INT_T> Vec2 operator-(INT_T other) const noexcept {
+			return Vec2( (float_t)(x - other), (float_t)(y - other) );
+		}
+
+		template <typename INT_T> Vec2 operator*(INT_T other) const noexcept {
+			return Vec2( (float_t)(x * other), (float_t)(y * other) );
+		}
+
+		template <typename INT_T> Vec2 operator/(INT_T other) const noexcept {
+			return Vec2( (float_t)(x / other), (float_t)(y / other) );
+		}
 		
 		bool operator==(Vec2 other) noexcept;
 		bool operator!=(Vec2 other) noexcept;

@@ -22,6 +22,8 @@
 #include "cbpp/locales.h"
 #include "cbpp/print.h"
 
+#include "cbpp/physobj.h"
+
 #include "cbpp/asset/sprite.h"
 #include "cbpp/asset/image.h"
 //#include "cbpp/asset/cdf.h"   //Cuber Data File

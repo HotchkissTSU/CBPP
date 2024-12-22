@@ -1,0 +1,18 @@
+## Recomendations for variable naming in CBPP ##
+
+Global prefixes:
+    A global variable   -> g_ (Has a priority over s_)
+    A member value      -> m_ (Can be omitted in data-oriented structures with direct access to it`s members)
+    A static value      -> s_
+
+Name prefixes:
+    std::map                            -> m
+    Primitive from cbpp::math           -> mp
+    Integer value                       -> i 
+    Boolean                             -> b
+    Floating-point value                -> f 
+    CBPP entity                         -> e 
+    CBPP vector                         -> v 
+    Any pointer                         -> p 
+    Reference                           -> ref
+    Any handles (including cbpp::File)  -> h 

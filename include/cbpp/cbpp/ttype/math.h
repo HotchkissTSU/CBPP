@@ -1,7 +1,8 @@
 #ifndef CBPP_MATH_H
 #define CBPP_MATH_H
 
-#define CBPP_MATH_EPSILON 0.005f
+//#define CBPP_MATH_EPSILON 0.005f
+//#define CBPP_PI 3.1415926535f
 
 #include "cbpp/vec2.h"
 #include <vector>
@@ -13,23 +14,23 @@ namespace cbpp{
 	float_t Clamp(float_t x, float_t min, float_t max);
 	int Clamp(int x, int min, int max);
 	
-	extern "C" struct mLine {
+	struct mLine {
 		float_t a,b,c;
 		Vec2 normal, p1, p2;
 	};
 	
-	extern "C" struct mSegment {
+	struct mSegment {
 		Vec2 start, end;
 		Vec2 direction;
 		float_t length;
 	};
 	
-	extern "C" struct mCircle {
+	struct mCircle {
 		float_t radius;
 		Vec2 pos;
 	};
 	
-	extern "C" struct Intersection {
+	struct Intersection {
 		std::vector<Vec2> points;
 		bool intersect = false;
 	};

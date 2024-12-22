@@ -8,8 +8,11 @@
 #include "cbpp/cbdef.h"
 #include "cbpp/error.h"
 
-//Connect a class to a custom text label
-//Must appear AFTER the class declaration
+/*
+    Connect a class to a custom text label
+    Must appear AFTER the class declaration
+    Registered entities can be spawned via their text classname
+*/
 #define CB_ENTITY_REGISTER(textName, className)\
     const char* className::Class() { return #textName; }\
     BaseEntity* cb_entfactory_##className() { return static_cast<BaseEntity*>(new className()); }\
@@ -29,10 +32,23 @@
     }\
     virtual IProperty* GetPropertyByName(const char* sPName) noexcept {\
         return __get_prop_by_name(this->GetProperties(), this->GetPropertiesNum(), sPName);\
-    }\
+    }
 
 //Entity properties
 namespace cbpp {
+    enum EPROP_PARAMS : uint8_t {
+        EPROP_PARAM_NONE        = 0b00000000, //Empty bitmask
+        EPROP_PARAM_NETWORKABLE = 0b00000001, //Sync this value between client and the server
+        EPROP_PARAM_SAVERESTORE = 0b00000010  //Save this value to savefile and restore it after
+    };
+
+    //Only shared entities sync their instances between server and client
+    enum EPROP_NET : uint8_t {
+        ENTITY_SHARED,      //Exists both on the server and the client
+        ENTITY_SERVERSIDE,  //Server-only entity
+        ENTITY_CLIENTSIDE   //Client-only entity
+    };
+
     class IProperty {
         public:
             virtual const char* Name() const noexcept = 0;
@@ -115,12 +131,17 @@ namespace cbpp {
 
             virtual const char* Class() = 0;
 
+            //One iteration of the logic update
             virtual void Tick() = 0;
+
+            //Rendering time!
             virtual void Render() = 0;
 
             virtual ~BaseEntity() = default;
 
         protected:
+            EPROP_NET m_iNetBehaviour = ENTITY_SERVERSIDE;
+
             //Our movement and rotation are relative to this entity
             BaseEntity* m_pMaster = NULL;
 

@@ -62,7 +62,12 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "text_encoding": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "hash_map": "cpp",
+        "condition_variable": "cpp",
+        "list": "cpp",
+        "mutex": "cpp",
+        "stdfloat": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

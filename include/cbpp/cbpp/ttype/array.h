@@ -39,7 +39,7 @@ namespace cbpp {
 
                 if(!std::is_trivially_copy_assignable<T>::value) {
                     for(size_t i = 0; i < m_length; i++) {
-                        At(i) = other.At(i);
+                        At(i) = other.ConstAt(i);
                     }
                 }else {
                     memcpy(m_array, other.m_array, sizeof(T) * m_length);

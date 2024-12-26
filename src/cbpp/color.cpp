@@ -2,6 +2,8 @@
 
 #include "cbpp/geomath.h"
 
+using namespace cbpp::math;
+
 namespace cbpp {	
 	Color Color::operator+(Color other) {
 		return Color(

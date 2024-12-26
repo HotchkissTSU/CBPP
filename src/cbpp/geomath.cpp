@@ -34,6 +34,21 @@ namespace cbpp::math {
         return Vec2(fX0, fY0);
     }
 
+    Vec2 Clamp(Vec2 Value, Vec2 MinValue, Vec2 MaxValue) noexcept {
+        return Vec2(Clamp(Value.x, MinValue.x, MaxValue.x),
+                    Clamp(Value.y, MinValue.y, MaxValue.y));
+    }
+
+    bool InRange(Vec2 Value, Vec2 MinValue, Vec2 MaxValue) noexcept {
+        return InRange(Value.x, MinValue.x, MaxValue.x) &&
+               InRange(Value.y, MinValue.y, MaxValue.y);
+    }
+    
+    bool InRangeStrict(Vec2 Value, Vec2 MinValue, Vec2 MaxValue) noexcept {
+        return InRangeStrict(Value.x, MinValue.x, MaxValue.x) &&
+               InRangeStrict(Value.y, MinValue.y, MaxValue.y);
+    }
+
     //Line
     Line::Line(Vec2 vp1, Vec2 vp2) {
         vDir = vp2 - vp1;
@@ -70,6 +85,7 @@ namespace cbpp::math {
         float_t fIsecY = (B.fA * A.fC - A.fA * B.fC) / (A.fA * B.fB - B.fA * A.fB);
         float_t fIsecX = -(A.fB*fIsecY + A.fC) / (A.fA);
 
+        pTarget->bResult = true;
         pTarget->iCollPointsNum = 1;
         g_IsecPtsBuffer[0] = Vec2(fIsecX, fIsecY);
 
@@ -91,7 +107,7 @@ namespace cbpp::math {
 		
 		float_t d = a*a*( m*m * (b*b + a*a) - c*c );
 		
-		if(d < 0){ //No solutions, no intersection points
+		if(d < 0){ //No solutions, so no intersection points
 			pTarget->bResult = false;
             return false;
 			

@@ -3,6 +3,18 @@
 
 #include "cbpp/cb_hash.h"
 
+//Build a serverside library
+#define CBPP_SERVER 0
+
+//Build a clientside library
+#define CBPP_CLIENT 1
+
+//Defines what library to build
+#define CBPP_NET_STATE CBPP_CLIENT
+
+#define CBPP_IS_SV (CBPP_NET_STATE == CBPP_SERVER)
+#define CBPP_IS_CL (CBPP_NET_STATE == CBPP_CLIENT)
+
 /*
     === UTILITY MACROS ===
 */
@@ -21,6 +33,11 @@ public:\
 void Set##_pretty_name ( const _type& new_value ) { _vname = new_value; }\
 const _type& Get##_pretty_name () const noexcept { return _vname; } private:
 
+/*
+    Creates a getter and a setter for an already existing class member
+    + public void Set [_pretty_name] ( const [_type]& )
+    + public const [_type]& Get [_pretty_name] () const noexcept
+*/
 #define CB_VAR_GETSETE(_type, _pretty_name, _vname)\
 public:\
 void Set##_pretty_name ( const _type& new_value ) { _vname = new_value; }\
@@ -33,11 +50,11 @@ const _type& Get##_pretty_name () const noexcept { return _vname; } private:
 */
 #define CB_VAR_GET(_type, _pretty_name, _vname) private: _type _vname;\
 public:\
-const _type& Get##_pretty_name () const noexcept { return _vname; }
+const _type& Get##_pretty_name () const noexcept { return _vname; } private:
 
 //Getter for an already existing class member
 #define CB_VAR_GETE(_type, _pretty_name, _vname) public:\
-_type Get##_pretty_name () const { return _vname; }
+_type Get##_pretty_name () const { return _vname; } private:
 
 //Return from a function if expr
 #define CB_RETIF(ret_value, expr) if(expr) { return ret_value; }
@@ -49,8 +66,8 @@ _type Get##_pretty_name () const { return _vname; }
     + private static hash_t m_cb_static_class_id 
 */
 #define CB_CLASS_UID(dt_name)\
-    private: constexpr static m_cb_static_class_id = cbpp::Hash(#dt_name);\
-    public: static hash_t ID() { return m_cb_static_class_id; }\
+    private: constexpr static s_cb_iStaticIndex = cbpp::Hash(#dt_name);\
+    public: static hash_t ID() { return s_cb_iStaticIndex; }\
     private:
 
 /*
@@ -59,7 +76,7 @@ _type Get##_pretty_name () const { return _vname; }
 */
 #define CB_CLASS_UID_AUTO\
     public: static hash_t ID() {\
-        constexpr static hash_t hash = cbpp::Hash(__PRETTY_FUNCTION__); return hash; }\
+        constexpr static hash_t s_iHash = cbpp::Hash(__PRETTY_FUNCTION__); return s_iHash; }\
     private:
 
 /*

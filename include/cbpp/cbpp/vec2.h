@@ -2,27 +2,17 @@
 #define CBPP_VECTOR
 
 #include <stddef.h>
-
 #include "cbpp/cbdef.h"
-#include <math.h>
 
 namespace cbpp{	
 	struct Vec2{
 		float_t x,y;
-	
-		Vec2(float_t xv, float_t yv);
-		Vec2(float_t v);
-		Vec2();
-		Vec2(const cbpp::Vec2& v);
-		Vec2(int xv, int yv);
-		Vec2(int v);
-		
-		float_t GetX();
-		float_t GetY();
-		
-		void SetX(float_t xv);
-		void SetY(float_t yv);
-		void Set(float_t xv, float_t yv);
+
+		Vec2() : x(0.0f), y(0.0f) {};
+		Vec2(const cbpp::Vec2& v) : x(v.x), y(v.y) {};
+
+		template<typename NUM_T> Vec2(NUM_T _x, NUM_T _y) : x((float_t)_x), y((float_t)_y) {};
+		template<typename NUM_T> Vec2(NUM_T _value) : x((float_t)_value), y((float_t)_value) {};
 		
 		float_t Distance(Vec2 other);
 		
@@ -63,12 +53,7 @@ namespace cbpp{
 		
 		bool operator==(Vec2 other) noexcept;
 		bool operator!=(Vec2 other) noexcept;
-
-		float_t operator[](std::size_t index);
 	};
-	
-	float_t Clamp(float_t v, float_t min, float_t max);
-	Vec2 ClampVector(Vec2 v, float_t min, float_t max);
 }
 
 #endif

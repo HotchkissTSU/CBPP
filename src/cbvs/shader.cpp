@@ -201,6 +201,11 @@ namespace cbvs {
         return out;
     }
 
+    bool Pipe::HasUniform(const char* uname) {
+        GLint out = glGetUniformLocation(objid, uname);
+        return (out != -1);
+    }
+
     void Pipe::PushUniform(const char* name, float_t a, float_t b, float_t c, float_t d) {
         GLint loc = GetUniform(name);
         glUniform4f(loc, (GLfloat)a, (GLfloat)b, (GLfloat)c, (GLfloat)d);

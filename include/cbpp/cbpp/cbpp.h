@@ -4,8 +4,9 @@
 #include "cbpp/cbdef.h"
 
 #include "cbpp/vec2.h"
-#include "cbpp/matrix.h"
-#include "cbpp/math.h"
+#include "cbpp/geomath.h"
+//#include "cbpp/matrix.h"
+//#include "cbpp/math.h"
 
 //#include "cbpp/mesh.h"
 #include "cbpp/bbox/aabb.h"
@@ -23,6 +24,8 @@
 #include "cbpp/print.h"
 
 #include "cbpp/physobj.h"
+
+#include "cbpp/world.h"
 
 #include "cbpp/asset/sprite.h"
 #include "cbpp/asset/image.h"

@@ -14,11 +14,13 @@
 
 #include "cbvs/error_check.h"
 
-#define CBPP_DDRAW_BUFFER_SIZE 512 //calculated in floats
+#define CBPP_DDRAW_BUFFER_SIZE 512
 
 #define CBVS_DDRAW_CIRCLE_FIDELITY 32
 
 namespace ddraw {
+    using cbpp::float_t;
+
     extern GLuint vao, vbo, default_texture;
     extern GLuint vao_tex, vbo_tex;
 

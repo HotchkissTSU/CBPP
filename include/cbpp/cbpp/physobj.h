@@ -12,9 +12,8 @@ namespace cbpp {
 
     enum HITBOX_TYPE : uint8_t {
         HITBOX_AABB,            // Axis-aligned bounding box
-        HITBOX_OBB,             // Oriented bounding box
         HITBOX_CIRCLE,          // A perfect circle
-        HITBOX_CONVEX_MULTIPLE  // A set of convex meshes
+        HITBOX_CONVEX           // A single convex mesh
     };
 
     class IHitbox {

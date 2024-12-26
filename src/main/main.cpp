@@ -21,7 +21,6 @@
 #define CBEP_LOGC(lname) { char path[128]; snprintf(path, 128, "logs/%s.txt", #lname); FILE* io_ptr = fopen( path, "wt" ); fclose(io_ptr); }
 
 using namespace cbpp;
-using namespace cbent;
 
 static sighandler_t _old_sig_handler;
 
@@ -84,13 +83,13 @@ void ResolveArgs(int argc, char** argv) {
 		
 		if( strcmp(comm, "-w") == 0 ) {
 			if(next != NULL) {
-				GameData.WindowW = cbpp::Clamp( atoi(next), 100, 10000 );
+				GameData.WindowW = cbpp::math::Clamp( atoi(next), 100, 10000 );
 			}
 		}
 
 		if( strcmp(comm, "-h") == 0 ) {
 			if(next != NULL) {
-				GameData.WindowH = cbpp::Clamp( atoi(next), 100, 10000 );
+				GameData.WindowH = cbpp::math::Clamp( atoi(next), 100, 10000 );
 			}
 		}
 

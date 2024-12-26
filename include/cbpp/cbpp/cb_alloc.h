@@ -8,8 +8,8 @@
 #include <type_traits> 
 #include <stddef.h>
 #include <stdexcept>
+#include <cstring>
 
-#include "cbpp/misc.h"
 #include "cbpp/error.h"
 
 /*

@@ -120,7 +120,7 @@ namespace ddraw {
 
         ddraw_pipe_def->Use();
         ddraw_pipe_def->PushUniform("cbpp_COLOR", color.r, color.g, color.b, color.a);
-        ddraw_pipe_def->PushUniform("cbpp_RATIO", cbvs::ScreenRatio);
+        //ddraw_pipe_def->PushUniform("cbpp_RATIO", cbvs::ScreenRatio);
 
         glBindVertexArray(vao);
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(buff), buff);

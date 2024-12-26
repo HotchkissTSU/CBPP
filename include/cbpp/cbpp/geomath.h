@@ -90,11 +90,26 @@ namespace cbpp {
         extern Intersection g_IsecBuffer;
         extern Vec2 g_IsecPtsBuffer[];
 
-        template<typename NUM_T> NUM_T Clamp(NUM_T Value, NUM_T MinValue, NUM_T MaxValue) {
+        template<typename NUM_T> NUM_T Clamp(NUM_T Value, NUM_T MinValue, NUM_T MaxValue) noexcept {
             if(Value > MaxValue) { return MaxValue; }
             if(Value < MinValue) { return MinValue; }
             return Value;
         }
+
+        //MIN <= X <= MAX
+        template<typename NUM_T> NUM_T InRange(NUM_T Value, NUM_T MinValue, NUM_T MaxValue) noexcept {
+            return (Value >= MinValue) && (Value <= MaxValue);
+        }
+
+        //MIN < X < MAX
+        template<typename NUM_T> NUM_T InRangeStrict(NUM_T Value, NUM_T MinValue, NUM_T MaxValue) noexcept {
+            return (Value > MinValue) && (Value < MaxValue);
+        }
+
+        bool InRange(Vec2 Value, Vec2 MinValue, Vec2 MaxValue) noexcept;
+        bool InRangeStrict(Vec2 Value, Vec2 MinValue, Vec2 MaxValue) noexcept;
+
+        Vec2 Clamp(Vec2 Value, Vec2 MinValue, Vec2 MaxValue) noexcept;
     }
 }
 

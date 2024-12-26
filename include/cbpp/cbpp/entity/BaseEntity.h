@@ -11,7 +11,7 @@
 /*
     Connect a class to a custom text label
     Must appear AFTER the class declaration
-    Registered entities can be spawned via their text classname
+    Registered entities can be created via their text classname
 */
 #define CB_ENTITY_REGISTER(textName, className)\
     const char* className::Class() { return #textName; }\
@@ -36,21 +36,14 @@
 
 //Entity properties
 namespace cbpp {
-    enum EPROP_PARAMS : uint8_t {
-        EPROP_PARAM_NONE        = 0b00000000, //Empty bitmask
-        EPROP_PARAM_NETWORKABLE = 0b00000001, //Sync this value between client and the server
-        EPROP_PARAM_SAVERESTORE = 0b00000010  //Save this value to savefile and restore it after
-    };
-
-    //Only shared entities sync their instances between server and client
-    enum EPROP_NET : uint8_t {
-        ENTITY_SHARED,      //Exists both on the server and the client
-        ENTITY_SERVERSIDE,  //Server-only entity
-        ENTITY_CLIENTSIDE   //Client-only entity
-    };
-
     class IProperty {
         public:
+            enum PARAMS : uint8_t {
+                PARAM_EMPTY       = 0b00000000, //Empty bitmask
+                PARAM_NETWORKABLE = 0b00000001, //Send this value to the client/server
+                PARAM_SAVELOAD    = 0b00000010  //Save and restore this value
+            };
+
             virtual const char* Name() const noexcept = 0;
             virtual const char* Desc() const noexcept = 0;
 
@@ -106,11 +99,15 @@ namespace cbpp {
 
         private:
             const char *m_sName = NULL, *m_sDesc = NULL;
+            IProperty::PARAMS m_iParams = PARAM_EMPTY;
             T m_Data;
     };
 }
 
 namespace cbpp {
+    //Entity ID
+    typedef size_t entid_t;
+
     //spooky scary hidden function
     IProperty* __get_prop_by_name(IProperty** aProps, size_t iPropsNum, const char* sName);
 
@@ -118,8 +115,7 @@ namespace cbpp {
     class BaseEntity {
         CB_VAR_GETSETE(Vec2, Position, m_vPos)
         CB_VAR_GETSETE(float_t, Angle, m_fAngle)
-        CB_VAR_GETSETE(float_t, Health, m_fHealth)
-        CB_VAR_GETSETE(float_t, MaxHealth, m_fMaxHealth)
+        CB_VAR_GETSETE(bool, Spawned, m_bSpawned)
 
         public:
             BaseEntity(){};
@@ -140,13 +136,13 @@ namespace cbpp {
             virtual ~BaseEntity() = default;
 
         protected:
-            EPROP_NET m_iNetBehaviour = ENTITY_SERVERSIDE;
+            bool m_bSpawned = false;
 
             //Our movement and rotation are relative to this entity
             BaseEntity* m_pMaster = NULL;
 
             Vec2 m_vPos;
-            float_t m_fAngle, m_fHealth, m_fMaxHealth;
+            float_t m_fAngle;
     };
 
     /*

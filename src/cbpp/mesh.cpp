@@ -18,8 +18,8 @@ namespace cbpp {
     }
 
     Vertex& Mesh::At(size_t iIndex) {
-        size_t iNewIndex = iIndex % m_aVerts.Length();
-        return m_aVerts.At(iNewIndex);
+        iIndex = iIndex % m_aVerts.Length();
+        return m_aVerts.At(iIndex);
     }
 
     Vertex& Mesh::operator[](size_t iIndex) {

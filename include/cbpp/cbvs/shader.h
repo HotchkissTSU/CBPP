@@ -16,6 +16,8 @@
 #define CBVS_SHADERS_STRICT CBVS_STRICT
 
 namespace cbvs {
+    using cbpp::float_t;
+
 	extern const char *default_vtx, *default_frag;
 
 	class Shader {
@@ -60,6 +62,7 @@ namespace cbvs {
             void Use();
 
             GLint GetUniform(const char* uname);
+            bool HasUniform(const char* uname);
 
             void PushUniform(const char* name, float_t a, float_t b, float_t c, float_t d);
             void PushUniform(const char* name, float_t a);

@@ -20,7 +20,7 @@ namespace cbpp {
 
         return g_mEntFactoryDict[sClassName]();
     }
-
+    
     IProperty* __get_prop_by_name(IProperty** aProps, size_t iPropsNum, const char* sName) {
         for(size_t i = 0; i < iPropsNum; i++) {
             if( strcmp(sName, aProps[i]->Name()) == 0 ) {

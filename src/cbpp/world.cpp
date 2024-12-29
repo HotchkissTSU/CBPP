@@ -11,6 +11,15 @@ namespace cbpp {
         this->AllocateEntityBuffer();
     }
 
+    World::World(size_t iWorldSize) {
+        m_iWorldSize = iWorldSize;
+        m_iHalfWorld = iWorldSize >> 1;
+        m_iChunksPerBorder = iWorldSize / m_iChunkSize;
+
+        AllocateEntityBuffer();
+        AllocateChunks();
+    }
+
     void World::AllocateEntityBuffer() {
         if(m_aEntityBuffer != NULL) {
             return;
@@ -18,6 +27,16 @@ namespace cbpp {
 
         m_aEntityBuffer = Allocate<BaseEntity*>(CBPP_ENTBUFFER_INIT_SIZE);
         m_iEntityBufferLen = CBPP_ENTBUFFER_INIT_SIZE;
+
+        m_aEntityChunks = Allocate<size_t>(CBPP_ENTBUFFER_INIT_SIZE);
+    }
+
+    void World::AllocateChunks() {
+        if(m_aChunks != NULL) {
+            return;
+        }
+
+        m_aChunks = Allocate<MapChunk>(m_iChunksPerBorder*m_iChunksPerBorder);
     }
 
     entid_t World::FindFreeEntityID() {
@@ -38,6 +57,11 @@ namespace cbpp {
         if(pTemp != NULL) {
             m_aEntityBuffer = pTemp;
         }
+
+        size_t* pTemp2 = Reallocate<size_t>(m_aEntityChunks, m_iEntityBufferLen-iAmount, m_iEntityBufferLen);
+        if(pTemp2 != NULL) {
+            m_aEntityChunks = pTemp2;
+        }
     }
 
     entid_t World::SpawnEntity(BaseEntity* eEntity) {
@@ -57,26 +81,42 @@ namespace cbpp {
         return iFreeID;
     }
 
+    void World::RemoveEntity(entid_t iIndex) {
+        BaseEntity* eTemp = m_aEntityBuffer[iIndex];
+        if(eTemp != NULL) {
+            delete eTemp;
+            m_aEntityBuffer[iIndex] = NULL;
+        }
+    }
+
     Vec2 World::ChunkToWorld(size_t iChunkIndex) const noexcept {
-        return Vec2(iChunkIndex % m_iChunksPerBorder, iChunkIndex / m_iChunksPerBorder);
+        size_t fX, fY;
+
+        fX = iChunkIndex % m_iChunksPerBorder;
+        fY = (iChunkIndex - fX) / m_iChunksPerBorder;
+
+        return Vec2( (float_t)(fX << CBPP_MAP_CHUNK_POW) - m_iHalfWorld,
+                     (float_t)(fY << CBPP_MAP_CHUNK_POW) - m_iHalfWorld );
     }
 
     size_t World::WorldToChunk(Vec2 vWorldPos) const noexcept {
         size_t iX, iY, iIndex;
 
-        iX = (size_t)floor(vWorldPos.x) / m_iChunkSize;
-        iY = (size_t)floor(vWorldPos.y) / m_iChunkSize;
+        vWorldPos = vWorldPos + m_iHalfWorld;
+
+        iX = (size_t)(vWorldPos.x) >> CBPP_MAP_CHUNK_POW;
+        iY = (size_t)(vWorldPos.y) >> CBPP_MAP_CHUNK_POW;
 
         iIndex = iX + iY*m_iChunksPerBorder;
-
         return iIndex;
     }
 
     bool World::IsInsideWorld(Vec2 vWorldPos) const noexcept {
-        static Vec2 s_vHalfWorld(m_iWorldSize >> 1);
+        static Vec2 s_vHalfWorld(m_iHalfWorld);
         return math::InRange(vWorldPos, s_vHalfWorld*-1, s_vHalfWorld);
     }
 
+    //Currently broken
     size_t World::LocateClosestChunk(Vec2 vWorldPos) const {
         float_t fX, fY;
         size_t iChunkX, iChunkY;
@@ -85,8 +125,8 @@ namespace cbpp {
         fX = floor(vWorldPos.x / m_iChunkSize) * m_iChunkSize;
         fY = floor(vWorldPos.y / m_iChunkSize) * m_iChunkSize;
 
-        iChunkX = (size_t)floor(vWorldPos.x) / m_iChunkSize;
-        iChunkY = (size_t)floor(vWorldPos.y) / m_iChunkSize;
+        iChunkX = (size_t)floor(vWorldPos.x) >> CBPP_MAP_CHUNK_POW;
+        iChunkY = (size_t)floor(vWorldPos.y) >> CBPP_MAP_CHUNK_POW;
 
         float_t aDists[4]; //Left, Top, Right, Bottom
 
@@ -151,5 +191,16 @@ namespace cbpp {
 
             Free<BaseEntity*>(m_aEntityBuffer, m_iEntityBufferLen);
         }
+
+        Free<size_t>(m_aEntityChunks, m_iEntityBufferLen);
+
+        //Free map chunks
+        if(m_aChunks != NULL) {
+            Free<MapChunk>(m_aChunks, m_iChunksPerBorder*m_iChunksPerBorder);
+        }
+    }
+
+    MapChunk::MapChunk(size_t iPolyAmount) {
+        
     }
 }

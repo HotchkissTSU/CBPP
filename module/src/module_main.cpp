@@ -10,16 +10,13 @@ extern "C" {
 
     bool ModuleMain(int argc, char** argv) {
         printf("Module entry point!\n");
-        
-        BaseEntity* eTest = CreateEntity("ent_test");
-        printf("eTest = %s\n", eTest->Class());
 
         g_World = new World();
 
-        for(int i = 0; i < 10000; i++) {
-            BaseEntity* eTmp = CreateEntity("ent_test");
-            printf("id: %d\n", g_World->SpawnEntity(eTmp));
-        }
+        size_t iChunkID = g_World->WorldToChunk(Vec2(-17,5));
+        Vec2 vChunkPos = g_World->ChunkToWorld(iChunkID);
+
+        printf("%d, %f, %f\n", iChunkID, vChunkPos.x, vChunkPos.y);
 
         return true;
     }

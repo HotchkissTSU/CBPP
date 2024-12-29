@@ -111,6 +111,8 @@ namespace cbpp {
     //spooky scary hidden function
     IProperty* __get_prop_by_name(IProperty** aProps, size_t iPropsNum, const char* sName);
 
+    class World;
+
     //The basis for all game entities
     class BaseEntity {
         CB_VAR_GETSETE(Vec2, Position, m_vPos)
@@ -134,9 +136,11 @@ namespace cbpp {
             virtual void Render() = 0;
 
             virtual ~BaseEntity() = default;
-
+            
         protected:
             bool m_bSpawned = false;
+            World* m_pWorld = NULL; //The world this entity is in
+            size_t m_iChunk = -1;   //Our chunk
 
             //Our movement and rotation are relative to this entity
             BaseEntity* m_pMaster = NULL;

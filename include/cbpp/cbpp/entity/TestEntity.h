@@ -6,14 +6,14 @@
 namespace cbpp {
     class TestEntity : public BaseEntity {
         private:
-            EntityProperty<float> m_pfTestFloat = EntityProperty(15.0f, "test_float", "test? maybe");
-
-            CB_EPROP_BEGIN
-                &m_pfTestFloat
-            CB_EPROP_END
+            float m_fTest = 15.8f;
 
         public:
-            TestEntity(){};
+            CB_EPROP_DESC {
+                CB_EPROP_EX(m_fTest, "test_float", "a test float member")
+            }
+
+            TestEntity(){ TestEntity::ConstructProps(); }
 
             virtual void Tick(){}
             virtual void Render(){}

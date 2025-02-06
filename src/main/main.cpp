@@ -31,12 +31,12 @@ void error_callback(int error_code, const char* description){
 }
 
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
-	cbvs::MousePosition.x = (float_t)(xpos);
-	cbvs::MousePosition.y = (float_t)(ypos);
+	//cbvs::MousePosition.x = (float_t)(xpos);
+	//cbvs::MousePosition.y = (float_t)(ypos);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    cbpp::Event ev;
+    /*cbpp::Event ev;
 
 	ev.Type = CBPP_KEYBOARD_EVENT;
 
@@ -45,15 +45,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	ev.ButtonEvent.Scancode = scancode;
 	ev.ButtonEvent.Mods = mods;
 
-	cbpp::PushEvent( ev );
+	cbpp::PushEvent( ev );*/
 }
 
 void text_input_callback(GLFWwindow* window, unsigned int codepoint) {
-	cbpp::Event ev;
+	/*cbpp::Event ev;
 
 	ev.Type = CBPP_TEXTINPUT_EVENT;
 
-	ev.TextInputEvent.Charcode = (char32_t)codepoint;
+	ev.TextInputEvent.Charcode = (char32_t)codepoint;*/
 }
 
 void window_size_callback(GLFWwindow* window, int width, int height)
@@ -326,11 +326,11 @@ int main( int argc, char** argv ) {
 	while( !glfwWindowShouldClose(GameData.MainWindow) && ModuleData.ModuleLoopCheck() ) {
 		glfwPollEvents();
 
-		if( cbpp::GetLastEvent(ev) ) {
+		/*if( cbpp::GetLastEvent(ev) ) {
 			if( ModuleData.ModuleEventCallback(ev) ){
 				//send this event to other engine systems
 			}
-		}
+		}*/
 		
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);

@@ -3,26 +3,27 @@
 
 using namespace cbpp;
 
-World* g_World;
-
 extern "C" {
     void ModuleWindowHint() { }
 
     bool ModuleMain(int argc, char** argv) {
         printf("Module entry point!\n");
 
-        g_World = new World();
+        BaseEntity* eTest = CreateEntity("ent_test");
+        EPropNode* pHead = eTest->GetProperties();
+        int i = 0;
 
-        size_t iChunkID = g_World->WorldToChunk(Vec2(-17,5));
-        Vec2 vChunkPos = g_World->ChunkToWorld(iChunkID);
+        while(pHead != NULL) {
+            i++;
+            printf("[%d] %s\n", i, pHead->m_pProperty->Name());
 
-        printf("%d, %f, %f\n", iChunkID, vChunkPos.x, vChunkPos.y);
+            pHead = pHead->m_pNextNode;
+        }
 
         return true;
     }
 
-    void ModuleTick() {
-    }
+    void ModuleTick() { }
 
     bool ModuleEventCallback( cbpp::Event& ev ) { return true; }
 }

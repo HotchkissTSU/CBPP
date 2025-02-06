@@ -7,7 +7,7 @@
 #include "cbpp/geomath.h"
 
 namespace cbpp {
-    World::World() {
+    World::World() : m_aFindBuffer(CBPP_EFINDBUFFER_INIT_SIZE) {
         this->AllocateEntityBuffer();
     }
 
@@ -27,8 +27,6 @@ namespace cbpp {
 
         m_aEntityBuffer = Allocate<BaseEntity*>(CBPP_ENTBUFFER_INIT_SIZE);
         m_iEntityBufferLen = CBPP_ENTBUFFER_INIT_SIZE;
-
-        m_aEntityChunks = Allocate<size_t>(CBPP_ENTBUFFER_INIT_SIZE);
     }
 
     void World::AllocateChunks() {
@@ -57,11 +55,6 @@ namespace cbpp {
         if(pTemp != NULL) {
             m_aEntityBuffer = pTemp;
         }
-
-        size_t* pTemp2 = Reallocate<size_t>(m_aEntityChunks, m_iEntityBufferLen-iAmount, m_iEntityBufferLen);
-        if(pTemp2 != NULL) {
-            m_aEntityChunks = pTemp2;
-        }
     }
 
     entid_t World::SpawnEntity(BaseEntity* eEntity) {
@@ -77,8 +70,25 @@ namespace cbpp {
 
         eEntity->SetSpawned(true);
 
+        m_iEntities = m_iEntityBufferLen;
+        while( m_iEntities > 0) {
+            if(m_aEntityBuffer[m_iEntities] != NULL) {
+                break;
+            } //here we are searching the last valid entity id
+
+            m_iEntities--;
+        }
+
         m_aEntityBuffer[iFreeID] = eEntity;
         return iFreeID;
+    }
+    
+    BaseEntity* World::EntityByID(entid_t iIndex) {
+        if(iIndex >= m_iEntityBufferLen) {
+            return NULL;
+        }
+
+        return m_aEntityBuffer[iIndex];
     }
 
     void World::RemoveEntity(entid_t iIndex) {
@@ -87,16 +97,20 @@ namespace cbpp {
             delete eTemp;
             m_aEntityBuffer[iIndex] = NULL;
         }
+
+        if(iIndex == m_iEntities) {
+            m_iEntities--;
+        }
     }
-
+    
     Vec2 World::ChunkToWorld(size_t iChunkIndex) const noexcept {
-        size_t fX, fY;
+        size_t iX, iY;
 
-        fX = iChunkIndex % m_iChunksPerBorder;
-        fY = (iChunkIndex - fX) / m_iChunksPerBorder;
+        iX = iChunkIndex % m_iChunksPerBorder;
+        iY = (iChunkIndex - iX) / m_iChunksPerBorder;
 
-        return Vec2( (float_t)(fX << CBPP_MAP_CHUNK_POW) - m_iHalfWorld,
-                     (float_t)(fY << CBPP_MAP_CHUNK_POW) - m_iHalfWorld );
+        return Vec2( (float_t)(iX << CBPP_MAP_CHUNK_POW) - m_iHalfWorld, //The chunk coordinates origin is in the top-left corner unlike the world ones
+                     (float_t)(iY << CBPP_MAP_CHUNK_POW) - m_iHalfWorld );
     }
 
     size_t World::WorldToChunk(Vec2 vWorldPos) const noexcept {
@@ -179,6 +193,56 @@ namespace cbpp {
         return iChunkX + iChunkY*m_iChunkSize;
     }
 
+    void World::FindEntitiesInBox(Vec2 vPos1, Vec2 vPos2) {
+        m_aFindBuffer.Clear();
+        for(entid_t i = 0; i < m_iEntities; i++) {
+            BaseEntity* eCandidate = m_aEntityBuffer[i];
+
+            if(eCandidate != NULL) {
+                if( math::InRange(eCandidate->GetPosition(), vPos1, vPos2) ) {
+                    m_aFindBuffer.PushBack(i);
+                }
+            }
+        }
+    }
+
+    void World::FindEntitiesInCircle(Vec2 vOrigin, float_t fRadius) {
+        float_t fRadSquare = fRadius*fRadius;
+        m_aFindBuffer.Clear();
+        for(entid_t i = 0; i < m_iEntities; i++) {
+            BaseEntity* eCandidate = m_aEntityBuffer[i];
+
+            if(eCandidate != NULL) {
+                if( math::SquareDistance(vOrigin, eCandidate->GetPosition()) <= fRadSquare ) {
+                    m_aFindBuffer.PushBack(i);
+                }
+            }
+        }
+    }
+
+    void World::FindEntitiesInSector(Vec2 vOrigin, Vec2 vDirection, float_t fRadius, float_t fAngle) {
+        float_t fRadSquare = fRadius*fRadius;
+        m_aFindBuffer.Clear();
+        for(entid_t i = 0; i < m_iEntities; i++) {
+            BaseEntity* eCandidate = m_aEntityBuffer[i];
+
+            if(eCandidate != NULL) {
+                if( math::SquareDistance(vOrigin, eCandidate->GetPosition()) <= fRadSquare ) {
+                    Vec2 vPos = eCandidate->GetPosition();
+                    float_t fDot = vDirection.Dot(vPos - vOrigin);
+
+                    if(fDot <= fAngle) {
+                        m_aFindBuffer.PushBack(i);
+                    }
+                }
+            }
+        }
+    }
+
+    List<entid_t>& World::FindResults() noexcept {
+        return m_aFindBuffer;
+    }
+
     World::~World() {
         //Free all the entities
         if(m_aEntityBuffer != NULL) {
@@ -192,15 +256,15 @@ namespace cbpp {
             Free<BaseEntity*>(m_aEntityBuffer, m_iEntityBufferLen);
         }
 
-        Free<size_t>(m_aEntityChunks, m_iEntityBufferLen);
-
         //Free map chunks
-        if(m_aChunks != NULL) {
-            Free<MapChunk>(m_aChunks, m_iChunksPerBorder*m_iChunksPerBorder);
-        }
+        Free<MapChunk>(m_aChunks, m_iChunksPerBorder*m_iChunksPerBorder);
     }
 
     MapChunk::MapChunk(size_t iPolyAmount) {
+        
+    }
+
+    MapChunk::~MapChunk() {
         
     }
 }

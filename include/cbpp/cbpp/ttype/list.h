@@ -53,7 +53,7 @@ namespace cbpp {
                 m_len_imag = 0;
                 m_array.Clear();
             }
-            
+
             bool PushBack(const T& value) {
                 m_len_imag++;
                 bool result = true;

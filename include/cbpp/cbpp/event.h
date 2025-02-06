@@ -1,42 +1,30 @@
 #ifndef CBPP_EVENT_H
 #define CBPP_EVENT_H
 
-#include <queue>
-#include <cstdint>
+#include <stdint.h>
 #include <uchar.h>
 #include "cbpp/vec2.h"
 
 #define CBPP_EVENTBUFFER_SIZE 256
 
 namespace cbpp {
-	enum CBPP_EVENT_TYPE : uint8_t {
-		CBPP_INVALID_EVENT,
-		CBPP_KEYBOARD_EVENT,
-		CBPP_MOUSE_EVENT,
-		CBPP_TEXTINPUT_EVENT
+	struct Event{
+		int a;
 	};
-	
-	struct Event {
-		CBPP_EVENT_TYPE Type = CBPP_INVALID_EVENT;
 
-		struct {
-			int32_t Key, Scancode, Action, Mods;
-		} ButtonEvent;
+	class IEvent {
+		public:
+			enum CLASS : uint8_t {
+				CLASS_TEST
+			};
 
-		struct {
-			int32_t Button;
-			Vec2 Position;
-		} MouseEvent;
-		
-		struct {
-			char32_t Charcode;
-		} TextInputEvent;
+			virtual CLASS Class() const noexcept = 0;
 	};
-	
-	bool GetLastEvent(Event& ev);
-	void PushEvent(Event& to_push);
-	
-	extern std::queue<Event> event_queue;
+
+	class InputEvent : public IEvent {
+		public:
+			virtual IEvent::CLASS Class() const noexcept override;
+	};
 }
 
 #endif

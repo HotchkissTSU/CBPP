@@ -2,7 +2,7 @@
 #define CBPP_GEOMATH_H
 
 /*
-    Some geometry calculations
+    Engine`s new math library
 */
 
 #include <stddef.h>
@@ -25,8 +25,15 @@ namespace cbpp {
         bool Equal(float_t A, float_t B) noexcept;
         bool Equal(Vec2 A, Vec2 B) noexcept;
 
+        //Degrees -> Radians
+        float_t Rad(float_t fDeg) noexcept; 
+
+        //Radians -> Degrees
+        float_t Deg(float_t fRad) noexcept; 
+
         // A... circle! The round one!
         struct Circle {
+            Circle() : fRadius(0.0f) {};
             Circle(Vec2 pos, float_t rad) : fRadius(rad), vPos(pos) {};
 
             float_t fRadius;
@@ -35,9 +42,13 @@ namespace cbpp {
 
         // An infinite straight line
         struct Line {
+            Line() : fA(0.0f), fB(0.0f), fC(0.0f) {};
             Line(Vec2 vPosA, Vec2 vPosB);
             Vec2 vDir, vPos1, vPos2;
             float_t fA, fB, fC; //Ax + By + C = 0
+
+            //Normalize the A and B coeffs of the equasion
+            void Normalize() noexcept;
         };
 
         // A line with a direction and a fixed start point
@@ -62,16 +73,23 @@ namespace cbpp {
             size_t iCollPointsNum = 0;
         };
 
+        //Obtain a reference to an internal reusable line
+        Line& LINE() noexcept;
+
+        //Obtain a reference to an internal reusable circle
+        Circle& CIRCLE() noexcept;
+
         /*
             If NULL is passed to these functions as pTarget, then the result
             is written in an internal buffer and can be obtained with GetLastIntersection().
 
             The data in this pointer is valid until any next Intersect() call.
             The intersection points array is buffered too and is also valid until
-            next calls. It can be obtained with GetIntersectionPoints().
+            upcoming calls. It can be obtained with GetIntersectionPoints().
 
-            The return value is a "Intersects (in any way) or not" flag.
+            If bResult is false then you should not trust any other data in the structure.
         */
+
         bool Intersect(Intersection* pTarget, Line& A, Line& B);
         bool Intersect(Intersection* pTarget, Line& A, Circle& B);
         bool Intersect(Intersection* pTarget, Circle& A, Circle& B);
@@ -90,6 +108,7 @@ namespace cbpp {
         extern Intersection g_IsecBuffer;
         extern Vec2 g_IsecPtsBuffer[];
 
+        //Lock value between two borders
         template<typename NUM_T> NUM_T Clamp(NUM_T Value, NUM_T MinValue, NUM_T MaxValue) noexcept {
             if(Value > MaxValue) { return MaxValue; }
             if(Value < MinValue) { return MinValue; }

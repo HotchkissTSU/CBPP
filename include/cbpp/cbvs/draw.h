@@ -14,6 +14,8 @@
 
 #include "cbvs/error_check.h"
 
+//#include "cbvs/font.h"
+
 #define CBPP_DDRAW_BUFFER_SIZE 512
 
 #define CBVS_DDRAW_CIRCLE_FIDELITY 32

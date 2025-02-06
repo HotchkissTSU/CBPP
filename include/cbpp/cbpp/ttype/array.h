@@ -90,6 +90,7 @@ namespace cbpp {
             //Attempt to resize the array, true if everything is OK, false if something terrible has happened
             bool Resize(size_t new_size) {
                 T* tmp_ptr = Reallocate(m_array, m_length, new_size);
+
                 if(tmp_ptr == NULL) {
                     CbThrowWarningf("Array resizing from %lu to %lu failed", m_length, new_size);
                     return false; //something terrible it is
@@ -124,17 +125,21 @@ namespace cbpp {
             }
 
             T& At(size_t index) {
+                #ifdef CBPP_DEBUG
                 if(index >= m_length) {
                     CbThrowErrorf("Index %lu is out of array bounds (%lu)", index, m_length);
                 }
+                #endif
 
                 return m_array[index];
             }
 
             const T& ConstAt(size_t index) const {
+                #ifdef CBPP_DEBUG
                 if(index >= m_length) {
                     CbThrowErrorf("Index %lu is out of array bounds (%lu)", index, m_length);
                 }
+                #endif
 
                 return m_array[index];
             }
@@ -151,6 +156,10 @@ namespace cbpp {
             //Get the const pointer to the underlying C array
             const T* CArr() const noexcept {
                 return const_cast<const T*>(m_array);
+            }
+
+            T* CArr() noexcept {
+                return m_array;
             }
 
             //Get array`s length in bytes

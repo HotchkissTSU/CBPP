@@ -129,6 +129,22 @@
 			"static" : [ "static" ],
 			"type" : "OBJ"
 		},
+		"zip" : 
+		{
+			"compiler":"gcc",
+			"comp_params":"-fPIC",
+			"dynamic" : [ "lib" ],
+			"include" : [ "include/cbpp", "include/zip" ],
+			"link_dynamic" : [],
+			"link_params" : "",
+			"link_static" : [],
+			"obj" : "obj\\cbpp_base",
+			"out" : "bin",
+			"out_libfile" : "lib",
+			"src" : [ "src\\zip.c" ],
+			"static" : [ "static" ],
+			"type" : "OBJ"
+		},
 		"libcbpp" : 
 		{
 			"dynamic" : [ "lib" ],

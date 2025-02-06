@@ -46,7 +46,7 @@ namespace cbpp {
         bool bNarrowWarning = false;
         for(size_t i = 0; i < iNameLen; i++) { //truncate the name to only have ASCII symbols in
             sName[i] = (char)(aName[i]);
-            bNarrowWarning = (aName[i] > 256);
+            bNarrowWarning = bNarrowWarning || (aName[i] > 256);
         }
 
         if(bNarrowWarning) {
@@ -192,7 +192,7 @@ namespace cbpp {
                 iSource++;
             }
 
-            if(iCurrent != U'/' && iCurrent != U'\n') { //also, omit all the newlines
+            if(iCurrent != U'/' && iCurrent != U'\n') { //also, omit all newlines
                 sSourceMod[iProc] = iCurrent;
                 iProc++;
             }

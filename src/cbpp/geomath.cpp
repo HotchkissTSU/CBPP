@@ -15,6 +15,14 @@ namespace cbpp::math {
         return (fDist < CBPP_MATH_EPSILON*CBPP_MATH_EPSILON);
     }
 
+    float_t Rad(float_t fDeg) noexcept {
+        return (fDeg * CBPP_MATH_2PI) / 360.0f;
+    }
+
+    float_t Deg(float_t fRad) noexcept {
+        return fRad * 180.0f / CBPP_MATH_PI;
+    }
+
     float_t Distance(Vec2 A, Vec2 B) noexcept {
         return sqrt( (A.x*A.x) + (B.x*B.x) );
     }
@@ -59,6 +67,16 @@ namespace cbpp::math {
         fA = vLineNormal.x;
         fB = vLineNormal.y;
         fC = vp1.y*vp2.x - vp1.x*vp2.y;
+    }
+
+    Line& LINE() noexcept {
+        static Line s_mpLineBuffer;
+        return s_mpLineBuffer;
+    }
+
+    Circle& CIRCLE() noexcept {
+        static Circle s_mpCircleBuffer;
+        return s_mpCircleBuffer;
     }
 }
 
@@ -153,7 +171,7 @@ namespace cbpp::math {
             pTarget = &g_IsecBuffer;
         }
 
-        //We assume that the first circle lies at the coordinates origin to simplify the math
+        //We assume that the first circle lays at the coordinates origin to simplify the math
         Circle B(B_.vPos - A.vPos, B_.fRadius); 
 
         float_t x0 = B.vPos.x, y0 = B.vPos.y;

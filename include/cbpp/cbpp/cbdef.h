@@ -3,6 +3,8 @@
 
 #include "cbpp/cb_hash.h"
 
+#include <type_traits>
+
 //Build a serverside library
 #define CBPP_SERVER 0
 

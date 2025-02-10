@@ -4,15 +4,18 @@
 #include <map>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "cbpp/vec2.h"
 #include "cbpp/cbdef.h"
 #include "cbpp/error.h"
+#include "cbpp/yyjson.h"
+#include "cbpp/print.h"
 
 /*
     Connect a class to a custom text label
     Must appear AFTER a class declaration
-    Registered entities can be created via their text classname
+    Registered entities can be created via their text name
 */
 #define CB_ENTITY_REGISTER(textName, className)\
     const char* className::Class() { return #textName; }\
@@ -21,6 +24,7 @@
     }\
     static cbpp::EntityRegistrator _g_##className##Registrator(#textName, &cb_entfactory_##className);
 
+//Begin describing this classes attributes
 #define CB_EPROP_DESC virtual void ConstructProps() noexcept override
 
 #define CB_EPROP(member_name) EntityProperty<decltype(member_name)>* member_name##_EPROP = \
@@ -86,14 +90,15 @@ namespace cbpp {
                            const char* sDesc) noexcept : m_Data(refData), m_sName(sName), m_sDesc(sDesc), m_pMaster(pMaster)
             {
                 EPropNode*& pMasterProps = pMaster->GetProperties();
+
                 if(pMasterProps != NULL) {
                     EPropNode* pNode = new EPropNode();
                     pNode->m_pNextNode = pMasterProps;
                     pNode->m_pProperty = static_cast<IProperty*>(this);
                     pMasterProps = pNode;
                 }else{
-                    pMasterProps = new EPropNode();
-                    pMasterProps->m_pNextNode = NULL;
+                    pMasterProps = new EPropNode(); //This property is the first one to be attached,
+                    pMasterProps->m_pNextNode = NULL; //so prepare the linked list head
                     pMasterProps->m_pProperty = static_cast<IProperty*>(this);
                 }
             }
@@ -135,14 +140,26 @@ namespace cbpp {
     class World;
 
     //The basis for all game entities
-    class BaseEntity {
+    class BaseEntity : public BasePrintable {
         CB_VAR_GETSETE(Vec2, Position, m_vPos)
         CB_VAR_GETSETE(float_t, Angle, m_fAngle)
         CB_VAR_GETSETE(bool, Spawned, m_bSpawned)
 
         public:
+            virtual void Print(FILE* hTarget = stdout) {}
+            virtual void SPrint(char* sTarget, size_t iMaxWrite) {}
+            virtual const char* ToString() { return NULL; }
+            virtual bool FromString(const char* sTarget) { return false; }
+
             BaseEntity(){ ConstructProps(); }
             BaseEntity(BaseEntity* pMaster) : m_pMaster(pMaster) { ConstructProps(); }
+
+            size_t GetDumpLength() const noexcept;
+            void Dump(uint8_t* pTarget) const noexcept;
+            void Load(uint8_t* pSource) noexcept;
+
+            yyjson_mut_val* ToJSON() const noexcept;
+            void FromJSON(yyjson_val* jValue) noexcept;
             
             virtual void ConstructProps() noexcept {
                 m_pPropsHead = NULL;

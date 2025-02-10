@@ -10,15 +10,8 @@ extern "C" {
         printf("Module entry point!\n");
 
         BaseEntity* eTest = CreateEntity("ent_test");
-        EPropNode* pHead = eTest->GetProperties();
-        int i = 0;
-
-        while(pHead != NULL) {
-            i++;
-            printf("[%d] %s\n", i, pHead->m_pProperty->Name());
-
-            pHead = pHead->m_pNextNode;
-        }
+        
+        PrintEntity(eTest);
 
         return true;
     }

@@ -14,7 +14,7 @@ namespace cbvs {
 
 namespace ddraw {
     //This uses regular floats as OpenGL uses them too.
-    //Primitive glyths are all square and have same size.
+    //Primitive glyths are all square and have the same size.
     struct GlythPrimitive {
         float fX,fY;
         float fSize;

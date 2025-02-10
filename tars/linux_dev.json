@@ -1,7 +1,7 @@
 {
 	"base" : 
 	{
-		"comp_params" : "-std=c++17 -m64 -fPIC -g3 -D GLFW_INCLUDE_NONE",
+		"comp_params" : "-std=c++17 -m64 -fPIC -O2 -D GLFW_INCLUDE_NONE",
 		"compiler" : "g++",
 		"from_obj" : 0
 	},

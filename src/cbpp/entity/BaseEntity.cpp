@@ -30,6 +30,10 @@ namespace cbpp {
         return m_pPropsHead;
     }
 
+    const EPropNode* BaseEntity::GetProperties() const noexcept {
+        return const_cast<const EPropNode*>(m_pPropsHead);
+    }
+
     size_t BaseEntity::GetDumpLength() const noexcept {
         EPropNode* pCurrent = m_pPropsHead;
         size_t iOutLen = 0;
@@ -70,6 +74,10 @@ namespace cbpp {
         }
     }
 
+    BaseEntity::~BaseEntity() {
+        delete m_pPropsHead;
+    }
+
     yyjson_mut_val* BaseEntity::ToJSON() const noexcept {
         
     }
@@ -107,9 +115,9 @@ namespace cbpp {
         delete m_pProperty;
     }
 
-    void PrintEntity(BaseEntity* eTarget, FILE* hStream) noexcept {
-        fprintf(hStream, "Entity of class '%s':\n", eTarget->Class());
-        EPropNode* pCurrent = eTarget->GetProperties();
+    void BaseEntity::Print(FILE* hStream) const {
+        fprintf(hStream, "Entity of class '%s':\n", Class());
+        EPropNode* pCurrent = m_pPropsHead;
         
         if(pCurrent == NULL) {
             fprintf(hStream, "\tNo attributes providen\n");
@@ -118,9 +126,36 @@ namespace cbpp {
 
         size_t iCounter = 1;
         while(pCurrent != NULL) {
-            fprintf(hStream, "\t[%u] %s\n", iCounter, pCurrent->m_pProperty->Name());
+            fprintf(hStream, "\t[%u] %s = ", iCounter, pCurrent->m_pProperty->Name());
+            pCurrent->m_pProperty->Print(hStream);
+            fprintf(hStream, "\n");
+
             iCounter++;
             pCurrent = pCurrent->m_pNextNode;
         }
+    }
+
+    size_t BaseEntity::SPrint(char* sTarget, size_t iMax) const {
+        size_t iWritten = 0;
+
+        iWritten += snprintf(sTarget, iMax, "Entity of class '%s':\n", Class());
+        EPropNode* pCurrent = m_pPropsHead;
+        
+        if(pCurrent == NULL) {
+            iWritten += snprintf(sTarget, iMax, "\tNo attributes providen\n");
+            return iWritten;
+        }
+
+        size_t iCounter = 1;
+        while(pCurrent != NULL) {
+            iWritten += snprintf(sTarget, iMax, "\t[%u] %s = ", iCounter, pCurrent->m_pProperty->Name());
+            iWritten += pCurrent->m_pProperty->SPrint(sTarget+iWritten, iMax);
+            iWritten += snprintf(sTarget+iWritten, iMax, "\n");
+
+            iCounter++;
+            pCurrent = pCurrent->m_pNextNode;
+        }
+
+        return iWritten;
     }
 }

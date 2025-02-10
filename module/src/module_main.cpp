@@ -10,8 +10,8 @@ extern "C" {
         printf("Module entry point!\n");
 
         BaseEntity* eTest = CreateEntity("ent_test");
-        
-        PrintEntity(eTest);
+
+        Print(*eTest);
 
         return true;
     }

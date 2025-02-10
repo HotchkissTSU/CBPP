@@ -18,7 +18,7 @@ namespace cbpp {
             virtual void Tick(){}
             virtual void Render(){}
 
-            virtual const char* Class();
+            virtual const char* Class() const noexcept;
 
             virtual ~TestEntity(){}
     };

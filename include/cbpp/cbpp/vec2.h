@@ -2,11 +2,16 @@
 #define CBPP_VECTOR
 
 #include <stddef.h>
+
 #include "cbpp/cbdef.h"
+#include "cbpp/print.h"
 
 namespace cbpp{	
-	struct Vec2{
+	struct Vec2 : public BasePrintable {
 		float_t x,y;
+
+		virtual void Print(FILE* hTarget = stdout) const;
+		virtual size_t SPrint(char* sTarget, size_t iMaxWrite) const;
 
 		Vec2() : x(0.0f), y(0.0f) {};
 		Vec2(const cbpp::Vec2& v) : x(v.x), y(v.y) {};

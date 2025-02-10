@@ -18,7 +18,7 @@
     Registered entities can be created via their text name
 */
 #define CB_ENTITY_REGISTER(textName, className)\
-    const char* className::Class() { return #textName; }\
+    const char* className::Class() const noexcept { return #textName; }\
     BaseEntity* cb_entfactory_##className(){\ 
         return static_cast<BaseEntity*>(new className());\
     }\
@@ -37,7 +37,7 @@
 namespace cbpp {
     class BaseEntity;
 
-    class IProperty {
+    class IProperty : public BasePrintable {
         public:
             enum PARAMS : uint8_t {
                 PARAM_EMPTY       = 0b00000000, //Desolate, dead-silent bitmask, with zero signs of life
@@ -45,6 +45,9 @@ namespace cbpp {
                 PARAM_NETWORKABLE = 0b00000001, //Sync this value between the client and the server
                 PARAM_SAVELOAD    = 0b00000010  //Save and restore this value
             };
+
+            virtual void Print(FILE* hTarget = stdout) const = 0;
+            virtual size_t SPrint(char* sTarget, size_t iMaxWrite) const = 0;
 
             virtual const char* Name() const noexcept = 0;
             virtual const char* Desc() const noexcept = 0;
@@ -54,6 +57,8 @@ namespace cbpp {
             virtual void Serialize(void* aTarget) const noexcept = 0;
             virtual void Deserialize(void* aSource) noexcept = 0;
             virtual const void* GetBuffer() const noexcept = 0;
+
+            ~IProperty() = default;
     };
 
     //Entity properties are stored in an one-way linked list
@@ -72,6 +77,14 @@ namespace cbpp {
     //A wrapper for class members to store them as meta-properties
     template <typename T> class EntityProperty : public IProperty {
         public:
+            virtual void Print(FILE* hTarget = stdout) const {
+                cbpp::Print<T>(m_Data, hTarget);
+            }
+
+            virtual size_t SPrint(char* sTarget, size_t iMaxWrite) const {
+                return cbpp::SPrint<T>(m_Data, sTarget, iMaxWrite);
+            }
+
             virtual const char* Name() const noexcept override {
                 return m_sName;
             }
@@ -146,10 +159,8 @@ namespace cbpp {
         CB_VAR_GETSETE(bool, Spawned, m_bSpawned)
 
         public:
-            virtual void Print(FILE* hTarget = stdout) {}
-            virtual void SPrint(char* sTarget, size_t iMaxWrite) {}
-            virtual const char* ToString() { return NULL; }
-            virtual bool FromString(const char* sTarget) { return false; }
+            virtual void Print(FILE* hTarget = stdout) const;
+            virtual size_t SPrint(char* sTarget, size_t iMaxWrite) const;
 
             BaseEntity(){ ConstructProps(); }
             BaseEntity(BaseEntity* pMaster) : m_pMaster(pMaster) { ConstructProps(); }
@@ -168,8 +179,9 @@ namespace cbpp {
             }
 
             EPropNode*& GetProperties() noexcept;
+            const EPropNode* GetProperties() const noexcept;
 
-            virtual const char* Class() = 0;
+            virtual const char* Class() const noexcept = 0;
 
             //One logic update
             virtual void Tick() = 0;
@@ -177,7 +189,7 @@ namespace cbpp {
             //Rendering time!
             virtual void Render() = 0;
 
-            virtual ~BaseEntity() = default;
+            virtual ~BaseEntity();
             
         protected:
             bool m_bSpawned = false;
@@ -188,7 +200,7 @@ namespace cbpp {
             BaseEntity* m_pMaster = NULL;
 
             Vec2 m_vPos;
-            float_t m_fAngle;
+            float_t m_fAngle = 0.0f;
 
             EPropNode* m_pPropsHead;
     };

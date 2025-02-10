@@ -14,16 +14,16 @@ namespace cbpp {
     template<> void Print<uint32_t>(const uint32_t& refValue, FILE* hTarget) { fprintf(hTarget, "%u", refValue); }
     template<> void Print<uint64_t>(const uint64_t& refValue, FILE* hTarget) { fprintf(hTarget, "%lu", refValue); }
 
-    template<> void SPrint<float >(const float& refValue, char* sTarget, size_t iMaxWrite) { snprintf(sTarget, iMaxWrite, "%f", refValue); }
-    template<> void SPrint<double>(const double& refValue, char* sTarget, size_t iMaxWrite) { snprintf(sTarget, iMaxWrite, "%lf", refValue); }
+    template<> size_t SPrint<float >(const float& refValue, char* sTarget, size_t iMaxWrite) { return snprintf(sTarget, iMaxWrite, "%f", refValue); }
+    template<> size_t SPrint<double>(const double& refValue, char* sTarget, size_t iMaxWrite) { return snprintf(sTarget, iMaxWrite, "%lf", refValue); }
 
-    template<> void SPrint<int8_t >(const int8_t& refValue, char* sTarget, size_t iMaxWrite) { snprintf(sTarget, iMaxWrite, "%d", refValue); }
-    template<> void SPrint<int16_t>(const int16_t& refValue, char* sTarget, size_t iMaxWrite) { snprintf(sTarget, iMaxWrite, "%d", refValue); }
-    template<> void SPrint<int32_t>(const int32_t& refValue, char* sTarget, size_t iMaxWrite) { snprintf(sTarget, iMaxWrite, "%d", refValue); }
-    template<> void SPrint<int64_t>(const int64_t& refValue, char* sTarget, size_t iMaxWrite) { snprintf(sTarget, iMaxWrite, "%ld", refValue); }
+    template<> size_t SPrint<int8_t >(const int8_t& refValue, char* sTarget, size_t iMaxWrite) { return snprintf(sTarget, iMaxWrite, "%d", refValue); }
+    template<> size_t SPrint<int16_t>(const int16_t& refValue, char* sTarget, size_t iMaxWrite) { return snprintf(sTarget, iMaxWrite, "%d", refValue); }
+    template<> size_t SPrint<int32_t>(const int32_t& refValue, char* sTarget, size_t iMaxWrite) { return snprintf(sTarget, iMaxWrite, "%d", refValue); }
+    template<> size_t SPrint<int64_t>(const int64_t& refValue, char* sTarget, size_t iMaxWrite) { return snprintf(sTarget, iMaxWrite, "%ld", refValue); }
 
-    template<> void SPrint<uint8_t >(const uint8_t& refValue, char* sTarget, size_t iMaxWrite) { snprintf(sTarget, iMaxWrite, "%u", refValue); }
-    template<> void SPrint<uint16_t>(const uint16_t& refValue, char* sTarget, size_t iMaxWrite) { snprintf(sTarget, iMaxWrite, "%u", refValue); }
-    template<> void SPrint<uint32_t>(const uint32_t& refValue, char* sTarget, size_t iMaxWrite) { snprintf(sTarget, iMaxWrite, "%u", refValue); }
-    template<> void SPrint<uint64_t>(const uint64_t& refValue, char* sTarget, size_t iMaxWrite) { snprintf(sTarget, iMaxWrite, "%lu", refValue); }
+    template<> size_t SPrint<uint8_t >(const uint8_t& refValue, char* sTarget, size_t iMaxWrite) { return snprintf(sTarget, iMaxWrite, "%u", refValue); }
+    template<> size_t SPrint<uint16_t>(const uint16_t& refValue, char* sTarget, size_t iMaxWrite) { return snprintf(sTarget, iMaxWrite, "%u", refValue); }
+    template<> size_t SPrint<uint32_t>(const uint32_t& refValue, char* sTarget, size_t iMaxWrite) { return snprintf(sTarget, iMaxWrite, "%u", refValue); }
+    template<> size_t SPrint<uint64_t>(const uint64_t& refValue, char* sTarget, size_t iMaxWrite) { return snprintf(sTarget, iMaxWrite, "%lu", refValue); }
 }

@@ -121,3 +121,71 @@ namespace cbpp {
 		}
 	}
 }
+
+namespace cbpp {
+	std::vector<CString> g_aSearchPaths[SPATHS_AMOUNT];
+
+	const char* SearchPathGroupName(SEARCH_PATH iGroupIndex) noexcept {
+		switch( iGroupIndex ) {
+			case PATH_ALL:     return "PATH_ALL";
+			case PATH_LOCALE:  return "PATH_LOCALE";
+			case PATH_MAP:     return "PATH_MAP";
+			case PATH_SOUND:   return "PATH_SOUND";
+			case PATH_TEXTURE: return "PATH_TEXTURE";
+			default: 		   return "PATH_UNKNOWN";
+		}
+	}
+
+	bool MountSearchPath(SEARCH_PATH iGroupIndex, const char* sPath) {
+		std::vector<CString>& aGroup = g_aSearchPaths[iGroupIndex];
+
+		bool bCollide = false;
+		for(size_t i = 0; i < aGroup.size(); i++) {
+			if( strcmp(aGroup[i], sPath) == 0 ) {
+				bCollide = true;
+				break;
+			}
+		}
+
+		if(bCollide) {
+			char sBuffer[256];
+			snprintf(sBuffer, 256, "The search path '%s' already exists in a group %s", sPath, SearchPathGroupName(iGroupIndex));
+			PushError(ERROR_IO, sBuffer);
+			return false;
+		}
+
+		aGroup.push_back(sPath);
+
+		return true;
+	}
+
+	File* OpenFile(SEARCH_PATH iGroupIndex, const char* sPath, const char* sModes) {
+		std::vector<CString>& aGroup = g_aSearchPaths[iGroupIndex];
+
+		char sBuffer[512];
+		for(size_t i = 0; i < aGroup.size(); i++) {
+			snprintf(sBuffer, 512, "%s%s", (const char*)aGroup[i], sPath);
+			FILE* hTestHandle = fopen(sBuffer, "r");
+			if(hTestHandle != NULL) {
+				fclose(hTestHandle);
+				return new File(sBuffer, sModes);
+			}
+		}
+
+		return NULL;
+	}
+
+	File* OpenFile(const char* sPath, const char* sModes) {
+		File* hOut = NULL;
+		size_t iInputLen = strlen(sPath);
+
+		for(size_t i = 0; i < SPATHS_AMOUNT; i++) {
+			hOut = OpenFile((SEARCH_PATH)i, sPath, sModes);
+			if(hOut != NULL) {
+				return hOut;
+			}
+		}
+
+		return NULL;
+	}
+}

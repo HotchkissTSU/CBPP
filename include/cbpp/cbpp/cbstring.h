@@ -19,14 +19,14 @@ namespace cbpp {
     //4-byte character type used by the engine
     typedef char32_t Char;
 
-    //This bro is required by the C unicode-converting functions and i have no idea what it does
+    //This bro is required by C unicode-converting functions and i have no idea what it does
     extern mbstate_t g_mbstate;
 
     //This buffer holds the results of String::C8 and String::C32 methods
     extern char* g_string_buffer;
     
     // CBPP character string type. Uses UTF-32 to store the data and can convert text from UTF-8 and back.
-    // Use only in the situations where multiple languages are needed.
+    // Use only in situations where multiple languages are required.
     class String {
         public:
             String() = default;
@@ -81,7 +81,7 @@ namespace cbpp {
             The resulting pointer is to be cleared with cbpp::Free()*/
             String* Split(size_t& size_ref, Char delim);
 
-            /*Split a string by the delimeter, not including ones inside the quote pairs.
+            /*Split a string by the delimeter, not including ones between the quote pairs.
             The resulting pointer is to be cleared with cbpp::Free()*/
             String* SplitEx(size_t& size_ref, Char delim, Char quote = U'"');
 
@@ -105,7 +105,7 @@ namespace cbpp {
     
     /*
         Character stream object for the more convenient text parsing
-        NOTE: char-templated CharStream is NOT in UTF-8!
+        NOTE: char-templated CharStream is NOT encoded in UTF-8!
     */
     template<typename CharT> class CharStream {
         public:
@@ -189,6 +189,27 @@ namespace cbpp {
             CharT* m_stream = NULL;
             size_t m_length = 0;
             size_t m_pointer = 0;
+    };
+
+    //A structure for safe c-strings storage in any containers
+    class CString {
+        public:
+            CString();
+            CString(const char* sSource);
+            CString(const CString& refOther);
+
+            CString& operator=(const CString& refOther);
+
+            char& operator[](size_t iIndex) noexcept;
+            char operator[](size_t iIndex) const noexcept;
+
+            operator const char * () const noexcept;
+            operator char*() noexcept;
+
+            ~CString();
+
+        private:
+            char* m_sData;
     };
 }
 

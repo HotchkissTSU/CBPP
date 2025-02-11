@@ -1,3 +1,11 @@
 {
-    "gamelib" : "./modules/test.so"
+    "gamelib" : "./modules/test.so",
+
+    "paths" : {
+        "all" : ["assets/"],
+        "locale" : ["assets/locale/"],
+        "map" : ["assets/maps/"],
+        "sound" : ["assets/sound/"],
+        "texture" : ["assets/textures/"]
+    }
 }

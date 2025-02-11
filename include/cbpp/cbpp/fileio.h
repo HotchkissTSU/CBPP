@@ -2,12 +2,25 @@
 #define CBPP_FILEIO_H
 
 #include <stdio.h>
-#include <cstdint>
+#include <stdint.h>
 #include <stddef.h>
+#include <vector>
 
 #include "cbpp/cbstring.h"
 
 namespace cbpp {	
+	enum SEARCH_PATH : uint8_t {
+		PATH_ALL,
+		PATH_LOCALE,
+		PATH_TEXTURE,
+		PATH_MAP,
+		PATH_SOUND,
+
+		SPATHS_AMOUNT
+	};
+
+	extern std::vector<CString> g_aSearchPaths[];
+
 	class File {
 		public:
 			File(){};
@@ -45,6 +58,13 @@ namespace cbpp {
 			FILE* io_ptr = NULL;
 			uint64_t fl_length = -1;
 	};
+
+	const char* SearchPathGroupName(SEARCH_PATH iGroupIndex) noexcept;
+
+	bool MountSearchPath(SEARCH_PATH iGroupIndex, const char* sPath);
+
+	File* OpenFile(const char* sPath, const char* sModes);
+	File* OpenFile(SEARCH_PATH iGroupIndex, const char* sPath, const char* sModes);
 }
 
 #endif

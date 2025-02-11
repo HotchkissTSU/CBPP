@@ -15,8 +15,8 @@
 #define CBPP_MATH_2PI (float_t)(2.0f) * CBPP_MATH_PI
 
 /*
-    We have an internal buffer to store the intersection points.
-    This is NOT thread-safe, but the engine is single-threaded.
+    We have an internal buffer to store intersection points.
+    This is NOT thread-safe.
 */
 #define CBPP_MATH_ISEC_POINTS_BUFFER_SIZE 16
 

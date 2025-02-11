@@ -61,7 +61,11 @@ namespace cbpp {
             ~IProperty() = default;
     };
 
-    //Entity properties are stored in an one-way linked list
+    /*
+        Entity properties are stored in an one-way linked list.
+        Each knot in an inheritance tree adds his own properties in 
+        this list in it`s constructor via ConstructProps() call.
+    */
     struct EPropNode {
         EPropNode(){};
         EPropNode(EPropNode* pPrevNode, IProperty* pValue);

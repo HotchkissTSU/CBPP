@@ -147,6 +147,28 @@ bool LoadGameLibrary() {
 	}
 #endif
 
+void __mount_group(yyjson_val* jValue, const char* sName, cbpp::SEARCH_PATH iIndex) noexcept {
+	yyjson_val* jGValue = yyjson_obj_get(jValue, sName);
+	if(jGValue == NULL) { return; }
+
+	if(yyjson_is_str(jGValue)) { return; }
+	
+	size_t iListLength = yyjson_get_len(jGValue);
+	for(size_t i = 0; i < iListLength; i++) {
+		yyjson_val* jCurrent = yyjson_arr_get(jGValue, i);
+		if(!yyjson_is_str(jCurrent)) { continue; }
+		cbpp::MountSearchPath(iIndex, yyjson_get_str(jCurrent));
+	}
+}
+
+void MountSearchPaths(yyjson_val* jValue) noexcept {
+	__mount_group(jValue, "all", 	 cbpp::PATH_ALL);
+	__mount_group(jValue, "map", 	 cbpp::PATH_MAP);
+	__mount_group(jValue, "locale",  cbpp::PATH_LOCALE);
+	__mount_group(jValue, "texture", cbpp::PATH_TEXTURE);
+	__mount_group(jValue, "sound",   cbpp::PATH_SOUND);
+}
+
 bool LoadGamefile() {
 	char* gf = GameData.Gamefile;
 	char* glib = NULL;
@@ -181,6 +203,13 @@ bool LoadGamefile() {
 		glib = strdup(sTmp);
 	}
 
+	yyjson_val* jSearchPaths = yyjson_obj_get(jRoot, "paths");
+	if(jSearchPaths != NULL) {
+		MountSearchPaths(jSearchPaths);
+	}else{
+		CbThrowWarning("No search paths are providen. This is kinda bad");
+	}
+
 	yyjson_doc_free(jDoc);
 
 	if(glib == NULL) {
@@ -191,6 +220,16 @@ bool LoadGamefile() {
 	}
 
 	return true;
+}
+
+void PrintSearchPaths(FILE* hStream = stdout) {
+	fprintf(hStream, "Engine default search paths:\n");
+	for(size_t i = 0; i < cbpp::SPATHS_AMOUNT; i++) {
+		fprintf(hStream, "\tGroup %s:\n", cbpp::SearchPathGroupName((cbpp::SEARCH_PATH)i));
+		for(size_t j = 0; j < cbpp::g_aSearchPaths[i].size(); j++) {
+			fprintf(hStream, "\t\t%s\n", (const char*)cbpp::g_aSearchPaths[i][j]);
+		}
+	}
 }
 
 void PrintGLInfo(FILE* stream = stdout, uint8_t debug_table_width = 55) {
@@ -303,6 +342,7 @@ int main( int argc, char** argv ) {
 	glViewport(0,0,GameData.WindowW, GameData.WindowH);
 
 	PrintGLInfo();
+	PrintSearchPaths();
 
 	if(!cbvs::InitDefaultShaders()) {
 		exit(-1);

@@ -360,4 +360,44 @@ namespace cbpp {
         tmp[out_size] = '\0';
         return tmp;
     }
+
+    CString::CString() : m_sData(NULL) { }
+    CString::CString(const char* sTarget) {
+        m_sData = strdup(sTarget);
+    }
+
+    CString::operator char * () noexcept { return m_sData; }
+
+    CString::operator const char * () const noexcept {
+        return const_cast<const char*>(m_sData);
+    }
+
+    CString::CString(const CString& refOther) {
+        if(m_sData != NULL) {
+            free(m_sData);
+        }
+
+        m_sData = strdup(refOther.m_sData);
+    }
+
+    CString& CString::operator=(const CString& refOther) {
+        if(m_sData != NULL) {
+            free(m_sData);
+        }
+
+        m_sData = strdup(refOther.m_sData);
+        return *this;
+    }
+
+    char& CString::operator[](size_t iIndex) noexcept {
+        return m_sData[iIndex];
+    }
+
+    char CString::operator[](size_t iIndex) const noexcept {
+        return m_sData[iIndex];
+    }
+
+    CString::~CString() {
+        if(m_sData != NULL) { free(m_sData); }
+    }
 }

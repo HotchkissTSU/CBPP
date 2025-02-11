@@ -11,12 +11,6 @@
 //Build a clientside library
 #define CBPP_CLIENT 1
 
-//Defines what library to build
-#define CBPP_NET_STATE CBPP_CLIENT
-
-#define CBPP_IS_SV (CBPP_NET_STATE == CBPP_SERVER)
-#define CBPP_IS_CL (CBPP_NET_STATE == CBPP_CLIENT)
-
 /*
     === UTILITY MACROS ===
 */

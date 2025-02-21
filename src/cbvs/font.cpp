@@ -1,27 +1,6 @@
 #include "cbvs/font.h"
-#include "cbpp/error.h"
-
-#include <stdlib.h>
 
 namespace ddraw {
-    GlythPrimitive* g_aPGlythBuffer = NULL;
-    size_t g_iPGlythBufferLength = 0;
-
-    cbvs::Shader *g_pPTextVTX = NULL, g_pPTextFRAG = NULL;
-    cbvs::Pipe *g_pPTextPipe = NULL;
-
-    void UpdatePGlythBuffer(size_t iBufferSize) {
-        if(iBufferSize <= g_iPGlythBufferLength) { return; }
-
-        GlythPrimitive* pTemp = (GlythPrimitive*) realloc(g_aPGlythBuffer, iBufferSize); //i love realloc
-        if(pTemp == NULL) { return; }
-
-        g_aPGlythBuffer = pTemp;
-        g_iPGlythBufferLength = iBufferSize;
-    }
-}
-
-namespace cbvs {
     // Taken from https://commons.wikimedia.org/wiki/File:Codepage-437.png
     // Public domain.
     const uint64_t g_aFontDefault[] = {

@@ -60,10 +60,13 @@ void window_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0,0,width,height);
 
+	/*
 	cbvs::ScreenSize.x = (float_t)width;
 	cbvs::ScreenSize.y = (float_t)height;
 
-	cbvs::ScreenRatio = (float_t)width / (float_t)height;
+	cbvs::ScreenRatio = (float_t)width / (float_t)height;*/
+
+	cbvs::g_fScreenRatio = (float_t)width / (float_t)height;
 }
 
 void ResolveArgs(int argc, char** argv) {
@@ -128,12 +131,12 @@ bool LoadGameLibrary() {
 	
 	ModuleData.ModuleMain = ( bool (*)(int, char**) )dlsym(lib_handle, "ModuleMain");
 	ModuleData.ModuleTick = ( void (*)() )dlsym(lib_handle, "ModuleTick");
-	ModuleData.ModuleWindowHint = ( void (*)() )dlsym(lib_handle, "ModuleWindowHint");
+	ModuleData.ModulePreMain = ( void (*)() )dlsym(lib_handle, "ModulePreMain");
 	ModuleData.ModuleEventCallback = ( bool (*)(cbpp::Event&) )dlsym(lib_handle, "ModuleEventCallback");
 
 	CBEP_FUNCHK(ModuleMain);
 	CBEP_FUNCHK(ModuleTick);
-	CBEP_FUNCHK(ModuleWindowHint);
+	CBEP_FUNCHK(ModulePreMain);
 	CBEP_FUNCHK(ModuleEventCallback);
 	
 	return true;
@@ -141,10 +144,10 @@ bool LoadGameLibrary() {
 #endif
 
 #ifdef _WIN64
-	bool LoadGameLibrary() {
-		static_assert(true, "Windows is not fully supported yet");
-		return false;
-	}
+bool LoadGameLibrary() {
+	static_assert(true, "Windows is not fully supported yet");
+	return false;
+}
 #endif
 
 void __mount_group(yyjson_val* jValue, const char* sName, cbpp::SEARCH_PATH iIndex) noexcept {
@@ -167,6 +170,7 @@ void MountSearchPaths(yyjson_val* jValue) noexcept {
 	__mount_group(jValue, "locale",  cbpp::PATH_LOCALE);
 	__mount_group(jValue, "texture", cbpp::PATH_TEXTURE);
 	__mount_group(jValue, "sound",   cbpp::PATH_SOUND);
+	__mount_group(jValue, "shader",  cbpp::PATH_SHADER);
 }
 
 bool LoadGamefile() {
@@ -207,8 +211,13 @@ bool LoadGamefile() {
 	if(jSearchPaths != NULL) {
 		MountSearchPaths(jSearchPaths);
 	}else{
-		CbThrowWarning("No search paths are providen. This is kinda bad");
+		CbThrowWarning("No search paths are providen. This is probably kinda bad");
 	}
+
+	/*yyjson_val* jStartLocale = yyjson_obj_get(jRoot, "locale");
+	if(jStartLocale != NULL) {
+		MountLocale(yyjson_get_str(jStartLocale));
+	}*/
 
 	yyjson_doc_free(jDoc);
 
@@ -256,8 +265,8 @@ void Cleanup() {
 	free(GameData.Gamefile);
 	free(GameData.GameLibrary);
 
-	ddraw::Cleanup();
-	cbvs::CleanupDefaultShaders();
+	//ddraw::Cleanup();
+	//cbvs::CleanupDefaultShaders();
 
 	glfwTerminate();
 
@@ -310,8 +319,6 @@ int main( int argc, char** argv ) {
 	glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 0 );
 	glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
 
-	ModuleData.ModuleWindowHint();
-
 	if(GameData.WindowTitle == NULL) {
 		GameData.WindowTitle = strdup( GameData.DefaultWindowTitle );
 	}
@@ -332,19 +339,31 @@ int main( int argc, char** argv ) {
 		exit(-1);
 	}
 
+	ddraw::RegisterShaders();
+
+	ModuleData.ModulePreMain();
+	if(!cbvs::LoadShaders()) {
+		CbThrowWarning("Shaders loading has failed, so everything will break very likely");
+	}
+
+	if(!ddraw::Init()) {
+		CbThrowWarning("Failed to init DDRAW");
+	}
+
 	glfwSetCursorPosCallback(GameData.MainWindow, cursor_position_callback);
 	glfwSetWindowSizeCallback(GameData.MainWindow, window_size_callback);
 	glfwSetKeyCallback(GameData.MainWindow, key_callback);
 
+	/*
 	cbvs::ScreenSize.x = (float_t)GameData.WindowW;
 	cbvs::ScreenSize.y = (float_t)GameData.WindowH;
-	cbvs::ScreenRatio = cbvs::ScreenSize.x / cbvs::ScreenSize.y;
+	cbvs::ScreenRatio = cbvs::ScreenSize.x / cbvs::ScreenSize.y;*/
 	glViewport(0,0,GameData.WindowW, GameData.WindowH);
 
 	PrintGLInfo();
 	PrintSearchPaths();
 
-	if(!cbvs::InitDefaultShaders()) {
+	/*if(!cbvs::InitDefaultShaders()) {
 		exit(-1);
 	}
 
@@ -352,14 +371,14 @@ int main( int argc, char** argv ) {
 	if(!ddraw_init_res) {
 		CbThrowError( "Failed to init DDRAW" );
 		exit(-1);
-	}
+	}*/
 
 	if(!ModuleData.ModuleMain( argc, argv )) {
-		CbThrowError("Unable to proceed, ModuleMain returned FALSE");
+		CbThrowError("Unable to proceed, ModuleMain has returned FALSE");
 		exit(-1);
 	}
 	
-	ddraw::SetColor( cbpp::Color(255,0,0,255) );
+	//ddraw::SetColor( cbpp::Color(255,0,0,255) );
 	
 	cbpp::Event ev;
 

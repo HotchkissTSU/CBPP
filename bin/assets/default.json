@@ -1,11 +1,13 @@
 {
     "gamelib" : "./modules/test.so",
+    "locale" : "ru",
 
     "paths" : {
         "all" : ["assets/"],
-        "locale" : ["assets/locale/"],
+        "locale" : ["assets/locales/"],
         "map" : ["assets/maps/"],
         "sound" : ["assets/sound/"],
-        "texture" : ["assets/textures/"]
+        "texture" : ["assets/textures/"],
+        "shader": ["assets/shaders/"]
     }
 }

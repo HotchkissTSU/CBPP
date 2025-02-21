@@ -1,0 +1,8 @@
+#version 400 core
+
+layout(location = 0) in vec2 inpos;
+uniform float cbpp_RATIO;
+
+void main() {
+    gl_Position = vec4(inpos.x, inpos.y, 0.0, 1.0);
+}

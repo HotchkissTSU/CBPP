@@ -8,11 +8,6 @@
 
 namespace cbpp {
 	std::stack<ErrorInfo> _cb_errors;
-	
-	ErrorInfo _no_error = {
-		ERROR_INVALID,
-		"No errors occured!"
-	};
 
 	void DisplayError(const char* title, const char* text, bool kill){
 		//printf("\n*** THIS IS A MESSAGEBOX! ***\n%s -> %s\n\n", title, text);
@@ -48,7 +43,7 @@ namespace cbpp {
 	const char* time_err_table[] = {
 		"At the edge of void",
 		"Nowhere, at no time",
-		"In the very end",
+		"At the very end",
 		"In the Cuber-epoch",
 		"Sometime, somewhere"
 	};
@@ -112,13 +107,31 @@ namespace cbpp {
 			#endif
 		#endif
 	}
+
+	const char* ErrorNameByCode(ERROR_CODE iCode) noexcept {
+		switch (iCode) {
+			case ERROR_GL: return "OpenGL API error";
+			case ERROR_IO: return "Input/output error";
+			case ERROR_MEM: return "Memory management failure";
+			case ERROR_TCODE: return "Text incoding error";
+			default: return "Unknown error type";
+		}
+	}
+
+	void ErrorInfo::Print(FILE* hTarget) const noexcept {
+		fprintf(hTarget, "TIER 2: %s:\n%s\n", ErrorNameByCode(Code), Msg);
+	}
+
+	size_t ErrorInfo::SPrint(char* sTarget, size_t iMaxWrite) const noexcept {
+		return snprintf(sTarget, iMaxWrite, "TIER 2: %s:\n%s\n", ErrorNameByCode(Code), Msg);
+	}
 	
-	const ErrorInfo& GetLastError() {
+	const ErrorInfo* GetLastError() {
 		if( _cb_errors.size() > 0 ) {
 			const ErrorInfo& info = _cb_errors.top();
-			return info;
+			return &info;
 		}else{
-			return const_cast<const ErrorInfo&>(_no_error);
+			return NULL;
 		}
 	}
 
@@ -129,11 +142,12 @@ namespace cbpp {
 	}
 
 	void PushError( ERROR_CODE code, const char* msg ) {
-		printf("TIER 2 Error: %d, %s\n", code, msg);
-		ErrorInfo errinf = {
-			code,
-			strdup(msg)
-		};
+		//printf("TIER 2 Error: %d, %s\n", code, msg);
+		ErrorInfo errinf;
+		errinf.Code = code;
+		errinf.Msg = strdup(msg);
+
+		Print(errinf);
 
 		_cb_errors.push(errinf);
 	}

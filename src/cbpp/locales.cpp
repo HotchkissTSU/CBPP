@@ -213,17 +213,17 @@ namespace cbpp {
     
     void MountLocale(const char* sPath) {
         char sJsonPath[512];
-        snprintf(sJsonPath, 512, "assets/locales/%s.json", sPath);
+        snprintf(sJsonPath, 512, "%s.json", sPath);
 
-        File hInput(sJsonPath, "rb");
+        File* hInput = OpenFile(PATH_LOCALE, sJsonPath, "rb");
 
-        size_t iFileLen = hInput.Length();
+        size_t iFileLen = hInput->Length();
         
         char* sJsonBuffer = (char*)malloc(iFileLen+1);
         sJsonBuffer[iFileLen] = '\0';
 
-        hInput.Read(sJsonBuffer, iFileLen);
-        hInput.Close();
+        hInput->Read(sJsonBuffer, iFileLen);
+        delete hInput;
         
         yyjson_read_err jError;
         yyjson_doc* jDoc = yyjson_read_opts(sJsonBuffer, iFileLen, CBPP_JSONREAD_OPTS, NULL, &jError);
@@ -281,7 +281,7 @@ namespace cbpp {
                 }
             }
         }
-
+        
         if(sFullLocaleName == NULL) {
             sFullLocaleName = String::str32dup(U"UNNAMED");
         }
@@ -351,5 +351,14 @@ namespace cbpp {
         }
 
         return bOut;
+    }
+
+    Locale* GetLocale(const char* sName) {
+        hash_t iKey = Hash(sName);
+        if(g_mLocales.count(iKey) == 0) {
+            return NULL;
+        }
+
+        return &g_mLocales.at(iKey);
     }
 }

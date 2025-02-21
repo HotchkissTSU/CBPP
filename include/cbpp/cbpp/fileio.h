@@ -15,8 +15,9 @@ namespace cbpp {
 		PATH_TEXTURE,
 		PATH_MAP,
 		PATH_SOUND,
+		PATH_SHADER,
 
-		SPATHS_AMOUNT
+		SPATHS_AMOUNT //Must be a last entry in this enum!
 	};
 
 	extern std::vector<CString> g_aSearchPaths[];
@@ -63,7 +64,11 @@ namespace cbpp {
 
 	bool MountSearchPath(SEARCH_PATH iGroupIndex, const char* sPath);
 
+	/*Search a file in all of existing search groups.
+	Returns NULL on failure*/
 	File* OpenFile(const char* sPath, const char* sModes);
+
+	/*Search a file in the providen search group*/
 	File* OpenFile(SEARCH_PATH iGroupIndex, const char* sPath, const char* sModes);
 }
 

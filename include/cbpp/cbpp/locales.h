@@ -47,9 +47,9 @@ namespace cbpp {
             String m_sPrettyName;
             std::map<hash_t, String> m_mData;
     };
-
+    
     /*
-        Load and store a new locale from a file by it`s short name,
+        Mount a new locale from a file by it`s short name,
         like "ru" instead of "assets/locales/ru.json" etc.
     */
     void MountLocale(const char* lfname);

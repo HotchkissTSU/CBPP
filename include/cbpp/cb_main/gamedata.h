@@ -13,7 +13,7 @@ extern struct ModuleData_t {
 	bool (*ModuleLoopCheck)( void ) = ModuleLoopCheck_default;
 	bool (*ModuleMain)( int, char** ) = nullptr;
 	void (*ModuleTick)( void ) = nullptr;
-	void (*ModuleWindowHint)( void ) = nullptr;
+	void (*ModulePreMain)( void ) = nullptr;
 	bool (*ModuleEventCallback) ( cbpp::Event& ) = nullptr;
 
 	void* LibHandle = NULL;

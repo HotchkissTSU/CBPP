@@ -1,356 +1,253 @@
 #include "cbvs/shader.h"
+
 #include "cbpp/error.h"
 #include "cbpp/fileio.h"
 
-#if !defined(CBVS_SHADERS_STRICT)
-    #define CBVS_SHADERS_STRICT CBVS_STRICT
-#endif
-
-#if CBVS_SHADERS_STRICT == CBVS_STRICT
-    #define CBVS_SHADER_ERR(reason) {CbThrowError(reason);}
-    #define CBVS_SHADER_ERRF(reason, ...) {CbThrowErrorf(reason, __VA_ARGS__);}
-#endif
-
-#if CBVS_SHADERS_STRICT == CBVS_TOLERANT
-    #define CBVS_SHADER_ERR(reason) {CbThrowWarning(reason);}
-    #define CBVS_SHADER_ERRF(reason, ...) {CbThrowWarningf(reason, __VA_ARGS__);}
-#endif
-
 namespace cbvs {
-const char* default_vtx = "#version 400 core\n\
-layout(location = 0) in vec2 inpos;\
-uniform float cbpp_RATIO;\
-void main() {\
-    gl_Position = vec4(inpos.x, inpos.y, 0.0, 1.0);\
-}";
+    ShaderLoaderNode* g_pShadersHead = NULL;
 
-const char* default_frag = "#version 400 core\n\
-uniform vec4 cbpp_COLOR;\
-void main() {\
-    gl_FragColor = cbpp_COLOR;\
-}";
-}
+    ShaderLoaderNode::ShaderLoaderNode(const char* sName, const char* sVTX, const char* sFRAG, const char* sGEOM) :
+                        m_sPipeName(sName), m_sVTX(sVTX),
+                        m_sFRAG(sFRAG), m_sGEOM(sGEOM) {}
 
-namespace cbvs {
-    Shader::Shader( GLenum type, const char* src ) {
-        char prefix[16], sh_name[64];
-        switch(type) {
-            case GL_VERTEX_SHADER:
-                snprintf(prefix, 16, "VTX");
-            case GL_FRAGMENT_SHADER:
-                snprintf(prefix, 16, "FRAG");
-            case GL_GEOMETRY_SHADER:
-                snprintf(prefix, 16, "GEOM");
-            default:
-                snprintf(prefix, 16, "UNDEF");
-        }
-
-        snprintf(sh_name, 64, "%s_unnamed", prefix);
-
-        SetName(sh_name);
-        Compile(type, src);
+    void ShaderLoaderNode::Print(FILE* hStream) const {
+        fprintf(
+            hStream,
+            "Shader loading unit: '%s':\n\tVertex shader: %s\n\tFragment shader: %s\n\tGeometry shader: %s\n",
+            m_sPipeName, m_sVTX, m_sFRAG, m_sGEOM
+        );
     }
 
-    Shader::Shader( const char* name, GLenum type, const char* src ) {
-        SetName(name);
-        Compile(type, src);
+    size_t ShaderLoaderNode::SPrint(char* sTarget, size_t iMaxWrite) const {
+        return snprintf(
+            sTarget, iMaxWrite,
+            "Shader loading unit: '%s':\n\tVertex shader: %s\n\tFragment shader: %s\n\tGeometry shader: %s\n",
+            m_sPipeName, m_sVTX, m_sFRAG, m_sGEOM
+        );
     }
 
-    void Shader::SetName(const char* shname) {
-        snprintf(name, 64, "%s", shname);
-    }
-
-    bool Shader::Compile( GLenum type, const char* src ) {
-        objid = glCreateShader(type);
-        if(!glIsShader(objid)) {
-            CBVS_SHADER_ERR("Failed to create OpenGL shader object");
-            return false;
-        }
-
-        glShaderSource( objid, 1, &src, NULL );
-        glCompileShader( objid );
-
-        GLint result = GL_FALSE;
-        glGetShaderiv( objid, GL_COMPILE_STATUS, &result );
-
-        if(result != GL_TRUE) {
-            GLint logSize = 0;
-            glGetShaderiv(objid, GL_INFO_LOG_LENGTH, &logSize);
-            
-            char* inflog = new char[logSize]();
-
-            glGetShaderInfoLog(objid, 255, NULL, inflog);
-            CBVS_SHADER_ERRF("%s", inflog);
-            delete[] inflog;
-            return false;
-        }
-
-        compiled = true;
-        return true;
-    }
-    
-    GLuint Shader::ID() { return objid; }
-
-    const char* Shader::Name() {
-        return const_cast<const char*>(name);
-    }
-
-    bool Shader::IsValid() {
-        if(!compiled) { return false; }
-
-        GLint res = 0;
-        glGetShaderiv(objid, GL_COMPILE_STATUS, &res);
-
-        return (bool)res;
-    }
-
-    Shader::~Shader() {
-        if(glIsShader(objid)){
-            glDeleteShader(objid);
-        }
-    }
-}
-
-namespace cbvs {
-    void Pipe::Create() {
-        objid = glCreateProgram();
-        if(!glIsProgram(objid)) {
-            CBVS_SHADER_ERR("Failed to create OpenGL shader program object");
-        }
-    }
-
-    Pipe::Pipe(PipeData& data) {
-        this->Link(data);
-    }
-
-    Pipe::Pipe(Shader* vtxp, Shader* fragp) {
-        PipeData buf = {
-            vtxp, fragp, NULL
-        };
-
-        this->Link(buf);
-    }
-    
-    Pipe::Pipe(Shader* vtxp, Shader* fragp, Shader* geop) {
-        PipeData buf = {
-            vtxp, fragp, geop
-        };
-
-        this->Link(buf);
-    }
-
-    bool Pipe::Link(PipeData& data) {
-        Create();
-
-        if(linked) {
-            CBVS_SHADER_ERRF("Pipe %x is already linked", this);
-            return false;
-        }
-
-        if(data.vtx) { 
-            if(data.vtx->IsValid()) { glAttachShader(objid, data.vtx->ID()); }
-            else{ CBVS_SHADER_ERRF("Shader '%s', passed as VTX shader, is invalid", data.vtx->Name()); }
-        }
-
-        if(data.frag) { 
-            if(data.frag->IsValid()) { glAttachShader(objid, data.frag->ID()); }
-            else{ CBVS_SHADER_ERRF("Shader '%s', passed as FRAG shader, is invalid", data.frag->Name()); }
-        }
-
-        if(data.geom) { 
-            if(data.geom->IsValid()) { glAttachShader(objid, data.geom->ID()); }
-            else{ CBVS_SHADER_ERRF("Shader '%s', passed as GEOM shader, is invalid", data.geom->Name()); }
-        }
-
-        glLinkProgram(objid);
-        GLint result = GL_FALSE;
-        glGetProgramiv(objid, GL_LINK_STATUS, &result);
-        
-        if(result != GL_TRUE) {
-            GLint logSize = 0;
-            glGetProgramiv(objid, GL_INFO_LOG_LENGTH, &logSize);
-
-            char* log = new char[logSize]();
-            glGetProgramInfoLog(objid, logSize, NULL, log);
-
-            CBVS_SHADER_ERRF("Pipe %x error: %s", this, log);
-
-            return false;
-        }
-
-        linked = true;
-        return true;
-    }
-
-    void Pipe::Use() { glUseProgram(objid); }
-
-    GLuint Pipe::ID() { return objid; }
-
-    bool Pipe::IsValid() {
-        if( !linked ) { return false; }
-
-        return true;
-    }
-
-    GLint Pipe::GetUniform(const char* uname) {
-        GLint out = glGetUniformLocation(objid, uname);
-        if(out == -1) {
-            CBVS_SHADER_ERRF("Unable to get uniform '%s' from the pipe", uname);
-        }
-
-        return out;
-    }
-
-    bool Pipe::HasUniform(const char* uname) {
-        GLint out = glGetUniformLocation(objid, uname);
-        return (out != -1);
-    }
-
-    void Pipe::PushUniform(const char* name, float_t a, float_t b, float_t c, float_t d) {
-        GLint loc = GetUniform(name);
-        glUniform4f(loc, (GLfloat)a, (GLfloat)b, (GLfloat)c, (GLfloat)d);
-    }
-
-    void Pipe::PushUniform(const char* name, float_t a) {
-        GLint loc = GetUniform(name);
-        glUniform1f(loc, (GLfloat)a);
-    }
-
-    void Pipe::PushUniform(const char* name, int32_t a) {
-        GLint loc = GetUniform(name);
-        glUniform1i(loc, (GLint)a);
-    }
-
-    Pipe::~Pipe() {
-        glDeleteProgram(objid);
-    }
-}
-
-namespace cbvs {
-    Shader* DefaultVTX = nullptr;
-    Shader* DefaultFRAG = nullptr;
-
-    Pipe* DefaultPipe = nullptr;
-
-    bool InitDefaultShaders() {
-        DefaultVTX = new Shader( GL_VERTEX_SHADER, default_vtx );
-        DefaultFRAG = new Shader( GL_FRAGMENT_SHADER, default_frag );
-
-        PipeData sharr = {
-            DefaultVTX, DefaultFRAG, NULL
-        };
-
-        DefaultPipe = new Pipe( sharr );
-
-        printf("\nDefault VTX: %x;\nDefault FRAG: %x;\nDefault Pipeline: %x;\n", DefaultVTX, DefaultFRAG, DefaultPipe);
-
-        return DefaultVTX->IsValid() && DefaultFRAG->IsValid() && DefaultPipe->IsValid();
-    }
-
-    void CleanupDefaultShaders() {
-        if( DefaultVTX != nullptr )  { delete DefaultVTX;  }
-        if( DefaultFRAG != nullptr ) { delete DefaultFRAG; }
-        if( DefaultPipe != nullptr ) { delete DefaultPipe; }
-    }
-
-    const char* LoadShader(const char* path, GLenum type) {
-        char filen[512] = {"assets/shaders/"};
-        strcat(filen, path);
-
-        switch(type) {
-            case GL_VERTEX_SHADER:
-                strcat(filen, ".vertex");
-                break;
-            case GL_FRAGMENT_SHADER:
-                strcat(filen, ".fragment");
-                break;
-            case GL_GEOMETRY_SHADER:
-                strcat(filen, ".geometry");
-                break;
-        }
-
-        cbpp::File inp(filen, "rt");
-
-        if(!inp.IsOpen()) {
-            switch(type) {
-                case GL_VERTEX_SHADER:
-                    return default_vtx;
-                case GL_FRAGMENT_SHADER:
-                    return default_frag;
-                default:
-                    CBVS_SHADER_ERR("Unable to open source file nor fallback to the default shader source");
-                    return NULL;
-            }
-        }
-
-        char* buffer = new char[ inp.Length() + 1 ]();
-        inp.Read(buffer, inp.Length());
-        //inp.Close();
-
-        return const_cast<const char*>( buffer );
-    }
-
-    Shader* CreateShader(GLenum type, const char* src) {
-        Shader* out = new Shader();
-        if(out->Compile(type, src)) {
-            return out;
+    void __shloader_insert (ShaderLoaderNode* pNode) noexcept {
+        if(g_pShadersHead == NULL) { //first entry in the list
+            g_pShadersHead = pNode;
         }else{
-            delete out;
-            #if CBVS_SHADERS_STRICT == CBVS_STRICT
-                CBVS_SHADER_ERR("Unable to create a new shader");
-            #endif
-
-            #if CBVS_SHADERS_STRICT == CBVS_TOLERANT
-                CBVS_SHADER_ERR("Unable to create a new shader, trying to fallback...");
-            #endif
-
-            switch(type) {
-                case GL_VERTEX_SHADER:
-                    return DefaultVTX;
-                
-                case GL_FRAGMENT_SHADER:
-                    return DefaultFRAG;
-
-                case GL_GEOMETRY_SHADER:
-                    CBVS_SHADER_ERR("There is no default fallback for geometry shaders");
-                    return nullptr;
-
-                default:
-                    delete out;
-                    CBVS_SHADER_ERR("Unable to create a new shader nor fallback to the default one");
-                    return nullptr;
-            }
-
-            return out;
+            pNode->m_pNextNode = g_pShadersHead;
+            g_pShadersHead = pNode;
         }
-    }
-
-    Pipe* CreatePipe(PipeData& data) {
-        Pipe* out = new Pipe();
-
-        if(out->Link(data)) {
-            return out;
-        }else {
-            if(DefaultPipe == nullptr) {
-                CBVS_SHADER_ERR("Unable to create a new pipe nor fallback to the default one");
-                return nullptr;
-            }
-
-            return DefaultPipe;
-        }
-    }
-
-    Pipe* CreatePipe(Shader* vtxp, Shader* fragp) {
-        PipeData sharr = {
-            vtxp, fragp, NULL
-        };
-        return CreatePipe(sharr);
-    }
-
-    Pipe* CreatePipe(Shader* vtxp, Shader* fragp, Shader* geop) {
-        PipeData sharr = {
-            vtxp, fragp, geop
-        };
-        return CreatePipe(sharr);
     }
 }
+
+namespace cbvs {
+    bool g_bSupressPipeCache = false;
+    std::map<cbpp::CString, Pipe*> g_mShaderDict;
+
+    const char* GetShaderFileExtension(GLenum iShaderClass) noexcept {
+        switch (iShaderClass) {
+            case GL_VERTEX_SHADER:   return ".vtx";  break;
+            case GL_FRAGMENT_SHADER: return ".frag"; break;
+            case GL_GEOMETRY_SHADER: return ".geom"; break;
+            default: return "";
+        }
+    }
+    /*
+    void GetCachedPipeName(char* sTarget, const char* sPipeName) noexcept {
+        for(size_t i = 0; i < strlen(sPipeName); i++) {
+            if(sPipeName[i] == '/' || sPipeName == '\\') {
+                sTarget[i] = '.';
+            }else{
+                sTarget[i] = sPipeName[i];
+            }
+        }
+    }
+
+    bool PipeCached(const char* sPipeName) noexcept {
+        char* sCacheName = strdup(sPipeName);
+        GetCachedPipeName(sCacheName, sPipeName);
+
+        char sPathBuffer[256];
+        snprintf(sPathBuffer, 256, "cache/%s", sCacheName);
+        free(sCacheName);
+
+        cbpp::File* hTest = cbpp::OpenFile(cbpp::PATH_SHADER, sPathBuffer, "rb");
+        if(hTest != NULL) {
+            delete hTest;
+            return true;
+        }
+
+        return false;
+    }
+    */
+    
+    GLuint CreateShader(const char* sPath, GLenum iShaderType) noexcept {
+        char sShaderNameBuffer[128];
+        snprintf(sShaderNameBuffer, 128, "%s%s", sPath, GetShaderFileExtension(iShaderType));
+
+        cbpp::File* hFile = cbpp::OpenFile(cbpp::PATH_SHADER, sShaderNameBuffer, "rt");
+        if(hFile == NULL) { return -1; }
+
+        size_t iFileLength = hFile->Length();
+
+        char* sFileText = (char*) malloc(iFileLength+1);
+        sFileText[iFileLength] = '\0';
+
+        hFile->Read(sFileText, hFile->Length());
+        delete hFile;
+
+        GLuint hShader = glCreateShader(iShaderType);
+        glShaderSource(hShader, 1, &sFileText, NULL);
+        glCompileShader(hShader);
+
+        free(sFileText);
+
+        GLint iResult;
+        glGetShaderiv(hShader, GL_COMPILE_STATUS, &iResult);
+        if(iResult == GL_FALSE) {
+            GLint iSize = 0;
+            glGetShaderiv(hShader, GL_INFO_LOG_LENGTH, &iSize);
+            
+            char* sErrorLog = (char*) malloc(iSize+1);
+            sErrorLog[iSize] = '\0';
+            glGetShaderInfoLog(hShader, iSize, NULL, sErrorLog);
+
+            cbpp::PushError(cbpp::ERROR_GL, sErrorLog);
+            
+            return -1;
+        }
+
+        return hShader;
+    }
+
+    bool Pipe::Load(const char* sVTX, const char* sFRAG, const char* sGEOM) noexcept {
+        GLuint hVTX = CreateShader(sVTX, GL_VERTEX_SHADER);
+        if(hVTX == -1) {
+            return false;
+        }
+
+        GLuint hFRAG = CreateShader(sFRAG, GL_FRAGMENT_SHADER);
+        if(hFRAG == -1) {
+            glDeleteShader(hVTX);
+            return false;
+        }
+
+        GLuint hGEOM = -1;
+        if(sGEOM != NULL) {
+            hGEOM = CreateShader(sGEOM, GL_GEOMETRY_SHADER);
+            if(hGEOM == -1) {
+                CbThrowWarningf("'%s' geometry shader compilation has failed. Pretending that nothing has happened", sGEOM);
+            }
+        }
+
+        m_hPipeID = glCreateProgram();
+        glAttachShader(m_hPipeID, hVTX);
+        glAttachShader(m_hPipeID, hFRAG);
+        if(hGEOM != -1) { glAttachShader(m_hPipeID, hGEOM); }
+
+        glLinkProgram(m_hPipeID);
+
+        GLint bLinkResult = false;
+        glGetProgramiv(m_hPipeID, GL_LINK_STATUS, &bLinkResult);
+        if(!bLinkResult) {
+            GLint iLogSize;
+            glGetProgramiv(m_hPipeID, GL_INFO_LOG_LENGTH, &iLogSize);
+
+            char* sLog = (char*) malloc(iLogSize+1);
+            sLog[iLogSize] = '\0';
+            glGetProgramInfoLog(m_hPipeID, iLogSize, NULL, sLog);
+
+            cbpp::PushError(cbpp::ERROR_GL, sLog);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    GLint Pipe::GetUniform(const char* sName) const noexcept {
+        GLint hOut = glGetUniformLocation(m_hPipeID, sName);
+
+        if(hOut == -1) {
+            char sBuffer[128];
+            snprintf(sBuffer, 128, "Failed to get '%s' uniform location from the pipe '%s'", sName, m_sName);
+            cbpp::PushError(cbpp::ERROR_GL, sBuffer);
+        }
+
+        return hOut;
+    }
+
+    const char* Pipe::Name() const noexcept {
+        return m_sName;
+    }
+
+    void Pipe::Use() const noexcept {
+        glUseProgram(m_hPipeID);
+    }
+
+    GLint Pipe::GetHandle() const noexcept {
+        return m_hPipeID;
+    }
+
+    bool Pipe::PushUniform(const char* sName, cbpp::float_t fValue) noexcept {
+        GLint hLocation = this->GetUniform(sName);
+        if(hLocation != -1) {
+            glUniform1f(hLocation, (GLfloat)fValue);
+            return true;
+        }
+        return false;
+    }
+
+    bool Pipe::PushUniform(const char* sName, int32_t iValue) noexcept {
+        GLint hLocation = this->GetUniform(sName);
+        if(hLocation != -1) {
+            glUniform1i(hLocation, iValue);
+            return true;
+        }
+        return false;
+    }
+
+    bool Pipe::PushUniform(const char* sName, cbpp::Color iColor) noexcept {
+        GLint hLocation = this->GetUniform(sName);
+        if(hLocation != -1) {
+            cbpp::NormColor cNorm = iColor.Normalized();
+
+            glUniform4f(hLocation, cNorm.r, cNorm.g, cNorm.b, cNorm.a);
+            return true;
+        }
+        return false;
+    }
+
+    Pipe* GetPipe(const char* sName) noexcept {
+        cbpp::CString hName(sName);
+        if(g_mShaderDict.count(hName) == 0) {
+            return NULL;
+        }
+
+        return g_mShaderDict.at(hName);
+    }
+
+    bool LoadShaders() {
+        ShaderLoaderNode* pCurrent = g_pShadersHead;
+
+        while(pCurrent != NULL) {
+            #ifdef CBPP_DEBUG
+                cbpp::Print(*pCurrent);
+            #endif
+
+            Pipe* pNewPipe = new Pipe(pCurrent->m_sPipeName);
+            if(!pNewPipe->Load(pCurrent->m_sVTX, pCurrent->m_sFRAG, pCurrent->m_sGEOM)) {
+                delete pNewPipe;
+                return false;
+            }
+
+            cbpp::CString hName(pCurrent->m_sPipeName);
+            g_mShaderDict[hName] = pNewPipe;
+
+            pCurrent = pCurrent->m_pNextNode;
+        }
+
+        return true;
+    }
+
+    void CleanupShaders() noexcept {
+        
+    }
+}
+

@@ -69,7 +69,7 @@ namespace cbpp {
 		return operator/((float)other);
 	}
 	
-	NormColor Color::Normalized() {
+	NormColor Color::Normalized() const noexcept {
 		NormColor out;
 		
 		out.r = (float)r / 255.0f;

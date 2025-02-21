@@ -30,7 +30,7 @@ namespace cbpp {
 		Color operator/(float other);
 		Color operator/(uint8_t other);
 		
-		NormColor Normalized();
+		NormColor Normalized() const noexcept;
 		
 		uint8_t r,g,b,a;
 	};

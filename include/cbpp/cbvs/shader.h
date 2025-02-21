@@ -1,95 +1,87 @@
 #ifndef CBVS_SHADER_H
 #define CBVS_SHADER_H
 
-#include "glad/glad.h"
-
-#include <cstdint>
-#include "cbpp/vec2.h"
-
 #include <map>
-#include <stdio.h>
-#include <stddef.h>
+#include <stdint.h>
 
-#define CBVS_STRICT 1
-#define CBVS_TOLERANT 0
+#include "glad/glad.h"
+#include "cbpp/cbstring.h"
+#include "cbpp/print.h"
+#include "cbpp/vec2.h"
+#include "cbpp/color.h"
+#include "cbpp/cbstring.h"
+#include "cbpp/cb_hash.h"
 
-#define CBVS_SHADERS_STRICT CBVS_STRICT
+#define CBVS_SHADER_REGISTER(sName, sVTX, sFRAG)\
+    cbvs::__shloader_insert( new cbvs::ShaderLoaderNode(sName, sVTX, sFRAG, NULL) );
+
+#define CBVS_SHADER_REGISTER_EX(sName, sVTX, sFRAG, sGEOM)\
+    cbvs::__shloader_insert( new cbvs::ShaderLoaderNode(sName, sVTX, sFRAG, sGEOM) );
 
 namespace cbvs {
-    using cbpp::float_t;
+    struct ShaderLoaderNode : public cbpp::BasePrintable {
+        ShaderLoaderNode(const char* sName, const char* sVTX, const char* sFRAG, const char* sGEOM = NULL);
 
-	extern const char *default_vtx, *default_frag;
+        virtual void Print(FILE* hStream = stdout) const;
+        virtual size_t SPrint(char* sTarget, size_t iMaxWrite) const;
 
-	class Shader {
-        public:
-            Shader() = default;
-            Shader(GLenum type, const char* source);
-            Shader(const char* shname, GLenum type, const char* source);
-            Shader(const Shader& other) = delete;
-
-            void SetName(const char* name);
-            const char* Name();
-
-            bool Compile(GLenum type, const char* src);
-			GLuint ID();
-
-            bool IsValid();
-
-            ~Shader();
-
-        private:
-            char name[64];
-            bool compiled = false;
-            GLuint objid;
+        ShaderLoaderNode* m_pNextNode = NULL;
+        
+        const char *m_sVTX, *m_sFRAG, *m_sGEOM;
+        const char* m_sPipeName;
     };
 
-    struct PipeData {
-        Shader *vtx, *frag, *geom;
-    };
+    extern ShaderLoaderNode* g_pShadersHead;
 
+    void __shloader_insert(ShaderLoaderNode* pNext) noexcept;
+
+    //Load all registered shaders
+    bool LoadShaders();
+    void CleanupShaders() noexcept;
+}
+
+namespace cbvs {
+    //Supress cache checks and recompile all shaders no matter what
+    extern bool g_bSupressPipeCache;
+
+    //Obtain a file extension for different shader types` sources
+    const char* GetShaderFileExtension(GLenum iShaderClass) noexcept;
+
+    //Load and compile a single shader of the given type
+    GLuint CreateShader(const char* sPath, GLenum iShaderClass) noexcept;
+
+    //A full rendering pipeline
     class Pipe {
         public:
-            Pipe() = default;
-            Pipe(Shader* vtxp, Shader* fragp);
-            Pipe(Shader* vtxp, Shader* fragp, Shader* geop);
-            Pipe(PipeData& data);
-            Pipe(const Pipe& other) = delete;
+            Pipe(const char* sName) : m_sName(sName) {};
 
-            bool Link(PipeData& sharr);
-            GLuint ID();
+            const char* Name() const noexcept;
 
-            bool IsValid();
-            void Use();
+            //Load a pipeline from source files
+            bool Load(const char* sVTX, const char* sFRAG, const char* sGEOM = NULL) noexcept;
 
-            GLint GetUniform(const char* uname);
-            bool HasUniform(const char* uname);
+            void Use() const noexcept;
 
-            void PushUniform(const char* name, float_t a, float_t b, float_t c, float_t d);
-            void PushUniform(const char* name, float_t a);
+            GLint GetHandle() const noexcept;
 
-            void PushUniform(const char* name, int32_t a);
+            GLint GetUniform(const char* sName) const noexcept;
 
-            ~Pipe();
+            bool PushUniform(const char* sName, cbpp::float_t fValue) noexcept;
+            bool PushUniform(const char* sName, int32_t iValue) noexcept;
+
+            bool PushUniform(const char* sName, cbpp::Vec2 v1) noexcept;
+            bool PushUniform(const char* sName, cbpp::Color iColor) noexcept;
+
+            void Free() noexcept;
 
         private:
-            void Create();
-            bool linked = false;
-            GLuint objid;
+            const char* m_sName;
+            GLint m_hPipeID;
     };
 
-    extern Shader *DefaultVTX, *DefaultFRAG;
-    extern Pipe* DefaultPipe;
+    Pipe* GetPipe(const char* sPipeName) noexcept;
 
-    bool InitDefaultShaders();
-    void CleanupDefaultShaders();
-
-    Shader* CreateShader(GLenum type, const char* src);
-
-    const char* LoadShader(const char* path, GLenum type = GL_VERTEX_SHADER);
-
-    Pipe* CreatePipe(PipeData& data);
-    Pipe* CreatePipe(Shader* vtxp, Shader* fragp);
-    Pipe* CreatePipe(Shader* vtxp, Shader* fragp, Shader* geop);
+    extern std::map<cbpp::CString, Pipe*> g_mShaderDict;
 }
 
 #endif

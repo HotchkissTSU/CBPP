@@ -25,6 +25,10 @@ namespace cbpp {
     template<> void Print<uint32_t>(const uint32_t& refValue, FILE* hTarget) { fprintf(hTarget, "%u", refValue);  }
     template<> void Print<uint64_t>(const uint64_t& refValue, FILE* hTarget) { fprintf(hTarget, "%lu", refValue); }
 
+    template<> void Print<Vec2>(const Vec2& refValue, FILE* hTarget) {
+        fprintf(hTarget, "Vec2(%f, %f)", refValue.x, refValue.y);
+    }
+
     template<> size_t SPrint<float >(const float& refValue, char* sTarget, size_t iMaxWrite)      { return snprintf(sTarget, iMaxWrite, "%f", refValue);  }
     template<> size_t SPrint<double>(const double& refValue, char* sTarget, size_t iMaxWrite)     { return snprintf(sTarget, iMaxWrite, "%lf", refValue); }
 
@@ -37,4 +41,8 @@ namespace cbpp {
     template<> size_t SPrint<uint16_t>(const uint16_t& refValue, char* sTarget, size_t iMaxWrite) { return snprintf(sTarget, iMaxWrite, "%u", refValue);  }
     template<> size_t SPrint<uint32_t>(const uint32_t& refValue, char* sTarget, size_t iMaxWrite) { return snprintf(sTarget, iMaxWrite, "%u", refValue);  }
     template<> size_t SPrint<uint64_t>(const uint64_t& refValue, char* sTarget, size_t iMaxWrite) { return snprintf(sTarget, iMaxWrite, "%lu", refValue); }
+
+    template<> size_t SPrint<Vec2>(const Vec2& refValue, char* sTarget, size_t iMaxWrite) {
+        snprintf(sTarget, iMaxWrite, "Vec2(%f, %f)", refValue.x, refValue.y);
+    }
 }

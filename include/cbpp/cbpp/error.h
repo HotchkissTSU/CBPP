@@ -1,7 +1,7 @@
 #ifndef CBPP_ERROR_H
 #define CBPP_ERROR_H
 
-#define CBPP_DEBUG       //if in debug mode, STL exceptions can be thrown
+#define CBPP_DEBUG       //if in debug mode, STL exceptions can be thrown, and some info is printed in the terminal
 #define CBPP_EXC_MSGBOX  //show messageboxes upon exceptions
 #define CBPP_WARN_MSGBOX //show messageboxes upon warnings
 
@@ -28,15 +28,23 @@
 #include <stdio.h>
 #include <stack>
 
+#include "cbpp/print.h"
+
 namespace cbpp {
 	enum ERROR_CODE : uint8_t {
 		ERROR_INVALID, //No errors, everything is probably cool
 		ERROR_IO,      //Error within the Input/Output system
 		ERROR_MEM,     //Error with the memory management (NULL-pointer, invalid size etc.)
-		ERROR_TCODE    //Error with text encoding
+		ERROR_TCODE,   //Error with text encoding
+		ERROR_GL       //Error in an OpenGL API
 	};
 
-	struct ErrorInfo {
+	const char* ErrorNameByCode(ERROR_CODE iCode) noexcept;
+
+	struct ErrorInfo : public BasePrintable {
+		virtual void Print(FILE* hTarget = stdout) const noexcept;
+		virtual size_t SPrint(char* sTarget, size_t iMaxWrite) const noexcept;
+
 		ERROR_CODE Code = ERROR_INVALID;
 		char* Msg;
 	};
@@ -47,7 +55,6 @@ namespace cbpp {
 	void DisplayError(const char* title, const char* text, bool kill = false);
 
 	extern std::stack<ErrorInfo> _cb_errors;
-	extern ErrorInfo _no_error;
 	
 	class Exception : public std::exception {
 		public:
@@ -73,7 +80,7 @@ namespace cbpp {
 		if we also need some sort of callback from a class or a function
 	*/
 	void PushError(ERROR_CODE errcd, const char* msg);
-	const ErrorInfo& GetLastError();
+	const ErrorInfo* GetLastError();
 	bool HasErrors();
 	void PopError();
 	void ClearErrors();

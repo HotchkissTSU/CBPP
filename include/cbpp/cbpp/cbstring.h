@@ -19,7 +19,7 @@ namespace cbpp {
     //4-byte character type used by the engine
     typedef char32_t Char;
 
-    //This bro is required by C unicode-converting functions and i have no idea what it does
+    //This bro is required by C unicode-converting functions and i have no idea what he does
     extern mbstate_t g_mbstate;
 
     //This buffer holds the results of String::C8 and String::C32 methods
@@ -191,7 +191,7 @@ namespace cbpp {
             size_t m_pointer = 0;
     };
 
-    //A structure for safe c-strings storage in any containers
+    // A structure for safe c-strings storage in any containers
     class CString {
         public:
             CString();
@@ -199,6 +199,10 @@ namespace cbpp {
             CString(const CString& refOther);
 
             CString& operator=(const CString& refOther);
+            bool operator==(const char* sOther) const noexcept;
+            bool operator==(const CString& refOther) const noexcept;
+
+            bool operator<(const CString& refOther) const noexcept;
 
             char& operator[](size_t iIndex) noexcept;
             char operator[](size_t iIndex) const noexcept;
@@ -209,7 +213,7 @@ namespace cbpp {
             ~CString();
 
         private:
-            char* m_sData;
+            char* m_sData = NULL;
     };
 }
 

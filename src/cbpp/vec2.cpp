@@ -71,12 +71,4 @@ namespace cbpp{
 	
 	bool Vec2::operator==(Vec2 other) noexcept { return ((x == other.x) && (y == other.y)); }
 	bool Vec2::operator!=(Vec2 other) noexcept { return ((x != other.x) || (y != other.y)); }
-
-	void Vec2::Print(FILE* hTarget) const {
-		fprintf(hTarget, "Vec2(%f, %f)", x, y);
-	}
-
-	size_t Vec2::SPrint(char* sTarget, size_t iMax) const {
-		return snprintf(sTarget, iMax, "Vec2(%f, %f)", x, y);
-	}
 }

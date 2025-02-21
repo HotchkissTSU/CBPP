@@ -1,7 +1,7 @@
 #include "cbpp/fileio.h"
 
 #include "cbpp/error.h"
-#include <cstring>
+#include <string.h>
 
 namespace cbpp {
 	File::File(const char* path, const char* mode) {
@@ -132,10 +132,11 @@ namespace cbpp {
 			case PATH_MAP:     return "PATH_MAP";
 			case PATH_SOUND:   return "PATH_SOUND";
 			case PATH_TEXTURE: return "PATH_TEXTURE";
+			case PATH_SHADER:  return "PATH_SHADER";
 			default: 		   return "PATH_UNKNOWN";
 		}
 	}
-
+	
 	bool MountSearchPath(SEARCH_PATH iGroupIndex, const char* sPath) {
 		std::vector<CString>& aGroup = g_aSearchPaths[iGroupIndex];
 
@@ -148,8 +149,8 @@ namespace cbpp {
 		}
 
 		if(bCollide) {
-			char sBuffer[256];
-			snprintf(sBuffer, 256, "The search path '%s' already exists in a group %s", sPath, SearchPathGroupName(iGroupIndex));
+			char sBuffer[512];
+			snprintf(sBuffer, 512, "The search path '%s' does already exist in the group %s", sPath, SearchPathGroupName(iGroupIndex));
 			PushError(ERROR_IO, sBuffer);
 			return false;
 		}
@@ -165,8 +166,13 @@ namespace cbpp {
 		char sBuffer[512];
 		for(size_t i = 0; i < aGroup.size(); i++) {
 			snprintf(sBuffer, 512, "%s%s", (const char*)aGroup[i], sPath);
+
 			FILE* hTestHandle = fopen(sBuffer, "r");
 			if(hTestHandle != NULL) {
+				#ifdef CBPP_DEBUG
+				printf("Resolved path for '%s' in group %s: %s\n", sPath, SearchPathGroupName(iGroupIndex), sBuffer);
+				#endif
+
 				fclose(hTestHandle);
 				return new File(sBuffer, sModes);
 			}

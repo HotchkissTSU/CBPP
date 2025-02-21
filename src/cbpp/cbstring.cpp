@@ -361,9 +361,14 @@ namespace cbpp {
         return tmp;
     }
 
+    
     CString::CString() : m_sData(NULL) { }
     CString::CString(const char* sTarget) {
-        m_sData = strdup(sTarget);
+        size_t iLength = strlen(sTarget);
+        m_sData = (char*) malloc(iLength+1);
+        memcpy(m_sData, sTarget, iLength);
+
+        m_sData[iLength] = '\0';
     }
 
     CString::operator char * () noexcept { return m_sData; }
@@ -377,7 +382,11 @@ namespace cbpp {
             free(m_sData);
         }
 
-        m_sData = strdup(refOther.m_sData);
+        size_t iLength = strlen(refOther.m_sData);
+        m_sData = (char*) malloc(iLength+1);
+        memcpy(m_sData, refOther.m_sData, iLength);
+
+        m_sData[iLength] = '\0';
     }
 
     CString& CString::operator=(const CString& refOther) {
@@ -387,6 +396,18 @@ namespace cbpp {
 
         m_sData = strdup(refOther.m_sData);
         return *this;
+    }
+
+    bool CString::operator==(const char* sOther) const noexcept {
+        return strcmp(m_sData, sOther) == 0;
+    }
+
+    bool CString::operator==(const CString& refOther) const noexcept {
+        return strcmp(m_sData, refOther.m_sData) == 0;
+    }
+
+    bool CString::operator<(const CString& refOther) const noexcept {
+        return strcmp(m_sData, refOther.m_sData) < 0;
     }
 
     char& CString::operator[](size_t iIndex) noexcept {

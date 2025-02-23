@@ -1,0 +1,19 @@
+#version 460 core
+
+layout (location=0) in vec2 vPos;
+layout (location=1) in vec2 vUV;
+layout (location=2) in uint iCharacter;
+
+out vec2 cbpp_vPos;
+out vec2 cbpp_vUV;
+out uint cbpp_iCharacter;
+
+uniform float cbpp_RATIO;
+
+void main() {
+    gl_Position = vec4(vPos.x / cbpp_RATIO, vPos.y, 0.0, 1.0);
+
+    cbpp_vPos = vPos;
+    cbpp_vUV = vUV;
+    cbpp_iCharacter = iCharacter;
+}

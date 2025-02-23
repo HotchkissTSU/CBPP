@@ -10,7 +10,6 @@
 #include "cbpp/vec2.h"
 #include "cbpp/color.h"
 #include "cbpp/cbstring.h"
-#include "cbpp/cb_hash.h"
 
 #define CBVS_SHADER_REGISTER(sName, sVTX, sFRAG)\
     cbvs::__shloader_insert( new cbvs::ShaderLoaderNode(sName, sVTX, sFRAG, NULL) );
@@ -27,8 +26,12 @@ namespace cbvs {
 
         ShaderLoaderNode* m_pNextNode = NULL;
         
-        const char *m_sVTX, *m_sFRAG, *m_sGEOM;
+        char *m_sVTX, *m_sFRAG, *m_sGEOM;
         const char* m_sPipeName;
+
+        bool m_bStrict = true;
+
+        ~ShaderLoaderNode();
     };
 
     extern ShaderLoaderNode* g_pShadersHead;
@@ -57,8 +60,9 @@ namespace cbvs {
 
             const char* Name() const noexcept;
 
-            //Load a pipeline from source files
-            bool Load(const char* sVTX, const char* sFRAG, const char* sGEOM = NULL) noexcept;
+            bool Load(GLuint hVTX, GLuint hGEOM, GLuint hFRAG) noexcept;
+
+            //bool Load(const char* sVTX, const char* sFRAG, const char* sGEOM = NULL) noexcept;
 
             void Use() const noexcept;
 

@@ -15,13 +15,17 @@ namespace ddraw {
     GLuint g_hVAO, g_hVBO;
     GLuint g_hDefaultTexture, g_hDefaultFontTexture, g_hTextureVAO;
 
+    GLuint g_hTextVAO;
+
     cbpp::NormColor g_cActiveColor;
 
     void RegisterShaders() noexcept {
         CBVS_SHADER_REGISTER("ddraw_generic", "ddraw/generic", "ddraw/generic")
-        CBVS_SHADER_REGISTER_EX("ddraw_circlefill", "ddraw/generic", "ddraw/generic", "ddraw/circlef")
         CBVS_SHADER_REGISTER("ddraw_texture", "ddraw/texture", "ddraw/texture")
+        CBVS_SHADER_REGISTER_EX("ddraw_circlefill", "ddraw/generic", "ddraw/generic", "ddraw/circlef")
         CBVS_SHADER_REGISTER_EX("ddraw_circle", "ddraw/generic", "ddraw/generic", "ddraw/circle")
+
+        CBVS_SHADER_REGISTER_EX("ddraw_text", "ddraw/text", "ddraw/text", "ddraw/text")
     }
 
     void __bitfield2array(uint8_t* pTarget, uint64_t iBits) noexcept {
@@ -42,6 +46,10 @@ namespace ddraw {
         g_hCirclef = cbvs::GetPipe("ddraw_circlefill");
         bOut = bOut && g_hCirclef != NULL;
 
+        if(!bOut) {
+            return false;
+        }
+
         glGenVertexArrays(1, &g_hVAO);
         glGenBuffers(1, &g_hVBO);
 
@@ -58,12 +66,18 @@ namespace ddraw {
 
         //Also setup them for texture rendering
 
+        GLuint hTextureVBO;
+
         glGenVertexArrays(1, &g_hTextureVAO);
+        glGenBuffers(1, &hTextureVBO);
+
         glBindVertexArray(g_hTextureVAO);
             glEnableVertexAttribArray(0);
             glEnableVertexAttribArray(1);
 
-            glBindBuffer(GL_ARRAY_BUFFER, g_hVBO);
+            glBindBuffer(GL_ARRAY_BUFFER, hTextureVBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*4*2*6, g_aMeshBuffer, GL_DYNAMIC_DRAW);
+
             glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (GLvoid*)0);
             glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (GLvoid*)(sizeof(GLfloat)*2));
         glBindVertexArray(0);
@@ -105,6 +119,24 @@ namespace ddraw {
         free(aFont);
 
         bOut = bOut && glCheck() == GL_NO_ERROR;
+        /*
+        GLuint hTextVBO;
+
+        glGenVertexArrays(1, &g_hTextVAO);
+        glGenBuffers(1, &hTextVBO);
+
+        glBindVertexArray(1);
+            glEnableVertexAttribArray(0);
+            glEnableVertexAttribArray(1);
+
+            glBindBuffer(GL_ARRAY_BUFFER, hTextVBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(g_aMeshBuffer), g_aMeshBuffer, GL_DYNAMIC_DRAW);
+
+            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*2+1, (GLvoid*)0); //X,Y
+            glVertexAttribPointer(1, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(GLfloat)*2+1, (GLvoid*)(sizeof(GLfloat)*2)); //character ID
+        glBindVertexArray(0);
+
+        bOut = bOut && glCheck() == GL_NO_ERROR;*/
 
         return bOut;
     }
@@ -228,5 +260,9 @@ namespace ddraw {
         glBindVertexArray(0);
 
         glCheck();
+    }
+
+    void Text(cbpp::Vec2 vPos, const char* sSource, cbpp::float_t fScale) noexcept {
+
     }
 }

@@ -347,7 +347,7 @@ int main( int argc, char** argv ) {
 	}
 
 	if(!ddraw::Init()) {
-		CbThrowWarning("Failed to init DDRAW");
+		CbThrowError("Failed to init DDRAW");
 	}
 
 	glfwSetCursorPosCallback(GameData.MainWindow, cursor_position_callback);

@@ -22,6 +22,8 @@ namespace ddraw {
     extern GLuint g_hDefaultTexture, g_hDefaultFontTexture;
     extern GLuint g_hTextureVAO;
 
+    extern GLuint g_hTextVAO;
+
     extern cbpp::NormColor g_cActiveColor;
 
     void RegisterShaders() noexcept;

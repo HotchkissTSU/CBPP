@@ -1,6 +1,5 @@
 {
     "gamelib" : "./modules/test.so",
-    "locale" : "ru",
 
     "paths" : {
         "all" : ["assets/"],
@@ -9,5 +8,42 @@
         "sound" : ["assets/sound/"],
         "texture" : ["assets/textures/"],
         "shader": ["assets/shaders/"]
+    },
+    
+    "shaders" : {
+        "ddraw" : {
+            "prefix" : "ddraw/",
+            "strict" : 1,
+
+            "members" : {
+                "generic" : {
+                    "vtx" : "generic",
+                    "frag" : "gereric"
+                },
+
+                "circle" : {
+                    "vtx" : "generic",
+                    "frag" : "generic",
+                    "geom" : "circle"
+                },
+
+                "circle_fill" : {
+                    "vtx" : "generic",
+                    "frag" : "generic",
+                    "geom" : "circlef"
+                },
+
+                "text" : {
+                    "vtx" : "text",
+                    "frag" : "text",
+                    "geom" : "text"
+                },
+
+                "texture" : {
+                    "vtx" : "generic",
+                    "frag" : "texture"
+                }
+            }
+        }
     }
 }

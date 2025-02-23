@@ -26,7 +26,7 @@ extern "C" {
     void ModuleTick() { 
         //ddraw::Line(Vec2(-1), Vec2(1), 3.0f);
         ddraw::RectOutline(Vec2(-0.8), Vec2(0.8), 5.0f);
-        ddraw::CircleOutline(Vec2(0.1f), 0.6f, 2.0f);
+        ddraw::CircleOutline(Vec2(-0.9f), 0.6f, 8.0f);
     }
 
     bool ModuleEventCallback( cbpp::Event& ev ) { return true; }

@@ -6,9 +6,23 @@
 namespace cbvs {
     ShaderLoaderNode* g_pShadersHead = NULL;
 
-    ShaderLoaderNode::ShaderLoaderNode(const char* sName, const char* sVTX, const char* sFRAG, const char* sGEOM) :
-                        m_sPipeName(sName), m_sVTX(sVTX),
-                        m_sFRAG(sFRAG), m_sGEOM(sGEOM) {}
+    ShaderLoaderNode::ShaderLoaderNode(const char* sName, const char* sVTX, const char* sFRAG, const char* sGEOM) : m_sPipeName(sName) {
+        m_sVTX = strdup(sVTX);
+        m_sFRAG = strdup(sFRAG);
+        if(sGEOM != NULL) {
+            m_sGEOM = strdup(sGEOM);
+        }else{
+            m_sGEOM = NULL;
+        }
+    }
+
+    ShaderLoaderNode::~ShaderLoaderNode() {
+        free(m_sFRAG);
+        free(m_sVTX);
+        if(m_sGEOM != NULL) {
+            free(m_sGEOM);
+        }
+    }
 
     void ShaderLoaderNode::Print(FILE* hStream) const {
         fprintf(
@@ -116,27 +130,9 @@ namespace cbvs {
         return hShader;
     }
 
-    bool Pipe::Load(const char* sVTX, const char* sFRAG, const char* sGEOM) noexcept {
-        GLuint hVTX = CreateShader(sVTX, GL_VERTEX_SHADER);
-        if(hVTX == -1) {
-            return false;
-        }
-
-        GLuint hFRAG = CreateShader(sFRAG, GL_FRAGMENT_SHADER);
-        if(hFRAG == -1) {
-            glDeleteShader(hVTX);
-            return false;
-        }
-
-        GLuint hGEOM = -1;
-        if(sGEOM != NULL) {
-            hGEOM = CreateShader(sGEOM, GL_GEOMETRY_SHADER);
-            if(hGEOM == -1) {
-                CbThrowWarningf("'%s' geometry shader compilation has failed. Pretending that nothing has happened", sGEOM);
-            }
-        }
-
+    bool Pipe::Load(GLuint hVTX, GLuint hGEOM, GLuint hFRAG) noexcept {
         m_hPipeID = glCreateProgram();
+        
         glAttachShader(m_hPipeID, hVTX);
         glAttachShader(m_hPipeID, hFRAG);
         if(hGEOM != -1) { glAttachShader(m_hPipeID, hGEOM); }
@@ -156,6 +152,12 @@ namespace cbvs {
             cbpp::PushError(cbpp::ERROR_GL, sLog);
 
             return false;
+        }
+
+        glDetachShader(m_hPipeID, hVTX);
+        glDetachShader(m_hPipeID, hFRAG);
+        if(hGEOM != -1) {
+            glDetachShader(m_hPipeID, hGEOM);
         }
 
         return true;
@@ -224,15 +226,45 @@ namespace cbvs {
     }
 
     bool LoadShaders() {
-        ShaderLoaderNode* pCurrent = g_pShadersHead;
+        ShaderLoaderNode* pCurrent = g_pShadersHead, *pPrev = NULL;
+
+        std::map<cbpp::CString, GLuint> mShadersVTX, mShadersFRAG, mShadersGEOM;
 
         while(pCurrent != NULL) {
             #ifdef CBPP_DEBUG
                 cbpp::Print(*pCurrent);
             #endif
 
+            GLuint hVTX, hGEOM = -1, hFRAG;
+            
+            if(mShadersVTX.count(pCurrent->m_sVTX) == 0) {
+                hVTX = CreateShader(pCurrent->m_sVTX, GL_VERTEX_SHADER);
+                if(hVTX == -1 && pCurrent->m_bStrict) { return false; }
+                mShadersVTX[pCurrent->m_sVTX] = hVTX;
+            }else{
+                hVTX = mShadersVTX[pCurrent->m_sVTX];
+            }
+
+            if(mShadersFRAG.count(pCurrent->m_sFRAG) == 0) {
+                hFRAG = CreateShader(pCurrent->m_sFRAG, GL_FRAGMENT_SHADER);
+                if(hFRAG == -1 && pCurrent->m_bStrict) { return false; }
+                mShadersFRAG[pCurrent->m_sFRAG] = hFRAG;
+            }else{
+                hFRAG = mShadersFRAG[pCurrent->m_sFRAG];
+            }
+
+            if(pCurrent->m_sGEOM != NULL) {
+                if(mShadersGEOM.count(pCurrent->m_sGEOM) == 0) {
+                    hGEOM = CreateShader(pCurrent->m_sGEOM, GL_GEOMETRY_SHADER);
+                    if(hGEOM == -1 && pCurrent->m_bStrict) { return false; }
+                    mShadersGEOM[pCurrent->m_sGEOM] = hGEOM;
+                }else{
+                    hGEOM = mShadersGEOM[pCurrent->m_sGEOM];
+                }
+            }
+
             Pipe* pNewPipe = new Pipe(pCurrent->m_sPipeName);
-            if(!pNewPipe->Load(pCurrent->m_sVTX, pCurrent->m_sFRAG, pCurrent->m_sGEOM)) {
+            if(!pNewPipe->Load(hVTX, hGEOM, hFRAG)) {
                 delete pNewPipe;
                 return false;
             }
@@ -240,7 +272,45 @@ namespace cbvs {
             cbpp::CString hName(pCurrent->m_sPipeName);
             g_mShaderDict[hName] = pNewPipe;
 
+            pPrev = pCurrent;
             pCurrent = pCurrent->m_pNextNode;
+
+            if(pPrev != NULL) {
+                delete pPrev;
+            }
+        }
+
+        #ifdef CBPP_DEBUG
+        printf("Unique vertex shaders: \n");
+        #endif
+
+        for(auto it = mShadersVTX.begin(); it != mShadersVTX.end(); it++) {
+            glDeleteShader(it->second);
+            #ifdef CBPP_DEBUG
+            printf("\t%s\n", (const char*)(it->first));
+            #endif
+        }
+
+        #ifdef CBPP_DEBUG
+        printf("Unique fragment shaders: \n");
+        #endif
+
+        for(auto it = mShadersFRAG.begin(); it != mShadersFRAG.end(); it++) {
+            glDeleteShader(it->second);
+            #ifdef CBPP_DEBUG
+            printf("\t%s\n", (const char*)(it->first));
+            #endif
+        }
+
+        #ifdef CBPP_DEBUG
+        printf("Unique geometry shaders: \n");
+        #endif
+
+        for(auto it = mShadersGEOM.begin(); it != mShadersGEOM.end(); it++) {
+            glDeleteShader(it->second);
+            #ifdef CBPP_DEBUG
+            printf("\t%s\n", (const char*)(it->first));
+            #endif
         }
 
         return true;

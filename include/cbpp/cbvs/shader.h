@@ -27,7 +27,7 @@ namespace cbvs {
         ShaderLoaderNode* m_pNextNode = NULL;
         
         char *m_sVTX, *m_sFRAG, *m_sGEOM;
-        const char* m_sPipeName;
+        char* m_sPipeName;
 
         bool m_bStrict = true;
 
@@ -38,7 +38,7 @@ namespace cbvs {
 
     void __shloader_insert(ShaderLoaderNode* pNext) noexcept;
 
-    //Load all registered shaders
+    //Attempt to load all registered shaders
     bool LoadShaders();
     void CleanupShaders() noexcept;
 }

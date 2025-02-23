@@ -13,14 +13,14 @@
     "shaders" : {
         "ddraw" : {
             "prefix" : "ddraw/",
-            "strict" : 1,
-
+            "strict" : true,
+            
             "members" : {
                 "generic" : {
                     "vtx" : "generic",
-                    "frag" : "gereric"
+                    "frag" : "generic"
                 },
-
+                
                 "circle" : {
                     "vtx" : "generic",
                     "frag" : "generic",

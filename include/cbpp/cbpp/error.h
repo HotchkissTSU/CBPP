@@ -11,7 +11,7 @@
 	TIER 1 ERRORS
 
 	These macros exist for decapitating your runtime if you encounter something so terrible
-	and impossible to comprehend, that you think it is a good reason to crash the game
+	and impossible to comprehend, that you think it is a good reason to evaporate the runtime.
 
 	(I insist: the only one (barely forgivable) reason for the game crash is a complete physical destruction of your computer)
 
@@ -36,7 +36,7 @@ namespace cbpp {
 		ERROR_IO,      //Error within the Input/Output system
 		ERROR_MEM,     //Error with the memory management (NULL-pointer, invalid size etc.)
 		ERROR_TCODE,   //Error with text encoding
-		ERROR_GL       //Error in an OpenGL API
+		ERROR_GL       //Error in the OpenGL API
 	};
 
 	const char* ErrorNameByCode(ERROR_CODE iCode) noexcept;
@@ -47,6 +47,8 @@ namespace cbpp {
 
 		ERROR_CODE Code = ERROR_INVALID;
 		char* Msg;
+
+		~ErrorInfo();
 	};
 
 	extern const char* time_err_table[];
@@ -80,7 +82,7 @@ namespace cbpp {
 		if we also need some sort of callback from a class or a function
 	*/
 	void PushError(ERROR_CODE errcd, const char* msg);
-	const ErrorInfo* GetLastError();
+	ErrorInfo* GetLastError();
 	bool HasErrors();
 	void PopError();
 	void ClearErrors();

@@ -6,7 +6,7 @@
 namespace cbvs {
     ShaderLoaderNode* g_pShadersHead = NULL;
 
-    ShaderLoaderNode::ShaderLoaderNode(const char* sName, const char* sVTX, const char* sFRAG, const char* sGEOM) : m_sPipeName(sName) {
+    ShaderLoaderNode::ShaderLoaderNode(const char* sName, const char* sVTX, const char* sFRAG, const char* sGEOM) {
         m_sVTX = strdup(sVTX);
         m_sFRAG = strdup(sFRAG);
         if(sGEOM != NULL) {
@@ -14,6 +14,8 @@ namespace cbvs {
         }else{
             m_sGEOM = NULL;
         }
+
+        m_sPipeName = strdup(sName);
     }
 
     ShaderLoaderNode::~ShaderLoaderNode() {
@@ -22,6 +24,8 @@ namespace cbvs {
         if(m_sGEOM != NULL) {
             free(m_sGEOM);
         }
+
+        free(m_sPipeName);
     }
 
     void ShaderLoaderNode::Print(FILE* hStream) const {
@@ -162,14 +166,14 @@ namespace cbvs {
 
         return true;
     }
-
+    
     GLint Pipe::GetUniform(const char* sName) const noexcept {
         GLint hOut = glGetUniformLocation(m_hPipeID, sName);
 
         if(hOut == -1) {
             char sBuffer[128];
             snprintf(sBuffer, 128, "Failed to get '%s' uniform location from the pipe '%s'", sName, m_sName);
-            cbpp::PushError(cbpp::ERROR_GL, sBuffer);
+            cbpp::PushError(cbpp::ERROR_GL, sBuffer); //This can potentially fill the entire client`s memory with errors
         }
 
         return hOut;
@@ -226,6 +230,15 @@ namespace cbvs {
     }
 
     bool LoadShaders() {
+        FILE* hLogStream = stdout;
+
+        FILE* hLog = fopen("logs/shader.txt", "wt");
+        if(hLog == NULL) {
+            CbThrowWarning("Unable to open shader.txt log file");
+        }else{
+            hLogStream = hLog;
+        }
+
         ShaderLoaderNode* pCurrent = g_pShadersHead, *pPrev = NULL;
 
         std::map<cbpp::CString, GLuint> mShadersVTX, mShadersFRAG, mShadersGEOM;
@@ -280,37 +293,35 @@ namespace cbvs {
             }
         }
 
-        #ifdef CBPP_DEBUG
-        printf("Unique vertex shaders: \n");
-        #endif
+        fprintf(hLogStream, "Unique vertex shaders: \n");
 
         for(auto it = mShadersVTX.begin(); it != mShadersVTX.end(); it++) {
             glDeleteShader(it->second);
-            #ifdef CBPP_DEBUG
-            printf("\t%s\n", (const char*)(it->first));
-            #endif
+            fprintf(hLogStream, "\t%s\n", (const char*)(it->first));
         }
 
-        #ifdef CBPP_DEBUG
-        printf("Unique fragment shaders: \n");
-        #endif
+        fprintf(hLogStream, "\nUnique fragment shaders: \n");
 
         for(auto it = mShadersFRAG.begin(); it != mShadersFRAG.end(); it++) {
             glDeleteShader(it->second);
-            #ifdef CBPP_DEBUG
-            printf("\t%s\n", (const char*)(it->first));
-            #endif
+            fprintf(hLogStream, "\t%s\n", (const char*)(it->first));
         }
 
-        #ifdef CBPP_DEBUG
-        printf("Unique geometry shaders: \n");
-        #endif
+        fprintf(hLogStream, "\nUnique geometry shaders: \n");
 
         for(auto it = mShadersGEOM.begin(); it != mShadersGEOM.end(); it++) {
             glDeleteShader(it->second);
-            #ifdef CBPP_DEBUG
-            printf("\t%s\n", (const char*)(it->first));
-            #endif
+            fprintf(hLogStream, "\t%s\n", (const char*)(it->first));
+        }
+
+        fprintf(hLogStream, "\nRegistered pipelines list:\n");
+
+        for(auto it = g_mShaderDict.begin(); it != g_mShaderDict.end(); it++) {
+            fprintf(hLogStream, "\t%s\n", (const char*)(it->first));
+        }
+
+        if(hLog != NULL) {
+            fclose(hLog);
         }
 
         return true;
@@ -320,4 +331,3 @@ namespace cbvs {
         
     }
 }
-

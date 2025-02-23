@@ -1,3 +1,5 @@
+// This shit is impossibly monke-bugged, REWRITE ME AS SOON AS POSSIBLE
+
 #include "cbpp/error.h"
 
 #include <stdio.h>
@@ -70,7 +72,13 @@ namespace cbpp {
 		if(error_log == NULL) {
 			return;
 		}
-		
+
+		/*ErrorInfo* pError;
+		while(HasErrors()) {
+			fprintf(error_log, "\nTIER 2: %s:\n%s\n\n", ErrorNameByCode(pError->Code), pError->Msg);
+			PopError();
+		}*/
+
 		char ftime_buff[64];
 		GetTimeString(ftime_buff, 64, "%T");
 
@@ -119,16 +127,19 @@ namespace cbpp {
 	}
 
 	void ErrorInfo::Print(FILE* hTarget) const noexcept {
-		fprintf(hTarget, "TIER 2: %s:\n%s\n", ErrorNameByCode(Code), Msg);
+		fprintf(hTarget, "\nTIER 2: %s:\n%s\n\n", ErrorNameByCode(Code), Msg);
 	}
 
 	size_t ErrorInfo::SPrint(char* sTarget, size_t iMaxWrite) const noexcept {
-		return snprintf(sTarget, iMaxWrite, "TIER 2: %s:\n%s\n", ErrorNameByCode(Code), Msg);
+		return snprintf(sTarget, iMaxWrite, "\nTIER 2: %s:\n%s\n\n", ErrorNameByCode(Code), Msg);
+	}
+
+	ErrorInfo::~ErrorInfo() {
 	}
 	
-	const ErrorInfo* GetLastError() {
-		if( _cb_errors.size() > 0 ) {
-			const ErrorInfo& info = _cb_errors.top();
+	ErrorInfo* GetLastError() {
+		if( _cb_errors.size() != 0 ) {
+			ErrorInfo& info = _cb_errors.top();
 			return &info;
 		}else{
 			return NULL;

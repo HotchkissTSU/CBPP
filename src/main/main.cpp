@@ -12,6 +12,7 @@
 #include "GLFW/glfw3.h"
 
 #include "cb_main/gamedata.h"
+#include "cb_main/load_shaders.h"
 
 #ifdef __linux__
 	#include <dlfcn.h>
@@ -214,10 +215,12 @@ bool LoadGamefile() {
 		CbThrowWarning("No search paths are providen. This is probably kinda bad");
 	}
 
-	/*yyjson_val* jStartLocale = yyjson_obj_get(jRoot, "locale");
-	if(jStartLocale != NULL) {
-		MountLocale(yyjson_get_str(jStartLocale));
-	}*/
+	yyjson_val* jShaders = yyjson_obj_get(jRoot, "shaders");
+	if(jShaders != NULL) {
+		if(!RegisterShaders(jShaders)) {
+			CbThrowError("Shader registration has failed. See log for details");
+		}
+	}
 
 	yyjson_doc_free(jDoc);
 

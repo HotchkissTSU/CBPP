@@ -20,12 +20,12 @@ namespace ddraw {
     cbpp::NormColor g_cActiveColor;
 
     void RegisterShaders() noexcept {
-        CBVS_SHADER_REGISTER("ddraw_generic", "ddraw/generic", "ddraw/generic")
+        /*CBVS_SHADER_REGISTER("ddraw_generic", "ddraw/generic", "ddraw/generic")
         CBVS_SHADER_REGISTER("ddraw_texture", "ddraw/texture", "ddraw/texture")
         CBVS_SHADER_REGISTER_EX("ddraw_circlefill", "ddraw/generic", "ddraw/generic", "ddraw/circlef")
         CBVS_SHADER_REGISTER_EX("ddraw_circle", "ddraw/generic", "ddraw/generic", "ddraw/circle")
 
-        CBVS_SHADER_REGISTER_EX("ddraw_text", "ddraw/text", "ddraw/text", "ddraw/text")
+        CBVS_SHADER_REGISTER_EX("ddraw_text", "ddraw/text", "ddraw/text", "ddraw/text")*/
     }
 
     void __bitfield2array(uint8_t* pTarget, uint64_t iBits) noexcept {
@@ -43,9 +43,9 @@ namespace ddraw {
         g_hCircle = cbvs::GetPipe("ddraw_circle");
         bOut = bOut && g_hCircle  != NULL;
 
-        g_hCirclef = cbvs::GetPipe("ddraw_circlefill");
+        g_hCirclef = cbvs::GetPipe("ddraw_circle_fill");
         bOut = bOut && g_hCirclef != NULL;
-
+        
         if(!bOut) {
             return false;
         }

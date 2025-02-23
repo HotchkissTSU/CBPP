@@ -21,8 +21,6 @@ namespace cbvs {
 			cbpp::PushError(cbpp::ERROR_GL, sErrorBuffer);
 		}
 
-		if(errorCode != GL_NO_ERROR) { CbThrowError("OpenGL mayhem"); }
-
 		return errorCode;
 	}
 }

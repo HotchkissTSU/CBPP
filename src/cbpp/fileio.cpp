@@ -192,6 +192,10 @@ namespace cbpp {
 			}
 		}
 
+		char sBuffer[128];
+		snprintf(sBuffer, 128, "Can`t find file '%s' in any registered search group", sPath);
+		PushError(ERROR_IO, sBuffer);
+
 		return NULL;
 	}
 }

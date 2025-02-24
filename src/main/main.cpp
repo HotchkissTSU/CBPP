@@ -222,6 +222,19 @@ bool LoadGamefile() {
 		}
 	}
 
+	yyjson_val* jLocales = yyjson_obj_get(jRoot, "locales");
+	if(jLocales != NULL) {
+		yyjson_val *jValue, *jKey;
+		size_t i, iMax;
+
+		yyjson_obj_foreach(jLocales, i, iMax, jKey, jValue) {
+			const char* sName = jKey->uni.str;
+			const char* sFile = yyjson_get_str(jValue);
+
+			MountLocale(sName, sFile);
+		}
+	}
+
 	yyjson_doc_free(jDoc);
 
 	if(glib == NULL) {

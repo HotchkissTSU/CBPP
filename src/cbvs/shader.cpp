@@ -55,7 +55,6 @@ namespace cbvs {
 }
 
 namespace cbvs {
-    bool g_bSupressPipeCache = false;
     std::map<cbpp::CString, Pipe*> g_mShaderDict;
 
     const char* GetShaderFileExtension(GLenum iShaderClass) noexcept {
@@ -189,6 +188,10 @@ namespace cbvs {
 
     GLint Pipe::GetHandle() const noexcept {
         return m_hPipeID;
+    }
+
+    Pipe::~Pipe() {
+        glDeleteProgram(m_hPipeID);
     }
 
     bool Pipe::PushUniform(const char* sName, cbpp::float_t fValue) noexcept {
@@ -328,6 +331,8 @@ namespace cbvs {
     }
 
     void CleanupShaders() noexcept {
-        
+        for(auto it = g_mShaderDict.begin(); it != g_mShaderDict.end(); it++) {
+            delete it->second;
+        }
     }
 }

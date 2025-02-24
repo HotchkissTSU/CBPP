@@ -43,6 +43,6 @@ namespace cbpp {
     template<> size_t SPrint<uint64_t>(const uint64_t& refValue, char* sTarget, size_t iMaxWrite) { return snprintf(sTarget, iMaxWrite, "%lu", refValue); }
 
     template<> size_t SPrint<Vec2>(const Vec2& refValue, char* sTarget, size_t iMaxWrite) {
-        snprintf(sTarget, iMaxWrite, "Vec2(%f, %f)", refValue.x, refValue.y);
+        return snprintf(sTarget, iMaxWrite, "Vec2(%f, %f)", refValue.x, refValue.y);
     }
 }

@@ -16,7 +16,7 @@ bool ProcessShaderGroup(yyjson_val* jGrp, const char* sGName) noexcept {
 
     yyjson_val* jMembers = yyjson_obj_get(jGrp, "members");
     if(jMembers == NULL && bStrict) {
-        char sBuffer[128]; snprintf(sBuffer, 128, "Shader group '%s' has no members defined");
+        char sBuffer[128]; snprintf(sBuffer, 128, "Shader group '%s' has no members defined", sGName);
         cbpp::PushError(cbpp::ERROR_IO, sBuffer);
         return false;
     }
@@ -25,7 +25,7 @@ bool ProcessShaderGroup(yyjson_val* jGrp, const char* sGName) noexcept {
     yyjson_val* jName;
     yyjson_val* jValue;
 
-    char sVTXBuffer[128], sFRAGBuffer[128], sGEOMBuffer[128]; //Tear this fucking stack apart! Yarr!
+    char sVTXBuffer[128], sFRAGBuffer[128], sGEOMBuffer[128]; //Tear this stack apart! Yarr!
     sGEOMBuffer[0] = '\0';
 
     char sNameBuffer[64];
@@ -40,12 +40,14 @@ bool ProcessShaderGroup(yyjson_val* jGrp, const char* sGName) noexcept {
         yyjson_val* jVTX = yyjson_obj_get(jValue, "vtx");
         if(!yyjson_is_str(jVTX)) {
             snprintf(sVTXBuffer, 128, "Pipeline '%s' has no vertex shader", sName);
+            cbpp::PushError(cbpp::ERROR_IO, sVTXBuffer);
             return false;
         }
 
         yyjson_val* jFRAG = yyjson_obj_get(jValue, "frag");
         if(!yyjson_is_str(jFRAG)) {
-            snprintf(sVTXBuffer, 128, "Pipeline '%s' has no geometry shader", sName);
+            snprintf(sVTXBuffer, 128, "Pipeline '%s' has no fragment shader", sName);
+            cbpp::PushError(cbpp::ERROR_IO, sVTXBuffer);
             return false;
         }
 
@@ -72,7 +74,7 @@ bool RegisterShaders(yyjson_val* jValue) noexcept {
 
     yyjson_obj_foreach(jValue, i, iMax, sGrpName, jGrp) {
         if(!ProcessShaderGroup(jGrp, sGrpName->uni.str)) {
-            char sBuffer[128]; snprintf(sBuffer, 128, "Failed to process shader group '%s'", yyjson_get_str(sGrpName));
+            char sBuffer[128]; snprintf(sBuffer, 128, "Failed to process shader group '%s'", sGrpName->uni.str);
             cbpp::PushError(cbpp::ERROR_IO, sBuffer);
             return false;
         }

@@ -1,36 +1,40 @@
 #ifndef CBPP_ERROR_H
 #define CBPP_ERROR_H
 
-#define CBPP_DEBUG       //if in debug mode, STL exceptions can be thrown, and some info is printed in the terminal
-#define CBPP_EXC_MSGBOX  //show messageboxes upon exceptions
-#define CBPP_WARN_MSGBOX //show messageboxes upon warnings
-
-#define CBPP_ERROR_LOG_SIZE 256
-
 /*
-	TIER 1 ERRORS
+	There are two levels of CBPP exceptions:
 
-	These macros exist for decapitating your runtime if you encounter something so terrible
-	and impossible to comprehend, that you think it is a good reason to evaporate the runtime.
+	Tier 1 errors are meant to be used only if there`s really no step back, and runtime evaporation is the only viable choice.
+	(The only one ((maybe)) reasonable cause for this is a complete physical destruction of the client`s computer)
 
-	(I insist: the only one (barely forgivable) reason for the game crash is a complete physical destruction of your computer)
+	Tier 2 errors are used only as hints in the way like "something bad happened deeply inside the function call stack, so we
+	will return false and push this error".
 
-	Also, they will create a log output
+	The main rule is that any call must not be able to kill the runtime - because nobody really likes game crashes.
+	Better do completely wrong than do nothing.
+
+	Hold the line, leave no quarter!
 */
 
-#define CbThrowError(err_text) cbpp::_ThrowError(cbpp::Exception( err_text , __FILE__, __PRETTY_FUNCTION__, __LINE__))
-#define CbThrowWarning(warn_text) cbpp::_ThrowWarning(cbpp::Exception( warn_text , __FILE__, __PRETTY_FUNCTION__, __LINE__))
-#define CbThrowErrorf(warn_text, ...) { char err_log[CBPP_ERROR_LOG_SIZE]; snprintf(err_log, CBPP_ERROR_LOG_SIZE, warn_text, __VA_ARGS__); CbThrowError(err_log); }
-#define CbThrowWarningf(warn_text, ...) { char err_log[CBPP_ERROR_LOG_SIZE]; snprintf(err_log, CBPP_ERROR_LOG_SIZE, warn_text, __VA_ARGS__); CbThrowWarning(err_log); }
+#define CBPP_T2ERROR_STACK_SIZE 128
 
-#include <stdexcept>
-#include <cstdint>
-#include <stdio.h>
-#include <stack>
+#define CbThrowError(sMsg) cbpp::Throw(sMsg, __PRETTY_FUNCTION__, __LINE__, true);
+#define CbThrowErrorf(sFormat, ...) { char sErrorBuffer[1024]; snprintf(sErrorBuffer, 1024, sFormat, __VA_ARGS__); CbThrowError(sErrorBuffer); }
+
+#define CbThrowWarning(sMsg) cbpp::Throw(sMsg, __PRETTY_FUNCTION__, __LINE__, false);
+#define CbThrowWarningf(sFormat, ...) { char sErrorBuffer[1024]; snprintf(sErrorBuffer, 1024, sFormat, __VA_ARGS__); CbThrowWarning(sErrorBuffer); }
+
+#include <stdint.h>
 
 #include "cbpp/print.h"
 
 namespace cbpp {
+	/*
+		Tier 1 error.
+		Commit a warcrime and murder the engine
+	*/
+	void Throw(const char* sMsg, const char* sFunc, size_t iLine, bool bKill) noexcept;
+
 	enum ERROR_CODE : uint8_t {
 		ERROR_INVALID, //No errors, everything is probably cool
 		ERROR_IO,      //Error within the Input/Output system
@@ -42,50 +46,29 @@ namespace cbpp {
 	const char* ErrorNameByCode(ERROR_CODE iCode) noexcept;
 
 	struct ErrorInfo : public BasePrintable {
-		virtual void Print(FILE* hTarget = stdout) const noexcept;
-		virtual size_t SPrint(char* sTarget, size_t iMaxWrite) const noexcept;
-
-		ERROR_CODE Code = ERROR_INVALID;
-		char* Msg;
-
+		ErrorInfo(ERROR_CODE iCode, const char* sMessage);
 		~ErrorInfo();
+
+		virtual void Print(FILE* hStream = stdout) const;
+    	virtual size_t SPrint(char* sTarget, size_t iMaxWrite) const;
+
+		char* m_sMessage = NULL;
+		ERROR_CODE m_iErrorClass = ERROR_INVALID;
 	};
 
-	extern const char* time_err_table[];
-	size_t GetTimeString(char* buffer, size_t buffer_ln, const char* format);
-
-	void DisplayError(const char* title, const char* text, bool kill = false);
-
-	extern std::stack<ErrorInfo> _cb_errors;
-	
-	class Exception : public std::exception {
-		public:
-			Exception(const char* what, const char* file = NULL, const char* func = NULL, std::size_t line = -1);
-			
-			virtual const char* what() const noexcept;
-			
-			~Exception();
-			
-			char *file, *func, *text;
-			char errtext[512];
-			
-			std::size_t line;
-	};
-	
-	void _ThrowError(Exception exc);
-	void _ThrowWarning(Exception exc);
+	extern ErrorInfo* g_aErrorStack[];
+	extern size_t g_iErrorStackHead;
 
 	/*
-		TIER 2 ERRORS
-
-		These following pals are meant to be used upon non-lethal errors,
-		if we also need some sort of callback from a class or a function
+		Push a tier 2 error in the stack.
+		The passed string is copied and not modified in any way
 	*/
-	void PushError(ERROR_CODE errcd, const char* msg);
-	ErrorInfo* GetLastError();
-	bool HasErrors();
-	void PopError();
-	void ClearErrors();
+	void PushError(ERROR_CODE iClass, const char* sMsg) noexcept;
+	bool HasErrors() noexcept;
+	ErrorInfo* GetLastError() noexcept;
+	void PopLastError() noexcept;
+
+	size_t GetTimeString(char* sBuffer, size_t iBufferSize, const char* sFormat);
 }
 
 #endif

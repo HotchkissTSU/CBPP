@@ -9,6 +9,10 @@
         "texture" : ["assets/textures/"],
         "shader": ["assets/shaders/"]
     },
+        
+    "locales" : {
+        "russian" : "ru"
+    },
     
     "shaders" : {
         "ddraw" : {

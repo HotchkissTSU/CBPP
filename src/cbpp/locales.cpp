@@ -15,15 +15,16 @@ namespace cbpp {
     Char* Locale::Load(const char* fname) {
         m_bRWresult = true;
 
-        File hInput(fname, "rb"); //open the file in a binary mode to forget about C locales
-        if(!hInput.IsOpen()) { m_bRWresult = false; return NULL; }
+        File* hInput = OpenFile(PATH_LOCALE, fname, "rb"); //open the file in a binary mode to forget about C locales
+        if(hInput == NULL) { m_bRWresult = false; return NULL; }
 
-        size_t iFileLen = hInput.Length();
+        size_t iFileLen = hInput->Length();
 
         char* aFileBuffer = (char*)malloc(iFileLen+1); //the buffer for the UTF-8 bytes
         aFileBuffer[iFileLen] = '\0';
 
-        hInput.Read(aFileBuffer, iFileLen);
+        hInput->Read(aFileBuffer, iFileLen);
+        delete hInput;
 
         Char* aBuffer32 = String::U8_U32(aFileBuffer);
         free(aFileBuffer);
@@ -210,8 +211,8 @@ namespace cbpp {
             m_mData[it->first] = it->second; //this STL ape somehow breaks strings without this by-hand stupid copy
         } //TODO: write my own hash tables that WORK AS INTENDED
     }
-    
-    void MountLocale(const char* sPath) {
+
+    void MountLocale(const char* sName, const char* sPath) {
         char sJsonPath[512];
         snprintf(sJsonPath, 512, "%s.json", sPath);
 
@@ -242,7 +243,7 @@ namespace cbpp {
         free(sJsonBuffer);
 
         Char* sFullLocaleName = NULL;
-        char* sCodeLocaleName = NULL;
+        const char* sCodeLocaleName = sName;
         char** aLocaleFiles = NULL;
         size_t iNumFiles = 0;
         char* sLocaleFilesPrefix = NULL;
@@ -256,11 +257,11 @@ namespace cbpp {
                     sFullLocaleName = String::U8_U32(sFullName_u8);
                 }
 
-                yyjson_val* jCodeName = yyjson_obj_get(jRoot, "codename");
+                /*yyjson_val* jCodeName = yyjson_obj_get(jRoot, "codename");
                 if(yyjson_is_str(jCodeName)) {
                     const char* sCodeName = yyjson_get_str(jCodeName);
                     sCodeLocaleName = strdup(sCodeName);
-                }
+                }*/
 
                 yyjson_val* jFilePrefix = yyjson_obj_get(jRoot, "prefix");
                 if(jFilePrefix != NULL && yyjson_is_str(jFilePrefix)) {
@@ -286,10 +287,10 @@ namespace cbpp {
             sFullLocaleName = String::str32dup(U"UNNAMED");
         }
 
-        if(sCodeLocaleName == NULL) {
+        /*if(sCodeLocaleName == NULL) {
             sCodeLocaleName = const_cast<char*>(sPath);
             CbThrowWarningf("No locale codename is providen. This locale`s one is set to '%s'", sPath);
-        }
+        }*/
 
         hash_t iNameHash = Hash(sCodeLocaleName);
         if(g_mLocales.count(iNameHash) > 0) {
@@ -305,9 +306,9 @@ namespace cbpp {
 
             for(size_t i = 0; i < iNumFiles; i++) {
                 if(sLocaleFilesPrefix != NULL){
-                    snprintf(sFileName, 512, "assets/locales/%s%s", sLocaleFilesPrefix, aLocaleFiles[i]);
+                    snprintf(sFileName, 512, "%s%s", sLocaleFilesPrefix, aLocaleFiles[i]);
                 }else{
-                    snprintf(sFileName, 512, "assets/locales/%s", aLocaleFiles[i]);
+                    snprintf(sFileName, 512, "%s", aLocaleFiles[i]);
                 }
 
                 Char* sLocaleSource = out.Load(sFileName);
@@ -323,7 +324,7 @@ namespace cbpp {
 
         free(aLocaleFiles);
         free(sFullLocaleName);
-        free(sCodeLocaleName);
+        //free(sCodeLocaleName);
     }
 
     const String& Locale::GetString(const char* key) {

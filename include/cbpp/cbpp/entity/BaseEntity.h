@@ -19,7 +19,7 @@
 */
 #define CB_ENTITY_REGISTER(textName, className)\
     const char* className::Class() const noexcept { return #textName; }\
-    BaseEntity* cb_entfactory_##className(){\ 
+    BaseEntity* cb_entfactory_##className(){\
         return static_cast<BaseEntity*>(new className());\
     }\
     static cbpp::EntityRegistrator _g_##className##Registrator(#textName, &cb_entfactory_##className);
@@ -104,21 +104,7 @@ namespace cbpp {
             EntityProperty(BaseEntity* pMaster, 
                            T& refData, 
                            const char* sName, 
-                           const char* sDesc) noexcept : m_Data(refData), m_sName(sName), m_sDesc(sDesc), m_pMaster(pMaster)
-            {
-                EPropNode*& pMasterProps = pMaster->GetProperties();
-
-                if(pMasterProps != NULL) {
-                    EPropNode* pNode = new EPropNode();
-                    pNode->m_pNextNode = pMasterProps;
-                    pNode->m_pProperty = static_cast<IProperty*>(this);
-                    pMasterProps = pNode;
-                }else{
-                    pMasterProps = new EPropNode(); //This property is the first one to be attached,
-                    pMasterProps->m_pNextNode = NULL; //so prepare the linked list head
-                    pMasterProps->m_pProperty = static_cast<IProperty*>(this);
-                }
-            }
+                           const char* sDesc) noexcept;
 
             void operator=(const T& other) {
                 m_Data = other;
@@ -208,6 +194,25 @@ namespace cbpp {
 
             EPropNode* m_pPropsHead;
     };
+
+    template <typename T> EntityProperty<T>::EntityProperty(BaseEntity* pMaster, 
+                    T& refData, 
+                    const char* sName, 
+                    const char* sDesc) noexcept : m_Data(refData), m_sName(sName), m_sDesc(sDesc), m_pMaster(pMaster)
+    {
+        EPropNode*& pMasterProps = pMaster->GetProperties();
+
+        if(pMasterProps != NULL) {
+            EPropNode* pNode = new EPropNode();
+            pNode->m_pNextNode = pMasterProps;
+            pNode->m_pProperty = static_cast<IProperty*>(this);
+            pMasterProps = pNode;
+        }else{
+            pMasterProps = new EPropNode(); //This property is the first one to be attached,
+            pMasterProps->m_pNextNode = NULL; //so prepare the linked list head
+            pMasterProps->m_pProperty = static_cast<IProperty*>(this);
+        }
+    }
 
     std::map<const char*, BaseEntity* (*)(void)>& GetEntityFactories() noexcept;
 

@@ -1,6 +1,13 @@
 #ifndef CBPP_PRINTF_H
 #define CBPP_PRINTF_H
 
+/*
+    CBPP universal printing system
+
+    If you want your class to support Print, you must inherit it from the BasePrintable interface
+    and then implement both of it`s methods. 
+*/
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -37,8 +44,8 @@ namespace cbpp {
     }
 
     /*
-        As i can not inherit a base type from the trait class listed above, so i have to do this 
-        purgatory to implement the Print for him.
+        As i can not inherit a base type from the trait class listed above, i have to do this 
+        purgatory to implement the Print.
         If you want Print to support other primitive types, you should add them to these functions by yourself.
     */
 

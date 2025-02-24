@@ -67,7 +67,8 @@
         "condition_variable": "cpp",
         "list": "cpp",
         "mutex": "cpp",
-        "stdfloat": "cpp"
+        "stdfloat": "cpp",
+        "untitled document": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

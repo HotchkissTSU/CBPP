@@ -52,7 +52,7 @@ namespace cbpp {
         Mount a new locale from a file by it`s short name,
         like "ru" instead of "assets/locales/ru.json" etc.
     */
-    void MountLocale(const char* lfname);
+    void MountLocale(const char* sCodeName, const char* sFileName);
     Locale* GetCurrentLocale() noexcept;
 
     /*

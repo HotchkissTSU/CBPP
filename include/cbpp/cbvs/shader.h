@@ -18,9 +18,15 @@
     cbvs::__shloader_insert( new cbvs::ShaderLoaderNode(sName, sVTX, sFRAG, sGEOM) );
 
 namespace cbvs {
+    /*
+        All shaders are loaded in 2 steps: 
+        1) We form a list of all the pipelines we want to compile, link and mount
+        2) We sort out repeating shaders not to do extra work and then perform all of the OGL`s magic
+    */
     struct ShaderLoaderNode : public cbpp::BasePrintable {
         ShaderLoaderNode(const char* sName, const char* sVTX, const char* sFRAG, const char* sGEOM = NULL);
 
+        //This thing is also printable for debugging purposes
         virtual void Print(FILE* hStream = stdout) const;
         virtual size_t SPrint(char* sTarget, size_t iMaxWrite) const;
 
@@ -36,6 +42,7 @@ namespace cbvs {
 
     extern ShaderLoaderNode* g_pShadersHead;
 
+    //Insert a new raw pipeline data in the loading list
     void __shloader_insert(ShaderLoaderNode* pNext) noexcept;
 
     //Attempt to load all registered shaders
@@ -44,9 +51,6 @@ namespace cbvs {
 }
 
 namespace cbvs {
-    //Supress cache checks and recompile all shaders no matter what
-    extern bool g_bSupressPipeCache;
-
     //Obtain a file extension for different shader types` sources
     const char* GetShaderFileExtension(GLenum iShaderClass) noexcept;
 
@@ -76,7 +80,7 @@ namespace cbvs {
             bool PushUniform(const char* sName, cbpp::Vec2 v1) noexcept;
             bool PushUniform(const char* sName, cbpp::Color iColor) noexcept;
 
-            void Free() noexcept;
+            ~Pipe();
 
         private:
             const char* m_sName;

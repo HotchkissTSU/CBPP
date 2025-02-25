@@ -3,6 +3,8 @@
 
 using namespace cbpp;
 
+cbvs::Texture* g_pTest;
+
 extern "C" {
     void ModulePreMain() { 
     }
@@ -12,13 +14,14 @@ extern "C" {
 
         ddraw::SetColor(Color(255,255,0,255));
 
+        g_pTest = new cbvs::Texture;
+        g_pTest->Load("hohma.png");
+
         return true;
     }
 
     void ModuleTick() { 
-        ddraw::Line(Vec2(-1), Vec2(1), 3.0f);
-        ddraw::RectOutline(Vec2(-0.8), Vec2(0.8), 5.0f);
-        ddraw::CircleOutline(Vec2(-0.9f), 0.6f, 8.0f);
+        ddraw::Texture(Vec2(-0.5f), 0.5f, *g_pTest);
     }
 
     bool ModuleEventCallback( cbpp::Event& ev ) { return true; }

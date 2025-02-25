@@ -10,12 +10,12 @@ namespace cbvs {
     //A CPU-side handle for an OpenGL texture
     class Texture {
         public:
-            enum LOAD_FORMAT : uint8_t {
-                LOAD_AUTO = SOIL_LOAD_AUTO,
-                LOAD_RGBA = SOIL_LOAD_RGBA,
-                LOAD_RGB  = SOIL_LOAD_RGB,
-                LOAD_L    = SOIL_LOAD_L,
-                LOAD_LA   = SOIL_LOAD_LA
+            enum IMG_FORMAT : uint8_t {
+                IMG_AUTO = SOIL_LOAD_AUTO,
+                IMG_RGBA = SOIL_LOAD_RGBA,
+                IMG_RGB  = SOIL_LOAD_RGB,
+                IMG_L    = SOIL_LOAD_L,
+                IMG_LA   = SOIL_LOAD_LA
             };
 
             enum OGL_FLAG : uint16_t {
@@ -31,11 +31,13 @@ namespace cbvs {
                 FLAG_RECTANGLE = SOIL_FLAG_TEXTURE_RECTANGLE
             };
 
-            bool Load(const char* sPath, LOAD_FORMAT iLoadFormat = LOAD_RGBA, OGL_FLAG iGLflag = FLAG_POWER_OF_2) noexcept;
+            bool Load(const char* sPath, IMG_FORMAT iLoadFormat = IMG_RGBA, OGL_FLAG iGLflag = (OGL_FLAG)(FLAG_POWER_OF_2 | FLAG_INV_Y)) noexcept;
 
             GLuint GetHandle() const noexcept;
             uint32_t Width() const noexcept;
             uint32_t Height() const noexcept;
+
+            ~Texture();
 
         private:
             GLuint m_hTexture;

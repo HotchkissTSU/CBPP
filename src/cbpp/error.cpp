@@ -11,7 +11,7 @@ namespace cbpp {
 		"Nowhere, at no time",
 		"At the very end",
 		"In the Cuber-epoch",
-		"Sometime, somewhere"
+		"Sometimes, somewhere"
 	};
 	constexpr static uint8_t g_iTES_Length = sizeof(g_aTimeErrorStrings) / sizeof(g_aTimeErrorStrings[0]);
 

@@ -6,27 +6,21 @@
 #include "cbvs/error_check.h"
 #include "cbvs/render.h"
 
+#include <assert.h>
+
 #include "cbpp/bit.h"
+#include "cbpp/error.h"
 
 namespace ddraw {
     GLfloat g_aMeshBuffer[DDRAW_MESHBUFFER_LENGTH];
-    cbvs::Pipe *g_hCircle = NULL, *g_hCirclef = NULL, *g_hGeneric = NULL;
+    cbvs::Pipe *g_hCircle = NULL, *g_hCirclef = NULL, *g_hGeneric = NULL, *g_hTexture = NULL;
 
-    GLuint g_hVAO, g_hVBO;
-    GLuint g_hDefaultTexture, g_hDefaultFontTexture, g_hTextureVAO;
+    GLuint g_hVAO = 0, g_hVBO = 0;
+    GLuint g_hDefaultTexture, g_hDefaultFontTexture, g_hTextureVAO, g_hTextureVBO, g_hTextVBO;
 
-    GLuint g_hTextVAO;
+    GLuint g_hTextVAO = 0;
 
     cbpp::NormColor g_cActiveColor;
-
-    void RegisterShaders() noexcept {
-        /*CBVS_SHADER_REGISTER("ddraw_generic", "ddraw/generic", "ddraw/generic")
-        CBVS_SHADER_REGISTER("ddraw_texture", "ddraw/texture", "ddraw/texture")
-        CBVS_SHADER_REGISTER_EX("ddraw_circlefill", "ddraw/generic", "ddraw/generic", "ddraw/circlef")
-        CBVS_SHADER_REGISTER_EX("ddraw_circle", "ddraw/generic", "ddraw/generic", "ddraw/circle")
-
-        CBVS_SHADER_REGISTER_EX("ddraw_text", "ddraw/text", "ddraw/text", "ddraw/text")*/
-    }
 
     void __bitfield2array(uint8_t* pTarget, uint64_t iBits) noexcept {
         for(size_t i = 0; i < 8; i++) {
@@ -45,8 +39,12 @@ namespace ddraw {
 
         g_hCirclef = cbvs::GetPipe("ddraw_circle_fill");
         bOut = bOut && g_hCirclef != NULL;
-        
+
+        g_hTexture = cbvs::GetPipe("ddraw_texture");
+        bOut = bOut && g_hTexture != NULL;
+
         if(!bOut) {
+            cbpp::PushError(cbpp::ERROR_GL, "DDRAW requires these pipelines to function: \n\t'ddraw_generic','ddraw_circle','ddraw_circle_fill','ddraw_texture'");
             return false;
         }
 
@@ -66,24 +64,25 @@ namespace ddraw {
 
         //Also setup them for texture rendering
 
-        GLuint hTextureVBO;
-
         glGenVertexArrays(1, &g_hTextureVAO);
-        glGenBuffers(1, &hTextureVBO);
+        glGenBuffers(1, &g_hTextureVBO);
 
         glBindVertexArray(g_hTextureVAO);
             glEnableVertexAttribArray(0);
             glEnableVertexAttribArray(1);
 
-            glBindBuffer(GL_ARRAY_BUFFER, hTextureVBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*4*2*6, g_aMeshBuffer, GL_DYNAMIC_DRAW);
+            glBindBuffer(GL_ARRAY_BUFFER, g_hTextureVBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(g_aMeshBuffer), g_aMeshBuffer, GL_DYNAMIC_DRAW);
 
             glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (GLvoid*)0);
             glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (GLvoid*)(sizeof(GLfloat)*2));
         glBindVertexArray(0);
 
-        bOut = bOut && glCheck() == GL_NO_ERROR;
+        //assert(glIsBuffer(hTextureVBO) == GL_TRUE);
+        //assert(g_hTextureVAO == 0);
 
+        bOut = bOut && glCheck() == GL_NO_ERROR;
+        
         //Load the default texture
         glGenTextures(1, &g_hDefaultTexture);
         glBindTexture(GL_TEXTURE_2D, g_hDefaultTexture);
@@ -93,7 +92,7 @@ namespace ddraw {
         glBindTexture(GL_TEXTURE_2D, 0);
 
         bOut = bOut && glCheck() == GL_NO_ERROR;
-
+        /*
         //Now its time to decompress the default font and feed it to the videocard
         
         uint8_t* aFont = (uint8_t*) malloc( 256*8*8 ); //an array of 256 uint64`s, which are bit fields
@@ -107,10 +106,6 @@ namespace ddraw {
             iCounter += 8;
         }
 
-        FILE* hOut = fopen("test.bmp", "wb");
-        fwrite(aFont, 1, 256*8*8, hOut);
-        fclose(hOut);
-
         glGenTextures(1, &g_hDefaultFontTexture);
         glBindTexture(GL_TEXTURE_2D, g_hDefaultFontTexture);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 128, 128, 0, GL_RED, GL_UNSIGNED_BYTE, aFont);
@@ -119,25 +114,23 @@ namespace ddraw {
         free(aFont);
 
         bOut = bOut && glCheck() == GL_NO_ERROR;
-        /*
-        GLuint hTextVBO;
 
         glGenVertexArrays(1, &g_hTextVAO);
-        glGenBuffers(1, &hTextVBO);
+        glGenBuffers(1, &g_hTextVBO);
 
         glBindVertexArray(1);
             glEnableVertexAttribArray(0);
             glEnableVertexAttribArray(1);
 
-            glBindBuffer(GL_ARRAY_BUFFER, hTextVBO);
+            glBindBuffer(GL_ARRAY_BUFFER, g_hTextVBO);
             glBufferData(GL_ARRAY_BUFFER, sizeof(g_aMeshBuffer), g_aMeshBuffer, GL_DYNAMIC_DRAW);
 
             glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*2+1, (GLvoid*)0); //X,Y
             glVertexAttribPointer(1, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(GLfloat)*2+1, (GLvoid*)(sizeof(GLfloat)*2)); //character ID
         glBindVertexArray(0);
-
-        bOut = bOut && glCheck() == GL_NO_ERROR;*/
-
+        
+        bOut = bOut && glCheck() == GL_NO_ERROR;
+        */
         return bOut;
     }
 
@@ -172,6 +165,7 @@ namespace ddraw {
         glLineWidth(fWidth);
 
         glBindVertexArray(g_hVAO);
+            glBindBuffer(GL_ARRAY_BUFFER, g_hVBO);
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(aBuffer), aBuffer);
             glDrawArrays(GL_LINES, 0, 2);
         glBindVertexArray(0);
@@ -193,6 +187,7 @@ namespace ddraw {
         glLineWidth(fWidth);
 
         glBindVertexArray(g_hVAO);
+            glBindBuffer(GL_ARRAY_BUFFER, g_hVBO);
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(aBuffer), aBuffer);
             glDrawArrays(GL_LINE_LOOP, 0, 4);
         glBindVertexArray(0);
@@ -215,6 +210,7 @@ namespace ddraw {
         };
 
         glBindVertexArray(g_hVAO);
+            glBindBuffer(GL_ARRAY_BUFFER, g_hVBO);
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(aBuffer), aBuffer);
             glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
@@ -236,6 +232,7 @@ namespace ddraw {
         g_aMeshBuffer[1] = vPos.y;
 
         glBindVertexArray(g_hVAO);
+            glBindBuffer(GL_ARRAY_BUFFER, g_hVBO);
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat)*2, g_aMeshBuffer);
             glDrawArrays(GL_POINTS, 0, 1);
         glBindVertexArray(0);
@@ -255,8 +252,36 @@ namespace ddraw {
         g_aMeshBuffer[1] = vPos.y;
 
         glBindVertexArray(g_hVAO);
+            glBindBuffer(GL_ARRAY_BUFFER, g_hVBO);
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat)*2, g_aMeshBuffer);
             glDrawArrays(GL_POINTS, 0, 1);
+        glBindVertexArray(0);
+
+        glCheck();
+    }
+
+    void Texture(cbpp::Vec2 vPos, cbpp::float_t fScale, cbvs::Texture& hImage) noexcept {
+        g_hTexture->Use();
+
+        g_hTexture->PushUniform("cbpp_RATIO", cbvs::g_fScreenRatio);
+
+        cbpp::Vec2 vPos1 = vPos, vPos2 = vPos + fScale;
+        
+        GLfloat aBuffer[] = {
+            vPos1.x, vPos1.y, 0.0f, 0.0f,
+            vPos2.x, vPos1.y, 1.0f, 0.0f,
+            vPos2.x, vPos2.y, 1.0f, 1.0f,
+
+            vPos1.x, vPos1.y, 0.0f, 0.0f,
+            vPos2.x, vPos2.y, 1.0f, 1.0f,
+            vPos1.x, vPos2.y, 0.0f, 1.0f
+        };
+
+        glBindTexture(GL_TEXTURE_2D, hImage.GetHandle());
+        glBindVertexArray(g_hTextureVAO);
+            glBindBuffer(GL_ARRAY_BUFFER, g_hTextureVBO);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(aBuffer), aBuffer);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
         glCheck();

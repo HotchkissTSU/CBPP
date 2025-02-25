@@ -1,6 +1,8 @@
 #ifndef CBPP_ERROR_H
 #define CBPP_ERROR_H
 
+//#define CBPP_DEBUG
+
 /*
 	There are two levels of CBPP exceptions:
 

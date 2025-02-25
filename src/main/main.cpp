@@ -355,8 +355,6 @@ int main( int argc, char** argv ) {
 		exit(-1);
 	}
 
-	ddraw::RegisterShaders();
-
 	ModuleData.ModulePreMain();
 	if(!cbvs::LoadShaders()) {
 		CbThrowWarning("Shaders loading has failed, so everything will break very likely");

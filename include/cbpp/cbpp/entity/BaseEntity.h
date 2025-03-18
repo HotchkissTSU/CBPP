@@ -63,7 +63,7 @@ namespace cbpp {
 
     /*
         Entity properties are stored in an one-way linked list.
-        Each knot in an inheritance tree adds his own properties in 
+        Each knot in the inheritance tree adds his own properties in 
         this list in it`s constructor via ConstructProps() call.
     */
     struct EPropNode {
@@ -164,8 +164,8 @@ namespace cbpp {
             
             virtual void ConstructProps() noexcept {
                 m_pPropsHead = NULL;
-                CB_EPROP_EX(m_vPos, "Position", "Position of the entity")
-                CB_EPROP_EX(m_fAngle, "Angle", "Rotation of the entity")
+                CB_EPROP_EX(m_vPos, "position", "Position of the entity")
+                CB_EPROP_EX(m_fAngle, "angle", "Rotation of the entity")
             }
 
             EPropNode*& GetProperties() noexcept;

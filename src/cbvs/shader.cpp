@@ -226,6 +226,8 @@ namespace cbvs {
     Pipe* GetPipe(const char* sName) noexcept {
         cbpp::CString hName(sName);
         if(g_mShaderDict.count(hName) == 0) {
+            char sBuffer[128]; snprintf(sBuffer, 128, "Failed to find a pipeline named '%s'", sName);
+            cbpp::PushError(cbpp::ERROR_GL, sBuffer);
             return NULL;
         }
 

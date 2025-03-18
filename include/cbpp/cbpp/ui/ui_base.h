@@ -3,11 +3,11 @@
 
 #include "cbpp/vec2.h"
 
-#define CBPP_UI_PTREE_DEPTH 128
+#define CBPP_UI_MAX_CHILDREN 128
 
 namespace cbui {
     struct Rect {
-        Vec2 vTopLeft, vBottomRight;
+        cbpp::Vec2 vTopLeft, vBottomRight;
     };
 
     struct PTreeNode {
@@ -17,12 +17,16 @@ namespace cbui {
 
     class BaseUnit {
         public:
-            virtual Vec2 GetBounds() = 0;
+            BaseUnit(BaseUnit* pParent);
+
+            virtual cbpp::Vec2 GetBounds() = 0;
 
             void Deparent() noexcept;
             bool SetParent(BaseUnit* pTarget) noexcept;
             BaseUnit* GetParent() noexcept;
             PTreeNode* GetChildren() noexcept;
+
+            bool PushChild(BaseEntity* pChild) noexcept;
 
             virtual void Render() = 0;
             virtual void Think()  = 0;
@@ -30,10 +34,11 @@ namespace cbui {
             virtual void OnEvent() = 0;
 
         private:
-            Vec2 m_vBounds, m_vLocalPosition;
+            cbpp::Vec2 m_vBounds, m_vLocalPosition;
 
             BaseUnit* m_pParent = NULL;
-            PTreeNode* m_pChildrenHead = NULL:
+            PTreeNode* m_pChildrenHead = NULL;
+            size_t m_iChildren = 0;
     };
 };
 

@@ -114,7 +114,7 @@ namespace cbpp {
 
         delete m_pProperty;
     }
-
+    
     void BaseEntity::Print(FILE* hStream) const {
         fprintf(hStream, "Entity of class '%s':\n", Class());
         EPropNode* pCurrent = m_pPropsHead;

@@ -1,41 +1,44 @@
 #ifndef CBPP_SPSHEET_H
 #define CBPP_SPSHEET_H
 
-#include "cbpp/vec2.h"
-#include "json/libjson.h"
+/*
+    CBPP Texture Atlas (CTA) format.
+    Stores sprites mapping info and one big texture
+*/
 
-#include <cstdint>
-#include <map>
-#include <string>
+#include "cbpp/vec2.h"
+#include "cbvs/texture.h"
+#include "cbpp/fileio.h"
+
+#include <stdint.h>
 #include <stddef.h>
 
+#define CBPP_CTA_VERSION_MAJOR 1
+#define CBPP_CTA_VERSION_MINOR 0
+
 namespace cbpp {
-    class Image {
-        public:
-            Image() = default;
-            Image(const uint8_t* bytes, size_t blen);
-
-            bool Load(const uint8_t* bytes, size_t blen);
-
-        private:
-            uint32_t w = 0, h = 0;
-            uint8_t* data = nullptr;
-    };
-
-    struct SpriteData_h {
-        float_t x = 0.0f, y = 0.0f, w = 0.0f, h = 0.0f;
-    };
-
     class SpriteSheet {
         public:
+            struct Sprite {
+                char* m_sName;
+                float m_fX, m_fY, m_fW, m_fH;
+            };
+            
             SpriteSheet() = default;
-            SpriteSheet( Image& image, JSONNODE* json_data );
 
-            bool Load( Image& img_data, JSONNODE* json_data );
+            SpriteSheet(const SpriteSheet& hOther) = delete;
+            SpriteSheet& operator=(const SpriteSheet& hOther) = delete;
+
+            uint32_t SpriteID(const char* sSpriteName) const noexcept;
+            const char* SpriteName(uint32_t iSpriteID) const noexcept;
+
+            bool Load( const char* sSheetName ) noexcept;
+            bool Save( const char* sSheetName ) const noexcept;
+
+            ~SpriteSheet();
 
         private:
-            std::map<std::string, SpriteData_t> data;
-            Image img_data;
+            GLuint* m_aSprites = NULL;
     };
 }
 

@@ -1,7 +1,6 @@
 #include "cbvs/ddraw.h"
 
 #include "cbpp/texture_default.h"
-#include "cbvs/font.h"
 
 #include "cbvs/error_check.h"
 #include "cbvs/render.h"
@@ -20,9 +19,11 @@ namespace ddraw {
 
     GLuint g_hTextVAO = 0;
 
+    GLuint g_hFontTexture;
+
     cbpp::NormColor g_cActiveColor;
 
-    void __bitfield2array(uint8_t* pTarget, uint64_t iBits) noexcept {
+    void __bitfield2array(uint8_t* pTarget, uint8_t iBits) noexcept {
         for(size_t i = 0; i < 8; i++) {
             pTarget[8-i-1] = cbpp::GetBit(iBits, i)*255;
         }
@@ -44,7 +45,6 @@ namespace ddraw {
         bOut = bOut && g_hTexture != NULL;
 
         if(!bOut) {
-            cbpp::PushError(cbpp::ERROR_GL, "DDRAW requires these pipelines to function: \n\t'ddraw_generic','ddraw_circle','ddraw_circle_fill','ddraw_texture'");
             return false;
         }
 
@@ -92,27 +92,12 @@ namespace ddraw {
         glBindTexture(GL_TEXTURE_2D, 0);
 
         bOut = bOut && glCheck() == GL_NO_ERROR;
-        /*
-        //Now its time to decompress the default font and feed it to the videocard
+
+        cbvs::Texture hFontTexture;
+        hFontTexture.Load("ddraw/font.png", cbvs::IMG_L);
+        g_hFontTexture = hFontTexture.GetHandle();
         
-        uint8_t* aFont = (uint8_t*) malloc( 256*8*8 ); //an array of 256 uint64`s, which are bit fields
-
-        size_t iCounter = 0;
-        uint8_t aBuffer[8];
-
-        for(size_t i = 0; i < 256*8; i++) {
-            __bitfield2array(aBuffer, g_aFontDefault[i]);
-            memcpy(aFont + iCounter, aBuffer, 8);
-            iCounter += 8;
-        }
-
-        glGenTextures(1, &g_hDefaultFontTexture);
-        glBindTexture(GL_TEXTURE_2D, g_hDefaultFontTexture);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 128, 128, 0, GL_RED, GL_UNSIGNED_BYTE, aFont);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        free(aFont);
-
+        /*
         bOut = bOut && glCheck() == GL_NO_ERROR;
 
         glGenVertexArrays(1, &g_hTextVAO);
@@ -260,12 +245,16 @@ namespace ddraw {
         glCheck();
     }
 
-    void Texture(cbpp::Vec2 vPos, cbpp::float_t fScale, cbvs::Texture& hImage) noexcept {
+    void Texture(cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbvs::Texture& hImage, bool bKeepRatio) noexcept {
         g_hTexture->Use();
 
-        g_hTexture->PushUniform("cbpp_RATIO", cbvs::g_fScreenRatio);
+        if(bKeepRatio) {
+            g_hTexture->PushUniform("cbpp_RATIO", cbvs::g_fScreenRatio);
+        }else{
+            g_hTexture->PushUniform("cbpp_RATIO", 1.0f);
+        }
 
-        cbpp::Vec2 vPos1 = vPos, vPos2 = vPos + fScale;
+        cbpp::Vec2 vPos1 = vPos, vPos2 = vPos + vScale;
         
         GLfloat aBuffer[] = {
             vPos1.x, vPos1.y, 0.0f, 0.0f,

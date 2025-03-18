@@ -6,7 +6,8 @@
 namespace cbvs {
     class IBuffer {
         public:
-            //virtual void 
+            virtual GLuint VertexBuffer() const noexcept = 0;
+            virtual GLuint VertexArray() const noexcept = 0;
         private:
             GLuint m_hVAO, m_hVBO;
     };

@@ -57,6 +57,15 @@ namespace cbpp::math {
                InRangeStrict(Value.y, MinValue.y, MaxValue.y);
     }
 
+    size_t PlanarToLinear(size_t iSideLength, size_t iX, size_t iY) noexcept {
+        return iSideLength * iY + iX;
+    }
+    
+    void LinearToPlanar(size_t iSideLength, size_t iLinear, size_t& iX, size_t& iY) noexcept {
+        iX = iLinear % iSideLength;
+        iY = iLinear / iSideLength;
+    }
+
     //Line
     Line::Line(Vec2 vp1, Vec2 vp2) {
         vDir = vp2 - vp1;

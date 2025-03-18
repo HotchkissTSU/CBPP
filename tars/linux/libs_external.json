@@ -1,0 +1,36 @@
+{
+	"name":"external SO libraries",
+
+	"base":{
+		"link_params" : "",
+		"out_libfile" : "",
+		"link_dynamic" : "",
+		"link_static" : "",
+		"static" : "",
+		"dynamic" : "",
+		"from_obj" : 0,
+
+		"compiler" : "gcc"
+	},
+
+	"targets":{
+		"libbson":{
+			"type":"DLL",
+			"include":["include/bson", "include/bson/jsonsl"],
+			"out":"bin",
+			"src":["src/bson/*.c"],
+			"obj":"obj/bson",
+			"comp_params":"-fPIC -D BSON_COMPILATION"
+		},
+
+		"libz" : 
+		{
+			"comp_params":"-fPIC -DPIC -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN",
+			"include" : [ "include/zlib" ],
+			"obj" : "obj/zlib",
+			"out" : "bin",
+			"src" : [ "src/zlib/*.c" ],
+			"type" : "DLL"
+		}
+	}
+}

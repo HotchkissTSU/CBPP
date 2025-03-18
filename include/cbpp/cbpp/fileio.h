@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "cbpp/cbstring.h"
+#include "bson/bson.h"
 
 namespace cbpp {	
 	enum SEARCH_PATH : uint8_t {
@@ -30,6 +31,8 @@ namespace cbpp {
 
 			bool Open(const char* path, const char* mode);
 			void Close();
+
+			const FILE* Handle() const noexcept;
 
 			// Output <count> elements to <buffer>, each <size> bytes long
 			size_t Write(void* buffer, uint64_t count, uint64_t size = 1);
@@ -70,6 +73,10 @@ namespace cbpp {
 
 	/*Search a file in the providen search group*/
 	File* OpenFile(SEARCH_PATH iGroupIndex, const char* sPath, const char* sModes);
+
+	bson_t* ReadBSON(SEARCH_PATH iGroupIndex, const char* sPath) noexcept;
+
+	size_t GetFileExtension(const char* sPath, char** sBuffer = NULL) noexcept;
 }
 
 #endif

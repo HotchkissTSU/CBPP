@@ -15,13 +15,13 @@ extern "C" {
         ddraw::SetColor(Color(255,255,0,255));
 
         g_pTest = new cbvs::Texture;
-        g_pTest->Load("hohma.png");
+        g_pTest->Load("hohma.png", cbvs::IMG_RGB);
 
         return true;
     }
 
     void ModuleTick() { 
-        ddraw::Texture(Vec2(-0.5f), 0.5f, *g_pTest);
+        ddraw::Texture(Vec2(-1), Vec2(2), *g_pTest, true);
     }
 
     bool ModuleEventCallback( cbpp::Event& ev ) { return true; }

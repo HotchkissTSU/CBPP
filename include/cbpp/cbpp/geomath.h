@@ -129,6 +129,9 @@ namespace cbpp {
         bool InRangeStrict(Vec2 Value, Vec2 MinValue, Vec2 MaxValue) noexcept;
 
         Vec2 Clamp(Vec2 Value, Vec2 MinValue, Vec2 MaxValue) noexcept;
+
+        size_t PlanarToLinear(size_t iSideLength, size_t iX, size_t iY) noexcept;
+        void LinearToPlanar(size_t iSideLength, size_t iLinear, size_t& iX, size_t& iY) noexcept;
     }
 }
 

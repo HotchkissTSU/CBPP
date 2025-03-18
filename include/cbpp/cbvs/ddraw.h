@@ -2,7 +2,7 @@
 #define CBVS_DDRAW_H
 
 /*
-    Direct-Draw system, aka "you call it, you see it".
+    Direct-Draw, aka "you call it, you see it".
     A rendering subsystem intended for debugging and testing purposes, easily accessible
     from any point in the engine.
 */
@@ -20,8 +20,9 @@ namespace ddraw {
     extern cbvs::Pipe *g_hGeneric, *g_hCircle, *g_hCirclef, *g_hTexture;
     extern GLuint g_hVAO, g_hVBO;
 
-    extern GLuint g_hDefaultTexture, g_hDefaultFontTexture;
+    extern GLuint g_hDefaultTexture;
     extern GLuint g_hTextureVAO, g_hTextureVBO;
+    extern GLuint g_hFontTexture;
 
     extern GLuint g_hTextVAO, g_hTextVBO;
 
@@ -41,7 +42,7 @@ namespace ddraw {
 
     void Text(cbpp::Vec2 vPos, const char* sSource, cbpp::float_t fScale = 1.0f) noexcept;
 
-    void Texture(cbpp::Vec2 vPos, cbpp::float_t fScale, cbvs::Texture& hImage) noexcept;
+    void Texture(cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbvs::Texture& hImage, bool bKeepRatio = true) noexcept;
 
     void MeshOutline(const cbpp::Vec2* aSource, size_t iSourceLength, cbpp::Vec2 vOffset) noexcept;
 }

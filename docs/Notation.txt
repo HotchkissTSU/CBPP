@@ -13,7 +13,8 @@ Name prefixes:
     Floating-point value                -> f 
     CBPP entity                         -> e 
     CBPP vector                         -> v 
-    CBPP mesh or any array              -> a
+    Any array                           -> a
     Any pointer                         -> p 
     Reference                           -> ref
     Any handles (including cbpp::File)  -> h 
+    JSON / BSON data structures         -> j

@@ -1,47 +1,18 @@
-#include "ui/ui_base.h"
+#include "cbpp/ui/ui_base.h"
 
 namespace cbui {
-    void BaseUnit::Deparent() noexcept {
-        if(m_pParent == NULL) {
-            return;
+    bool BaseUnit::SetParent(BaseUnit* pParent) noexcept {
+        if(pParent == NULL) { return false; }
+        if(pParent->PushChild(this)) {
+            m_pParent = pParent;
+            return true;
         }
-
-        PTreeNode* pCurrent = m_pParent->m_pChildrenHead, *pPrev = NULL;
-        while(pCurrent != NULL) {
-            if(pCurrent->m_pUnit == this) {
-                if(pPrev == NULL) { //we are the single child
-                    delete pCurrent;
-                    m_pChildrenHead = NULL;
-                }else{
-                    pPrev->m_pNextNode = pCurrent->m_pNextNode;
-                    delete pCurrent;
-                }
-
-                m_pParent = NULL;
-                return;
-            }
-
-            pPrev = pCurrent;
-            pCurrent = pCurrent->m_pNextNode;
-        }
+        return false;
     }
 
-    void BaseUnit::SetParent(BaseUnit* pTarget) noexcept {
-        if(pTarget == NULL) {
-            Deparent();
-            return;
-        }
+    bool BaseUnit::PushChild(BaseUnit* pChild) noexcept {
+        if(m_iChildren >= CBPP_UI_MAX_CHILDREN) { return false; }
 
-        if(m_pParent != NULL) { //we already have one
-            Deparent();
-        }
-
-        m_pParent = pTarget;
-
-
-
-        m_pParent->m_pChildrenHead
-
-        return true;
+        
     }
 }

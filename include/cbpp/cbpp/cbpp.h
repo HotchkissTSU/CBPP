@@ -27,8 +27,8 @@
 
 #include "cbpp/world.h"
 
-#include "cbpp/asset/sprite.h"
-#include "cbpp/asset/image.h"
+#include "cbpp/asset/resource.h"
+#include "cbpp/asset/spsheet.h"
 //#include "cbpp/asset/cdf.h"   //Cuber Data File
 #include "cbpp/cbseq/cbseq.h" //cutscene sequence scripts
 

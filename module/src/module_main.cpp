@@ -17,6 +17,14 @@ extern "C" {
         g_pTest = new cbvs::Texture;
         g_pTest->Load("hohma.png", cbvs::IMG_RGB);
 
+        Pool<double, uint8_t> hTestPool;
+
+        for(size_t i = 0; i < 64; i++) {
+            double* p = hTestPool.Allocate(i*10);
+            //printf("[%d], p = %x\n", i, p);
+            hTestPool.Free(p);
+        }
+
         return true;
     }
 

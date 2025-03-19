@@ -68,7 +68,8 @@
         "list": "cpp",
         "mutex": "cpp",
         "stdfloat": "cpp",
-        "untitled document": "cpp"
+        "untitled document": "cpp",
+        "valarray": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

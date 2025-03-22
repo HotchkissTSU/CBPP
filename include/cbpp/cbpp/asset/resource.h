@@ -2,16 +2,21 @@
 #define CBPP_ASSET_IRESOURCE_H
 
 #include <utility>
+#include <new>
 
 #include <stdint.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "cbpp/geomath.h"
 #include "cbpp/bit.h"
 #include "cbpp/error.h"
 
 #define CBPP_POOL_APPEND_AMOUNT sizeof(mask_t)
+
+#define pooled_class(className) class className : public cbpp::IResource<className>
+#define pooled_struct(className) struct className : public cbpp::IResource<className>
 
 namespace cbpp {
     template <typename type_t, typename mask_t = uint32_t> struct PoolChunk {
@@ -21,7 +26,7 @@ namespace cbpp {
         type_t& operator[](size_t iIndex) noexcept {
             #ifdef CBPP_DEBUG
             if(iIndex > sizeof(mask_t)*8) {
-                CbThrowErrorf("Local pool chunk index %zu is out of bounds (%zu)", iIndex, sizeof(mask_t)*8);
+                CbThrowErrorf("Local chunk index %zu is out of bounds (%zu)", iIndex, sizeof(mask_t)*8);
             }
             #endif
 
@@ -54,10 +59,10 @@ namespace cbpp {
     /*
         Pool allocator.
         Stores same objects continuously, so they probably will have a chance to
-        fit inside one cache line and boost processing speed to hypersonic values.
+        fit inside the cache line and boost processing speed to hypersonic values.
 
-        type_t - what class to store
-        mask_t - which type is used as a bitmask for marking used/free space
+        type_t - what type to store
+        mask_t - which type is used as a bitmask to mark used/free space
     */
     template <typename type_t, typename mask_t = uint32_t> class Pool {
         typedef PoolChunk<type_t, mask_t> chunk_t;
@@ -66,6 +71,7 @@ namespace cbpp {
             Pool() noexcept = default;
             Pool(size_t iInitialSize) noexcept : m_iChunks(iInitialSize) {
                 m_aChunks = (chunk_t*) malloc(sizeof(chunk_t) * iInitialSize);
+                memset(m_aChunks, 0, sizeof(chunk_t)*m_iChunks);
             }
 
             //Check if this index holds a valid, properly allocated object
@@ -81,7 +87,6 @@ namespace cbpp {
             }
 
             //Locate and mark as used a new index for the object storage. 
-            //If there is no free space left, new chunks are added
             bool FindPlace(size_t* pIndex) noexcept {
                 size_t iLocalIndex;
                 for(size_t i = 0; i < m_iChunks; i++) {
@@ -112,6 +117,7 @@ namespace cbpp {
             }
 
             //Allocate and initialize a new object
+            //If there is no free space left, new chunks are added
             template <typename... args_t> type_t* Allocate(args_t&&... vaArgs) noexcept {
                 size_t iIndex;
                 if(!FindPlace(&iIndex)) {
@@ -191,10 +197,21 @@ namespace cbpp {
             size_t m_iChunks = 0;
     };
 
-    template <typename type_t, typename mask_t> Pool<type_t, mask_t>* AllocateGlobalPool(size_t iInitialSize) noexcept {
-        static Pool<type_t, mask_t> s_Pool(iInitialSize);
-        return &s_Pool;
-    }
+    template <typename type_t, uint16_t t_iInitialSize = 4, typename mask_t = uint32_t> class IResource {
+        public:
+            static Pool<type_t, mask_t>* GetGlobalPool(size_t iInitialSize) noexcept {
+                static Pool<type_t, mask_t> s_Pool(iInitialSize);
+                return &s_Pool;
+            }
+
+            template <typename... args_t> static type_t* Allocate(args_t... vaArgs) noexcept {
+                return GetGlobalPool(t_iInitialSize)->Allocate(vaArgs...);
+            }
+
+            static void Free(type_t* pObject) noexcept {
+                GetGlobalPool(t_iInitialSize)->Free(pObject);
+            }
+    };
 }
 
 #endif

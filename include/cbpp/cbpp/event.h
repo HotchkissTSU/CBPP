@@ -3,28 +3,51 @@
 
 #include <stdint.h>
 #include <uchar.h>
-#include "cbpp/vec2.h"
+#include <time.h>
 
-#define CBPP_EVENTBUFFER_SIZE 256
+#include "cbpp/asset/resource.h"
+
+//The maximal amount of events to store in the queue
+#define CBPP_EVENTQUEUE_SIZE 256
 
 namespace cbpp {
-	struct Event{
-		int a;
+	struct Event {
+		enum EType : uint8_t {
+			KEYBOARD,
+			MOUSE_BUTTON,
+			MOUSE_MOVE
+		};
+
+		enum EState : uint8_t {
+			KEY_PRESS,
+			KEY_RELEASE
+		};
+
+		EType Type;
+		time_t Timestamp;
+
+		union {
+			struct {
+				EState State;
+				uint32_t Key;
+			} Keyboard;
+
+			struct {
+				EState State;
+				uint8_t Button;
+				uint32_t X, Y;
+			} MouseButton;
+		} Data;
 	};
 
-	class IEvent {
-		public:
-			enum CLASS : uint8_t {
-				CLASS_TEST
-			};
-
-			virtual CLASS Class() const noexcept = 0;
+	pooled_struct (EventNode) {
+		EventNode *m_pNextNode, *m_pPrevNode;
+		Event m_Event;
 	};
 
-	class InputEvent : public IEvent {
-		public:
-			virtual IEvent::CLASS Class() const noexcept override;
-	};
+	void PushEvent(Event* pEv) noexcept;
+	bool PollEvent(Event* pEv) noexcept;
+	bool HasEvents() noexcept;
 }
 
 #endif

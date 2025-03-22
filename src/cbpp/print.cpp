@@ -12,8 +12,12 @@
  */
 
 namespace cbpp {
+    void __print_pass() noexcept {}
+
     template<> void Print<float >(const float& refValue, FILE* hTarget)      { fprintf(hTarget, "%f", refValue);  }
     template<> void Print<double>(const double& refValue, FILE* hTarget)     { fprintf(hTarget, "%lf", refValue); }
+
+    template<> void Print<const char*>(const char* const& refValue, FILE* hTarget) { fprintf(hTarget, "%s", refValue);  }
 
     template<> void Print<int8_t >(const int8_t& refValue, FILE* hTarget)    { fprintf(hTarget, "%i", refValue);  }
     template<> void Print<int16_t>(const int16_t& refValue, FILE* hTarget)   { fprintf(hTarget, "%i", refValue);  }

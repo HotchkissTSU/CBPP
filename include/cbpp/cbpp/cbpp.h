@@ -2,6 +2,7 @@
 #define CBPP_MAINH
 
 #include "cbpp/cbdef.h"
+#include "cbpp/benchmark.h"
 
 #include "cbpp/vec2.h"
 #include "cbpp/geomath.h"

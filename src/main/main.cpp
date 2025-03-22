@@ -395,7 +395,7 @@ int main( int argc, char** argv ) {
 	//ddraw::SetColor( cbpp::Color(255,0,0,255) );
 	
 	cbpp::Event ev;
-
+	
 	while( !glfwWindowShouldClose(GameData.MainWindow) && ModuleData.ModuleLoopCheck() ) {
 		glfwPollEvents();
 

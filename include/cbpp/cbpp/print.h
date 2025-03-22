@@ -43,6 +43,17 @@ namespace cbpp {
         }
     }
 
+    void __print_pass() noexcept;
+    
+    template <typename t_first, typename... args_t> void __print_pass(t_first t_Value, args_t&&... vaArgs) noexcept {
+        Print(t_Value);
+        __print_pass(vaArgs...);
+    }
+
+    template <typename... args_t> void Printf(args_t... vaArgs) noexcept {
+        __print_pass(vaArgs...);
+    }
+
     /*
         As i can not inherit a base type from the trait class listed above, i have to do this 
         purgatory to implement the Print.
@@ -51,6 +62,8 @@ namespace cbpp {
 
     template<> void Print<float >(const float& refValue, FILE* hTarget);
     template<> void Print<double>(const double& refValue, FILE* hTarget);
+
+    template<> void Print<const char*>(const char* const& refValue, FILE* hTarget);
 
     template<> void Print<int8_t >(const int8_t& refValue, FILE* hTarget);
     template<> void Print<int16_t>(const int16_t& refValue, FILE* hTarget);

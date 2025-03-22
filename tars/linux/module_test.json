@@ -2,7 +2,7 @@
 	"name":"CBPP test module",
 	"base":{
 		"compiler":"g++",
-		"comp_params":"-std=c++17 -fPIC -g3"
+		"comp_params":"-std=c++17 -fPIC -g3 -D CBPP_DEBUG"
 	},
 	"targets":{
 		"test":{

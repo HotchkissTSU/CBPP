@@ -2,17 +2,17 @@
 #define CBPP_UI_BASE_H
 
 #include "cbpp/vec2.h"
+#include "cbpp/asset/resource.h"
+#include "cbpp/event.h"
 
 #define CBPP_UI_MAX_CHILDREN 128
 
 namespace cbui {
-    struct Rect {
-        cbpp::Vec2 vTopLeft, vBottomRight;
-    };
+    class BaseUnit;
 
-    struct PTreeNode {
-        PTreeNode* m_pNextNode;
-        BaseUnit* m_pUnit;
+    pooled_struct(PTreeNode) {
+        PTreeNode* m_pNextNode = NULL;
+        BaseUnit* m_pUnit = NULL;
     };
 
     class BaseUnit {
@@ -26,12 +26,13 @@ namespace cbui {
             BaseUnit* GetParent() noexcept;
             PTreeNode* GetChildren() noexcept;
 
-            bool PushChild(BaseEntity* pChild) noexcept;
+            bool PushChild(BaseUnit* pChild) noexcept;
+            bool RemoveChild(BaseUnit* pChild) noexcept;
+
+            virtual bool OnEvent(Event* pEvent) noexcept = 0;
 
             virtual void Render() = 0;
             virtual void Think()  = 0;
-
-            virtual void OnEvent() = 0;
 
         private:
             cbpp::Vec2 m_vBounds, m_vLocalPosition;

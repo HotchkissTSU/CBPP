@@ -41,6 +41,23 @@
 			"static" : [ "static" ],
 			"type" : "OBJ"
 		},
+		"ui" : 
+		{
+			"dynamic" : [ "lib" ],
+			"include" : [ "include\\cbpp", "include\\cbpp\\ui", "include" ],
+			"link_dynamic" : [],
+			"link_params" : "",
+			"link_static" : [],
+			"obj" : "obj\\cbpp_base",
+			"out" : "bin",
+			"out_libfile" : "lib",
+			"src" : 
+			[
+				"src/cbpp/ui/*.cpp"
+			],
+			"static" : [ "static" ],
+			"type" : "OBJ"
+		},
 		"assets" : 
 		{
 			"dynamic" : [ ],

@@ -17,12 +17,18 @@ extern "C" {
         g_pTest = new cbvs::Texture;
         g_pTest->Load("hohma.png", cbvs::IMG_RGB);
 
-        Pool<double, uint8_t> hTestPool;
+        CbBenchmark(stdout);
 
-        for(size_t i = 0; i < 64; i++) {
-            double* p = hTestPool.Allocate(i*10);
-            //printf("[%d], p = %x\n", i, p);
-            hTestPool.Free(p);
+        Event test;
+        memset(&test, 0, sizeof(test));
+
+        for(size_t i = 0; i < 128; i++) {
+            test.Timestamp++;
+            PushEvent(&test);
+        }
+
+        while( PollEvent(&test) ) {
+            //printf("D = %ld\n", test.Timestamp);
         }
 
         return true;

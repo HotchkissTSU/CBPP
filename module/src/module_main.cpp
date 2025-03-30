@@ -15,7 +15,7 @@ extern "C" {
         ddraw::SetColor(Color(255,255,0,255));
 
         g_pTest = new cbvs::Texture;
-        g_pTest->Load("hohma.png", cbvs::IMG_RGB);
+        g_pTest->Load("ddraw/font.png", cbvs::IMG_RGB);
 
         CbBenchmark(stdout);
 
@@ -23,7 +23,6 @@ extern "C" {
         memset(&test, 0, sizeof(test));
 
         for(size_t i = 0; i < 128; i++) {
-            test.Timestamp++;
             PushEvent(&test);
         }
 
@@ -38,5 +37,6 @@ extern "C" {
         ddraw::Texture(Vec2(-1), Vec2(2), *g_pTest, true);
     }
 
-    bool ModuleEventCallback( cbpp::Event& ev ) { return true; }
+    //Return TRUE if the event was processed by the module and the engine should not use it
+    bool ModuleEventCallback( cbpp::Event& ev ) { return false; }
 }

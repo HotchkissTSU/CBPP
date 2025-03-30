@@ -25,6 +25,8 @@ using namespace cbpp;
 
 static sighandler_t _old_sig_handler;
 
+static double g_fPrevMX = 0.0, g_fPrevMY = 0.0;
+
 void error_callback(int error_code, const char* description){
 	char err_log[256];
 	snprintf(err_log, 256, "GLFW error: [%i] -> %s\n", error_code, description);
@@ -32,21 +34,35 @@ void error_callback(int error_code, const char* description){
 }
 
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
-	//cbvs::MousePosition.x = (float_t)(xpos);
-	//cbvs::MousePosition.y = (float_t)(ypos);
+	double f_dx = xpos - g_fPrevMX;
+	double f_dy = ypos - g_fPrevMY;
+
+	static cbpp::Event ev;
+	CreateEvent(&ev);
+
+	ev.Type = Event::MOUSE_MOVE;
+
+	ev.Data.MouseMove.dX = (float_t)f_dx;
+	ev.Data.MouseMove.dY = (float_t)f_dy;
+	ev.Data.MouseMove.X = (uint32_t)xpos;
+	ev.Data.MouseMove.Y = (uint32_t)ypos;
+
+	cbpp::PushEvent(&ev);
+
+	g_fPrevMX = xpos; g_fPrevMY = ypos;
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    /*cbpp::Event ev;
+    static cbpp::Event ev;
+	CreateEvent(ev);
 
-	ev.Type = CBPP_KEYBOARD_EVENT;
+	ev.Type = Event::KEYBOARD;
 
-	ev.ButtonEvent.Action = action;
-	ev.ButtonEvent.Key = key;
-	ev.ButtonEvent.Scancode = scancode;
-	ev.ButtonEvent.Mods = mods;
+	ev.Data.Keyboard.Key = (uint32_t)key;
+	ev.Data.Keyboard.Mods = (uint32_t)mods;
+	ev.Data.Keyboard.Scancode = (uint32_t)scancode;
 
-	cbpp::PushEvent( ev );*/
+	cbpp::PushEvent(&ev);
 }
 
 void text_input_callback(GLFWwindow* window, unsigned int codepoint) {
@@ -296,7 +312,7 @@ void Cleanup() {
 void SetSignalsCallback(sighandler_t cb_sig_handler) {
 	signal(SIGSEGV, cb_sig_handler);
 	signal(SIGTERM, cb_sig_handler);
-	//signal(SIGABRT, cb_sig_handler); never uncomment it
+	//signal(SIGABRT, cb_sig_handler); never uncomment it, or our poor OS will fall into an infinite loop
 	signal(SIGFPE, cb_sig_handler);
 	signal(SIGILL, cb_sig_handler);
 	signal(SIGINT, cb_sig_handler);
@@ -354,10 +370,10 @@ int main( int argc, char** argv ) {
 		CbThrowError("Failed to load OpenGL 4.0");
 		exit(-1);
 	}
-
+	
 	ModuleData.ModulePreMain();
 	if(!cbvs::LoadShaders()) {
-		CbThrowWarning("Shaders loading has failed, so everything will break very likely");
+		CbThrowWarning("Shaders loading has failed, so everything will fall apart very likely");
 	}
 
 	if(!ddraw::Init()) {
@@ -399,11 +415,13 @@ int main( int argc, char** argv ) {
 	while( !glfwWindowShouldClose(GameData.MainWindow) && ModuleData.ModuleLoopCheck() ) {
 		glfwPollEvents();
 
-		/*if( cbpp::GetLastEvent(ev) ) {
-			if( ModuleData.ModuleEventCallback(ev) ){
-				//send this event to other engine systems
+		while ( cbpp::PollEvent(&ev) ) {
+			if(ModuleData.ModuleEventCallback(ev)) { continue; }
+
+			switch (ev.Type) {
+				
 			}
-		}*/
+		}
 		
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);

@@ -15,8 +15,8 @@
 
 #define CBPP_POOL_APPEND_AMOUNT sizeof(mask_t)
 
-#define pooled_class(className) class className : public cbpp::IResource<className>
-#define pooled_struct(className) struct className : public cbpp::IResource<className>
+#define pooled_class(className) class className final : public cbpp::IResource<className>
+#define pooled_struct(className) struct className final : public cbpp::IResource<className>
 
 namespace cbpp {
     template <typename type_t, typename mask_t = uint32_t> struct PoolChunk {

@@ -1,5 +1,6 @@
 #include "cbpp/event.h"
 #include <string.h>
+#include "GLFW/glfw3.h"
 
 namespace cbpp {
     EventNode* g_pEventQueue = NULL, *g_pEventQueueEnd = NULL;
@@ -58,5 +59,13 @@ namespace cbpp {
 
     bool HasEvents() noexcept {
         return g_iEventsCounter > 0;
+    }
+
+    void CreateEvent(Event* pTarget) noexcept {
+        if(pTarget == NULL) {
+            return;
+        }
+
+        pTarget->Timestamp = glfwGetTime();
     }
 }

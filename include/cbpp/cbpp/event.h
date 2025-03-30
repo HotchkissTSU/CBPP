@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include <uchar.h>
-#include <time.h>
 
 #include "cbpp/asset/resource.h"
 
@@ -20,23 +19,32 @@ namespace cbpp {
 
 		enum EState : uint8_t {
 			KEY_PRESS,
-			KEY_RELEASE
+			KEY_RELEASE,
+			KEY_HOLD
 		};
 
 		EType Type;
-		time_t Timestamp;
+		double Timestamp;
 
 		union {
 			struct {
 				EState State;
 				uint32_t Key;
+				uint32_t Mods;
+				uint32_t Scancode;
 			} Keyboard;
 
 			struct {
 				EState State;
 				uint8_t Button;
 				uint32_t X, Y;
+				float_t ScrollX, ScrollY;
 			} MouseButton;
+
+			struct {
+				uint32_t X, Y;
+				float_t dX, dY;
+			} MouseMove;
 		} Data;
 	};
 
@@ -45,6 +53,7 @@ namespace cbpp {
 		Event m_Event;
 	};
 
+	void CreateEvent(Event* pTarget) noexcept;
 	void PushEvent(Event* pEv) noexcept;
 	bool PollEvent(Event* pEv) noexcept;
 	bool HasEvents() noexcept;

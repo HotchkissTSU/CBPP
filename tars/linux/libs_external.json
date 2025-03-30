@@ -31,6 +31,28 @@
 			"out" : "bin",
 			"src" : [ "src/zlib/*.c" ],
 			"type" : "DLL"
+		},
+
+		"libcdf" : 
+		{
+			"comp_params":"-fPIC -g3",
+			"include" : [ "include" ],
+			"obj" : "obj/cdf",
+			"out" : "bin",
+			"src" : [ "src/cdf/*.c" ],
+			"type" : "DLL"
+		},
+
+		"cdftest" : 
+		{
+			"static": ["bin"],
+			"link_static":["cdf"],
+			"comp_params":"-g3 -D CDF_SAFE_CHECKS",
+			"include" : [ "include" ],
+			"obj" : "obj/cdf",
+			"out" : "bin",
+			"src" : [ "src/cdf/test/main.c" ],
+			"type" : "EXE"
 		}
 	}
 }

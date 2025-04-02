@@ -21,12 +21,7 @@ size_t cdf_sizeof(CDF_OBJECT_TYPE iType) {
 
 size_t cdf_object_sizeof(cdf_object* pObj) {
     CDF_CHECK( if(pObj == NULL) { return 0; } )
-
-    if(pObj->m_iType == CDF_TYPE_ARRAY || pObj->m_iType == CDF_TYPE_OBJECT) {
-        return pObj->m_iLength + sizeof(cdf_object) - sizeof(pObj->m_uData);
-    }
-    
-    return sizeof(cdf_object);
+    return pObj->m_iLength + offsetof(cdf_object, m_uData);
 }
 
 cdf_document* cdf_document_new() {
@@ -161,6 +156,11 @@ bool cdf_object_iterate(cdf_object* pObj, size_t* pIter, cdf_object** pCurrent) 
     return true;
 }
 
+uint8_t* cdf_object_data_from_iter(cdf_object* pParent, size_t iIter) {
+    CDF_CHECK( if(pParent == NULL) { return NULL; } )
+    return (uint8_t*)(pParent->m_uData.objinfo + iIter + sizeof(cdf_object) - sizeof(pParent->m_uData));
+}
+
 cdf_object* cdf_object_new(cdf_document* pDoc, const char* sName, CDF_OBJECT_TYPE iType) {
     cdf_object* pObj = (cdf_object*) malloc(sizeof(cdf_object));
     cdf_object_init(pDoc, pObj, sName, iType);
@@ -170,12 +170,12 @@ cdf_object* cdf_object_new(cdf_document* pDoc, const char* sName, CDF_OBJECT_TYP
 bool cdf_object_copy(cdf_object* pObj, uint8_t* pTarget) {
     CDF_CHECK( if(pObj == NULL || pTarget == NULL) { return false; } )
 
-    if(pObj->m_iType == CDF_TYPE_ARRAY || pObj->m_iType == CDF_TYPE_OBJECT) {
-        size_t iStructSize = sizeof(cdf_object) - sizeof(pObj->m_uData);
+    if(pObj->m_iType == CDF_TYPE_ARRAY || pObj->m_iType == CDF_TYPE_OBJECT || pObj->m_iType == CDF_TYPE_STRING) {
+        size_t iStructSize = offsetof(cdf_object, m_uData);
         memcpy(pTarget, pObj, iStructSize);
         memcpy(pTarget + iStructSize, pObj->m_uData.objinfo, pObj->m_iLength);
     }else{
-        memcpy(pTarget, pObj, sizeof(cdf_object));
+        memcpy(pTarget, pObj, cdf_object_sizeof(pObj));
     }
 
     return true;
@@ -187,10 +187,9 @@ bool cdf_object_push(cdf_object* pParent, cdf_object* pChild) {
         if(pParent->m_iType != CDF_TYPE_OBJECT) { return false; }
     )
 
-    size_t iParentSize = cdf_object_sizeof(pParent);
     size_t iChildSize = cdf_object_sizeof(pChild);
 
-    uint8_t* pTemp = (uint8_t*) realloc(pParent->m_uData.objinfo, iParentSize + iChildSize);
+    uint8_t* pTemp = (uint8_t*) realloc(pParent->m_uData.objinfo, pParent->m_iLength + iChildSize);
     if(pTemp == NULL) {
         return false;
     }
@@ -249,21 +248,23 @@ cdf_object* cdf_object_from_iter(cdf_object* pParent, size_t iIter) {
     return pObj;
 }
 
-void cdf_object_destroy(cdf_document* pDoc, cdf_object** pObj) {
+void cdf_object_destroy(cdf_document* pDoc, cdf_object** pObj, bool bStack) {
     CDF_CHECK( if((*pObj) == NULL) { return; } )
 
     if(pDoc != NULL) {
         cdf_nametable_remove(pDoc, (*pObj)->m_iNameID);
     }
 
-    if((*pObj)->m_iType == CDF_TYPE_ARRAY || (*pObj)->m_iType == CDF_TYPE_OBJECT) {
+    if((*pObj)->m_iType == CDF_TYPE_ARRAY || (*pObj)->m_iType == CDF_TYPE_OBJECT || (*pObj)->m_iType == CDF_TYPE_STRING) {
         if((*pObj)->m_uData.objinfo != NULL) {
             free((*pObj)->m_uData.objinfo);
         }
     }
 
-    free((*pObj));
-    (*pObj) = NULL;
+    if(!bStack) {
+        free((*pObj));
+        (*pObj) = NULL;
+    }
 }
 
 void cdf_nametable_free(char** pTable, size_t iTableLen) {
@@ -365,4 +366,29 @@ cdf_document* cdf_document_read(FILE* hFile) {
     }
 
     return pDoc;
+}
+
+bool cdf_push_generic(cdf_document* pDoc, cdf_object* pParent, const char* sName, void* pBinary, size_t iLength, CDF_OBJECT_TYPE iType) {
+    CDF_CHECK( if(pParent == NULL) { return false; } )
+
+    cdf_object hObj;
+    cdf_object_init(pDoc, &hObj, sName, iType);
+
+    if(iType == CDF_TYPE_ARRAY || iType == CDF_TYPE_BINARY || iType == CDF_TYPE_STRING) {
+        hObj.m_uData.objinfo = (uint8_t*) malloc(iLength);
+        if(hObj.m_uData.objinfo == NULL) { return false; }
+        memcpy(hObj.m_uData.objinfo, pBinary, iLength);
+    }else{
+        memcpy(&hObj.m_uData, pBinary, iLength);
+    }
+
+    cdf_object* pObj = &hObj;
+    bool bPush = cdf_object_push(pParent, pObj);
+    cdf_object_destroy(NULL, &pObj, true);
+
+    return bPush;
+}
+
+bool cdf_generic_value(cdf_object* pParent, void* pTarget, size_t iLength) {
+    CDF_CHECK( if(pParent == NULL) { return false; } )
 }

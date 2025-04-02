@@ -14,6 +14,25 @@
     #define CDF_CHECK(code)
 #endif
 
+#define cdf_push_binary(doc, obj, name, data, len)\
+    cdf_push_generic(doc, obj, name, (void*)data, len, CDF_TYPE_BINARY)
+
+#define cdf_push_vector(doc, obj, name, x, y)\
+    {struct { float fx; float fy; } vec; vec.fx = x; vec.fy = y;\
+    cdf_push_generic(doc, obj, name, (void*)(&vec), sizeof(float)*2, CDF_TYPE_VECTOR);}
+
+#define cdf_push_float(doc, obj, name, f)\
+    {float fd = f; cdf_push_generic(doc, obj, name, (void*)(&fd), sizeof(float), CDF_TYPE_FLOAT);}
+
+#define cdf_push_int(doc, obj, name, i)\
+    {int32_t id = i; cdf_push_generic(doc, obj, name, (void*)(&id), sizeof(int32_t), CDF_TYPE_INT);}
+
+#define cdf_push_uint(doc, obj, name, i)\
+    {uint32_t ud = i; cdf_push_generic(doc, obj, name, (void*)(&ud), sizeof(uint32_t), CDF_TYPE_UINT);}
+
+#define cdf_push_string(doc, obj, name, string)\
+    cdf_push_generic(doc, obj, name, string, strlen(string), CDF_TYPE_STRING)
+
 typedef enum CDF_OBJECT_TYPE {
     CDF_TYPE_INT,     //A signed 32-bit integer
     CDF_TYPE_UINT,    //An unsigned 32-bit integer
@@ -31,7 +50,8 @@ typedef enum CDF_OBJECT_TYPE {
 typedef struct cdf_object {
     uint32_t m_iNameID;
     uint32_t m_iLength;
-    CDF_OBJECT_TYPE m_iType;
+    size_t m_iType;
+    
     union {
         int32_t i32;
         uint32_t u32;
@@ -65,7 +85,14 @@ size_t cdf_sizeof(CDF_OBJECT_TYPE iType);
 */
 size_t cdf_object_sizeof(cdf_object* pObj);
 
+/*
+    Read a document from the file
+*/
 cdf_document* cdf_document_read(FILE* hFile);
+
+/*
+    Write a document in the file
+*/
 bool cdf_document_write(FILE* hFile, cdf_document* pDoc);
 
 cdf_document* cdf_document_new();
@@ -125,12 +152,14 @@ bool cdf_object_iterate(cdf_object* pObj, size_t* pIter, cdf_object** pCurrent);
 */
 cdf_object* cdf_object_from_iter(cdf_object* pParent, size_t iIter);
 
+uint8_t* cdf_object_data_from_iter(cdf_object* pParent, size_t iIter);
+
 /*
     Deallocate an object and set it\`s pointer to NULL. 
     If pDoc is not NULL, then this object`s name will be removed
     from the document`s nametable.
 */
-void cdf_object_destroy(cdf_document* pDoc, cdf_object** pObj);
+void cdf_object_destroy(cdf_document* pDoc, cdf_object** pObj, bool bStack);
 
 /*
     Push a sub-object. Parent`s type must be CDF_TYPE_ARRAY or CDF_TYPE_OBJECT. 
@@ -159,5 +188,8 @@ cdf_object* cdf_object_by_name(cdf_document* pDoc, cdf_object* pParent, const ch
     Obtain an object by it`s array index.
 */
 cdf_object* cdf_object_by_index(cdf_object* pParent, uint32_t iIndex);
+
+bool cdf_push_generic(cdf_document* pDoc, cdf_object* pParent, const char* sName, void* pBinary, size_t iLength, CDF_OBJECT_TYPE iType);
+bool cdf_generic_value(cdf_object* pParent, void* pTarget, size_t iLength);
 
 #endif

@@ -1,7 +1,5 @@
 #include "cdf/cdf.h"
-
 #include <stdlib.h>
-#include <string.h>
 
 size_t cdf_sizeof(CDF_OBJECT_TYPE iType) {
     switch (iType) {
@@ -17,6 +15,10 @@ size_t cdf_sizeof(CDF_OBJECT_TYPE iType) {
         default:
             return 0;
     }
+}
+
+bool cdf_type_complex(CDF_OBJECT_TYPE iType) {
+    return (iType == CDF_TYPE_ARRAY || iType == CDF_TYPE_STRING || iType == CDF_TYPE_OBJECT);
 }
 
 size_t cdf_object_sizeof(cdf_object* pObj) {
@@ -144,14 +146,18 @@ void cdf_object_init(cdf_document* pDoc, cdf_object* pObj, const char* sName, CD
     memset(&pObj->m_uData, 0, sizeof(pObj->m_uData));
 }
 
-bool cdf_object_iterate(cdf_object* pObj, size_t* pIter, cdf_object** pCurrent) {
-    CDF_CHECK( if(pObj == NULL) { return false; } )
+bool cdf_object_iterate(cdf_object* pObj, cdf_iterator* pIter) {
+    CDF_CHECK( if(pObj == NULL || pIter == NULL) { return false; } )
+
     if(pObj->m_iType != CDF_TYPE_ARRAY && pObj->m_iType != CDF_TYPE_OBJECT) { return false; }
 
-    *pCurrent = (cdf_object*)(pObj->m_uData.objinfo + *pIter);
-    (*pIter) += cdf_object_sizeof(*pCurrent);
+    cdf_object* pCurrent = (cdf_object*)(pObj->m_uData.objinfo + pIter->m_iIter);
+    memcpy(pIter, pCurrent, CDF_HEADER_SIZE);
 
-    if(*pIter > pObj->m_iLength) { return false; }
+    pIter->m_pData = cdf_object_data_from_iter(pObj, pIter->m_iIter);
+    pIter->m_iIter += cdf_object_sizeof(pCurrent);
+
+    if(pIter->m_iIter > pObj->m_iLength) { return false; }
 
     return true;
 }
@@ -170,7 +176,7 @@ cdf_object* cdf_object_new(cdf_document* pDoc, const char* sName, CDF_OBJECT_TYP
 bool cdf_object_copy(cdf_object* pObj, uint8_t* pTarget) {
     CDF_CHECK( if(pObj == NULL || pTarget == NULL) { return false; } )
 
-    if(pObj->m_iType == CDF_TYPE_ARRAY || pObj->m_iType == CDF_TYPE_OBJECT || pObj->m_iType == CDF_TYPE_STRING) {
+    if( cdf_type_complex(pObj->m_iType) ) {
         size_t iStructSize = offsetof(cdf_object, m_uData);
         memcpy(pTarget, pObj, iStructSize);
         memcpy(pTarget + iStructSize, pObj->m_uData.objinfo, pObj->m_iLength);
@@ -201,49 +207,60 @@ bool cdf_object_push(cdf_object* pParent, cdf_object* pChild) {
     return true;
 }
 
-cdf_object* cdf_object_by_nid(cdf_object* pParent, uint32_t iNameIndex) {
-    size_t iIter = 0;
-    cdf_object* pCurrent = NULL;
+bool cdf_object_by_nid(cdf_object* pParent, cdf_iterator* pTarget, uint32_t iNameIndex) {
+    CDF_CHECK( if(pParent == NULL || pTarget == NULL) { return false; } )
 
-    while( cdf_object_iterate(pParent, &iIter, &pCurrent) ) {
-        if(pCurrent->m_iNameID == iNameIndex) {
-            return pCurrent;
+    cdf_iterator Iter;
+    cdf_iterator_init(&Iter);
+
+    while( cdf_object_iterate(pParent, &Iter) ) {
+        if(Iter.m_iNameID == iNameIndex) {
+            *pTarget = Iter;
+            return true;
         }
     }
 
-    return NULL;
+    return false;
 }
 
-cdf_object* cdf_object_by_name(cdf_document* pDoc, cdf_object* pParent, const char* sName) {
+bool cdf_object_by_name(cdf_document* pDoc, cdf_object* pParent, cdf_iterator* pTarget, const char* sName) {
+    CDF_CHECK( if(pDoc == NULL || pParent == NULL || sName == NULL) { return false; } )
+
     uint32_t iNameIndex = cdf_nametable_find(pDoc, sName);
-    return cdf_object_by_nid(pParent, iNameIndex);
+    if(iNameIndex == 0) { return false; }
+
+    return cdf_object_by_nid(pParent, pTarget, iNameIndex);
 }
 
-cdf_object* cdf_object_by_index(cdf_object* pParent, uint32_t iIndex) {
+bool cdf_object_by_index(cdf_object* pParent, cdf_iterator* pTarget, uint32_t iIndex) {
     CDF_CHECK(
         if(pParent == NULL) { return NULL; }
         if(pParent->m_iType != CDF_TYPE_ARRAY) { return NULL; }
         if(pParent->m_iLength == 0 || pParent->m_uData.objinfo == NULL) { return NULL; }
     )
 
-    cdf_object* pFirst = (cdf_object*)(pParent->m_uData.objinfo);
-    size_t iLength = cdf_object_sizeof(pFirst);
+    cdf_object* pFirst = (cdf_object*)( pParent->m_uData.objinfo );
 
-    return (cdf_object*)(pParent->m_uData.objinfo + iLength*iIndex);
+    pTarget->m_iLength = pFirst->m_iLength;
+    pTarget->m_iType = pFirst->m_iType;
+    pTarget->m_iNameID = 0;
+    pTarget->m_pData = (uint8_t*)( pParent->m_uData.objinfo + cdf_object_sizeof(pFirst)*iIndex );
+
+    return true;
 }
 
-cdf_object* cdf_object_from_iter(cdf_object* pParent, size_t iIter) {
-    CDF_CHECK( if(pParent == NULL) { return NULL; } )
+cdf_object* cdf_object_from_iter(cdf_object* pParent, cdf_iterator* pIter) {
+    CDF_CHECK( if(pParent == NULL || pIter == NULL) { return false; } )
 
-    cdf_object* pIter = (cdf_object*)(pParent->m_uData.objinfo + iIter);
     cdf_object* pObj = (cdf_object*) malloc(sizeof(cdf_object));
+    memcpy(pObj, pIter, CDF_HEADER_SIZE);
 
-    pObj->m_iLength = pIter->m_iLength;
-    pObj->m_iNameID = pIter->m_iNameID;
-    pObj->m_iType = pIter->m_iType;
-
-    pObj->m_uData.objinfo = (uint8_t*) malloc(pObj->m_iLength);
-    memcpy(pObj->m_uData.objinfo, pIter + (sizeof(cdf_object) - sizeof(pObj->m_uData)), pObj->m_iLength);
+    if( cdf_type_complex(pIter->m_iType) ) {
+        pObj->m_uData.objinfo = (uint8_t*) malloc(pIter->m_iLength);
+        memcpy(pObj->m_uData.objinfo, pIter->m_pData, pIter->m_iLength);
+    }else{
+        memcpy(&pObj->m_uData, pIter->m_pData, pIter->m_iLength);
+    }
 
     return pObj;
 }
@@ -255,7 +272,7 @@ void cdf_object_destroy(cdf_document* pDoc, cdf_object** pObj, bool bStack) {
         cdf_nametable_remove(pDoc, (*pObj)->m_iNameID);
     }
 
-    if((*pObj)->m_iType == CDF_TYPE_ARRAY || (*pObj)->m_iType == CDF_TYPE_OBJECT || (*pObj)->m_iType == CDF_TYPE_STRING) {
+    if( cdf_type_complex((*pObj)->m_iType) ) {
         if((*pObj)->m_uData.objinfo != NULL) {
             free((*pObj)->m_uData.objinfo);
         }
@@ -389,6 +406,17 @@ bool cdf_push_generic(cdf_document* pDoc, cdf_object* pParent, const char* sName
     return bPush;
 }
 
-bool cdf_generic_value(cdf_object* pParent, void* pTarget, size_t iLength) {
+bool cdf_get_generic(cdf_object* pParent, void* pTarget, size_t iLength) {
     CDF_CHECK( if(pParent == NULL) { return false; } )
+    if(pParent->m_iLength < iLength) { return false; }
+
+    void* pSource;
+    if( cdf_type_complex(pParent->m_iType) ) {
+        pSource = pParent->m_uData.objinfo;
+    }else{
+        pSource = &pParent->m_uData;
+    }
+
+    memcpy(pTarget, pSource, iLength);
+    return true;
 }

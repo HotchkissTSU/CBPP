@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "cdf/cdf.h"
 #include <stdlib.h>
+#include <string.h>
 
 #include <stdio.h>
 
@@ -19,6 +20,23 @@ int main(int argc, char** argv) {
     fclose(hFile);
 
     cdf_document_destroy(&pDoc);
+
+    hFile = fopen("test.cdf", "rb");
+    pDoc = cdf_document_read(hFile);
+    fclose(hFile);
+
+    pRoot = cdf_document_root(pDoc);
+
+    cdf_iterator Iter;
+    cdf_iterator_init(&Iter);
+
+    int v;
+
+    while( cdf_object_iterate(pRoot, &Iter) ){
+        memcpy(&v, Iter.m_pData, 4);
+        size_t iNameIndex = Iter.m_iNameID;
+        printf("'%s' = %d\n", pDoc->m_aNames[iNameIndex], v);
+    }
 
     return 0;
 }

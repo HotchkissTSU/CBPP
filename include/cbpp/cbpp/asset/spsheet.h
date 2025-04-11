@@ -10,6 +10,8 @@
 #include "cbvs/texture.h"
 #include "cbpp/fileio.h"
 
+#include "cdf/cdf.h"
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -20,26 +22,24 @@ namespace cbpp {
     class SpriteSheet {
         public:
             struct Sprite {
-                char* m_sName;
-                float m_fX, m_fY, m_fW, m_fH;
+                size_t iNameID;
+                float fX, fY;
+                float fW, fH;
             };
-            
+
             SpriteSheet() = default;
+            ~SpriteSheet() noexcept;
 
-            SpriteSheet(const SpriteSheet& hOther) = delete;
-            SpriteSheet& operator=(const SpriteSheet& hOther) = delete;
+            bool Load(const char* sPath) noexcept;
 
-            uint32_t SpriteID(const char* sSpriteName) const noexcept;
-            const char* SpriteName(uint32_t iSpriteID) const noexcept;
-
-            bool Load( const char* sSheetName ) noexcept;
-            bool Save( const char* sSheetName ) const noexcept;
-
-            ~SpriteSheet();
+            friend SpriteSheet* LoadSheet(const char* sPath) noexcept;
 
         private:
-            GLuint* m_aSprites = NULL;
+            GLuint m_hTexture = 0;
+            cdf_document* m_pDoc = NULL;
     };
+
+    SpriteSheet* LoadSheet(const char* sPath) noexcept;
 }
 
 #endif

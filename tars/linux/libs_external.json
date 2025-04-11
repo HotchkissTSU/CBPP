@@ -1,12 +1,12 @@
 {
-	"name":"external SO libraries",
+	"name":"external libraries",
 
 	"base":{
 		"link_params" : "",
 		"out_libfile" : "",
 		"link_dynamic" : "",
 		"link_static" : "",
-		"static" : "",
+		"static" : ["static"],
 		"dynamic" : "",
 		"from_obj" : 0,
 
@@ -14,15 +14,6 @@
 	},
 
 	"targets":{
-		"libbson":{
-			"type":"DLL",
-			"include":["include/bson", "include/bson/jsonsl"],
-			"out":"bin",
-			"src":["src/bson/*.c"],
-			"obj":"obj/bson",
-			"comp_params":"-fPIC -D BSON_COMPILATION"
-		},
-
 		"libz" : 
 		{
 			"comp_params":"-fPIC -DPIC -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN",
@@ -32,26 +23,25 @@
 			"src" : [ "src/zlib/*.c" ],
 			"type" : "DLL"
 		},
-
+		
 		"libcdf" : 
 		{
-			"comp_params":"-fPIC -g3",
+			"comp_params":"-g3 -ffast-math -Wno-discarded-qualifiers",
 			"include" : [ "include" ],
 			"obj" : "obj/cdf",
-			"out" : "bin",
+			"out" : "static",
 			"src" : [ "src/cdf/*.c" ],
-			"type" : "DLL"
+			"type" : "STATIC"
 		},
 
 		"cdftest" : 
 		{
-			"static": ["bin"],
+			"comp_params" :"-g3",
 			"link_static":["cdf"],
-			"comp_params":"-g3 -D CDF_SAFE_CHECKS",
 			"include" : [ "include" ],
 			"obj" : "obj/cdf",
 			"out" : "bin",
-			"src" : [ "src/cdf/test/main.c" ],
+			"src" : [ "src/cdf/test/cdftest.c" ],
 			"type" : "EXE"
 		}
 	}

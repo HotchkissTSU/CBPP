@@ -1,74 +1,80 @@
 #include "cdf/cdf.h"
+
+#include <string.h>
 #include <stdlib.h>
 
-size_t cdf_sizeof(CDF_OBJECT_TYPE iType) {
+const char* cdf_get_error(cdf_retcode iCode) {
+    switch( iCode ) {
+        case CDF_OK:
+            return "No errors";
+        case CDF_INV_INPUT:
+            return "Invalid input";
+        case CDF_ALLOC_FAILURE:
+            return "Memory allocation failure";
+        case CDF_NON_ITERABLE:
+            return "Object is not iterable";
+        case CDF_UNEXPECTED_EOF:
+            return "Unexpected EOF encounter";
+        case CDF_TYPE_UNSUPPORTED:
+            return "Unknown type ID";
+        default:
+            return "Unknown error ID";
+    }
+}
+
+int cdf_type_primitive(cdf_type iType) {
+    return iType < CDF_TYPE_STRING;
+}
+
+int cdf_type_iterable(cdf_type iType) {
+    return iType > CDF_TYPE_BINARY;
+}
+
+size_t cdf_sizeof(cdf_type iType) {
     switch (iType) {
         case CDF_TYPE_INT:
-            return sizeof(int32_t);
+            return CDF_INT_SIZE;
+            break;
+        
         case CDF_TYPE_UINT:
-            return sizeof(uint32_t);
+            return CDF_INT_SIZE;
+            break;
+
         case CDF_TYPE_FLOAT:
             return sizeof(float);
+            break;
+
+        case CDF_TYPE_DOUBLE:
+            return sizeof(double);
+
         case CDF_TYPE_VECTOR:
             return sizeof(float)*2;
-        
+
         default:
             return 0;
     }
 }
 
-bool cdf_type_complex(CDF_OBJECT_TYPE iType) {
-    return (iType == CDF_TYPE_ARRAY || iType == CDF_TYPE_STRING || iType == CDF_TYPE_OBJECT);
-}
-
 size_t cdf_object_sizeof(cdf_object* pObj) {
     CDF_CHECK( if(pObj == NULL) { return 0; } )
-    return pObj->m_iLength + offsetof(cdf_object, m_uData);
+    return CDF_HEADER_SIZE + pObj->m_iLength;
 }
 
-cdf_document* cdf_document_new() {
-    cdf_document* pDoc = (cdf_document*) malloc(sizeof(cdf_document));
-    pDoc->m_iNames = 1;
-    pDoc->m_aNames = (char**) malloc(sizeof(char*));
-    pDoc->m_aNames[0] = CDF_ERRORNAME;
+cdf_document* cdf_document_create() {
+    cdf_document* pDoc = (cdf_document*) malloc( sizeof(cdf_document) );
+    pDoc->m_iNames = 0;
+    pDoc->m_aNames = NULL;
 
-    cdf_object_init(pDoc, &pDoc->m_hRoot, "root", CDF_TYPE_OBJECT);
+    cdf_retcode iCode = cdf_object_init_ex(pDoc, &pDoc->m_Root, CDF_NAME_ROOT, 0, CDF_TYPE_OBJECT);
+    if(iCode != CDF_OK) { return NULL; }
 
     return pDoc;
 }
 
-cdf_object* cdf_document_root(cdf_document* pDoc) {
-    CDF_CHECK( if(pDoc == NULL) { return; } )
-    return &pDoc->m_hRoot;
-}
-
-void cdf_document_destroy(cdf_document** ppDoc) {
-    cdf_document* pDoc = *ppDoc;
-
-    CDF_CHECK( if(pDoc == NULL) { return; } )
-
-    for(size_t i = 1; i < pDoc->m_iNames; i++) {
-        if(pDoc->m_aNames[i] != NULL) {
-            free(pDoc->m_aNames[i]);
-        }
-    }
-
-    cdf_object* pObj = &pDoc->m_hRoot;
-
-    if(pObj->m_iType == CDF_TYPE_ARRAY || pObj->m_iType == CDF_TYPE_OBJECT) {
-        if(pObj->m_uData.objinfo != NULL) {
-            free(pObj->m_uData.objinfo);
-        }
-    }
-
-    free(pDoc);
-    (*ppDoc) = NULL;
-}
-
-uint32_t cdf_nametable_push(cdf_document* pDoc, const char* sName) {
+cdf_uint cdf_nametable_push(cdf_document* pDoc, const char* sName) {
     CDF_CHECK( if(pDoc == NULL || sName == NULL) { return 0; } )
     
-    uint32_t iIndex = cdf_nametable_find(pDoc, sName);
+    cdf_uint iIndex = cdf_nametable_find(pDoc, sName);
 
     if(iIndex != 0) {
         return iIndex;
@@ -76,21 +82,21 @@ uint32_t cdf_nametable_push(cdf_document* pDoc, const char* sName) {
 
     iIndex = cdf_nametable_find(pDoc, NULL);
     if(iIndex != 0) {
-        pDoc->m_aNames[iIndex] = strdup(sName);
+        pDoc->m_aNames[iIndex] = CDF_COPY(sName);
         return iIndex;
     }
 
     pDoc->m_iNames++;
     char** pTemp = (char**) realloc(pDoc->m_aNames, sizeof(char*) * (pDoc->m_iNames));
-    if(pTemp == NULL) { return 0; } //no free space, up-allocating
+    if(pTemp == NULL) { return 0; }
     pDoc->m_aNames = pTemp;
 
-    pDoc->m_aNames[pDoc->m_iNames-1] = strdup(sName);
+    pDoc->m_aNames[pDoc->m_iNames-1] = CDF_COPY(sName);
 
     return pDoc->m_iNames-1;
 }
 
-uint32_t cdf_nametable_find(cdf_document* pDoc, const char* sName) {
+cdf_uint cdf_nametable_find(cdf_document* pDoc, const char* sName) {
     CDF_CHECK( if(pDoc == NULL) { return 0; } )
 
     for(size_t i = 0; i < pDoc->m_iNames; i++) {
@@ -106,184 +112,122 @@ uint32_t cdf_nametable_find(cdf_document* pDoc, const char* sName) {
     return 0;
 }
 
-bool cdf_nametable_remove(cdf_document* pDoc, uint32_t iNameIndex) {
+cdf_retcode cdf_nametable_remove(cdf_document* pDoc, cdf_uint iNameIndex) {
     CDF_CHECK( 
-        if(pDoc == NULL) { return false; }
-        if(iNameIndex > pDoc->m_iNames || iNameIndex == 0) { return false; }
+        if(pDoc == NULL) { return CDF_INV_INPUT; }
+        if(iNameIndex > pDoc->m_iNames || iNameIndex == 0) { return CDF_INV_INPUT; }
     )
 
-    if( pDoc->m_aNames[iNameIndex] == NULL ) { return false; }
+    if( pDoc->m_aNames[iNameIndex] == NULL ) { return CDF_OK; }
 
     free(pDoc->m_aNames[iNameIndex]);
     pDoc->m_aNames[iNameIndex] = NULL;
 
-    return true;
+    return CDF_OK;
 }
 
-bool cdf_nametable_remove_name(cdf_document* pDoc, const char* sName) {
-    CDF_CHECK( if(sName == NULL) { return false; } )
+cdf_retcode cdf_object_init_ex(cdf_document* pDoc, cdf_object* pObj, const char* sName, size_t iSize, cdf_type iType) {
+    CDF_CHECK( if(pDoc == NULL) { return CDF_INV_INPUT; } )
 
-    uint32_t iIndex = cdf_nametable_find(pDoc, sName);
-    if(iIndex != 0) {
-        return cdf_nametable_remove(pDoc, iIndex);
-    }
-
-    return false;
-}
-
-void cdf_object_init(cdf_document* pDoc, cdf_object* pObj, const char* sName, CDF_OBJECT_TYPE iType) {
-    CDF_CHECK( if(pObj == NULL) { return; } )
-
+    pObj->m_iLength = iSize;
+    pObj->m_iNameID = cdf_nametable_push(pDoc, sName);
     pObj->m_iType = iType;
-    pObj->m_iLength = cdf_sizeof(iType);
 
-    if(pDoc != NULL) {
-        pObj->m_iNameID = cdf_nametable_push(pDoc, sName);
+    if(iSize != 0) {
+        pObj->m_pData = malloc(iSize);
+        if(pObj->m_pData == NULL) { return CDF_ALLOC_FAILURE; }
     }else{
-        pObj->m_iNameID = 0;
+        pObj->m_pData = NULL;
     }
 
-    memset(&pObj->m_uData, 0, sizeof(pObj->m_uData));
+    return CDF_OK;
 }
 
-bool cdf_object_iterate(cdf_object* pObj, cdf_iterator* pIter) {
-    CDF_CHECK( if(pObj == NULL || pIter == NULL) { return false; } )
+cdf_object* cdf_object_create_ex(cdf_document* pDoc, const char* sName, cdf_uint iSize, cdf_type iType) {
+    CDF_CHECK( if(pDoc == NULL) { return NULL; } )
 
-    if(pObj->m_iType != CDF_TYPE_ARRAY && pObj->m_iType != CDF_TYPE_OBJECT) { return false; }
+    cdf_object* pObj = (cdf_object*) malloc( sizeof(cdf_object) );
+    cdf_object_init_ex(pDoc, pObj, sName, iSize, iType);
 
-    cdf_object* pCurrent = (cdf_object*)(pObj->m_uData.objinfo + pIter->m_iIter);
-    memcpy(pIter, pCurrent, CDF_HEADER_SIZE);
-
-    pIter->m_pData = cdf_object_data_from_iter(pObj, pIter->m_iIter);
-    pIter->m_iIter += cdf_object_sizeof(pCurrent);
-
-    if(pIter->m_iIter > pObj->m_iLength) { return false; }
-
-    return true;
-}
-
-uint8_t* cdf_object_data_from_iter(cdf_object* pParent, size_t iIter) {
-    CDF_CHECK( if(pParent == NULL) { return NULL; } )
-    return (uint8_t*)(pParent->m_uData.objinfo + iIter + sizeof(cdf_object) - sizeof(pParent->m_uData));
-}
-
-cdf_object* cdf_object_new(cdf_document* pDoc, const char* sName, CDF_OBJECT_TYPE iType) {
-    cdf_object* pObj = (cdf_object*) malloc(sizeof(cdf_object));
-    cdf_object_init(pDoc, pObj, sName, iType);
     return pObj;
 }
 
-bool cdf_object_copy(cdf_object* pObj, uint8_t* pTarget) {
-    CDF_CHECK( if(pObj == NULL || pTarget == NULL) { return false; } )
+void cdf_object_destroy_ex(cdf_document* pDoc, cdf_object* pObj, int bStack) {
+    CDF_CHECK( if(pDoc == NULL || pObj == NULL) { return; } )
 
-    if( cdf_type_complex(pObj->m_iType) ) {
-        size_t iStructSize = offsetof(cdf_object, m_uData);
-        memcpy(pTarget, pObj, iStructSize);
-        memcpy(pTarget + iStructSize, pObj->m_uData.objinfo, pObj->m_iLength);
-    }else{
-        memcpy(pTarget, pObj, cdf_object_sizeof(pObj));
+    if(pObj->m_iNameID != 0 || pDoc != NULL) {
+        cdf_nametable_remove(pDoc, pObj->m_iNameID);
     }
 
-    return true;
+    if(pObj->m_iLength != 0 && pObj->m_pData != NULL) {
+        free(pObj->m_pData);
+    }
+
+    if(bStack == 0) { free(pObj); }
 }
 
-bool cdf_object_push(cdf_object* pParent, cdf_object* pChild) {
-    CDF_CHECK(
-        if(pParent == NULL || pChild == NULL) { return false; }
-        if(pParent->m_iType != CDF_TYPE_OBJECT) { return false; }
-    )
+cdf_retcode cdf_object_unwrap(cdf_object* pObj, void* pTarget) {
+    CDF_CHECK( if(pObj == NULL || pTarget == NULL) { return CDF_INV_INPUT; } )
+
+    memcpy(pTarget, pObj, CDF_HEADER_SIZE);
+    memcpy(pTarget+CDF_HEADER_SIZE, pObj->m_pData, pObj->m_iLength);
+
+    return CDF_OK;
+}
+
+cdf_retcode cdf_object_push(cdf_object* pParent, cdf_object* pChild) {
+    CDF_CHECK( if(pParent == NULL || pChild == NULL) { return CDF_INV_INPUT; } )
+    CDF_CHECK( if(!cdf_type_iterable(pParent->m_iType)) { return CDF_NON_ITERABLE; } )
 
     size_t iChildSize = cdf_object_sizeof(pChild);
 
-    uint8_t* pTemp = (uint8_t*) realloc(pParent->m_uData.objinfo, pParent->m_iLength + iChildSize);
-    if(pTemp == NULL) {
-        return false;
-    }
-    pParent->m_uData.objinfo = pTemp;
+    void* pTemp = realloc(pParent->m_pData, pParent->m_iLength + iChildSize);
+    if(pTemp == NULL) { return CDF_ALLOC_FAILURE; }
+    pParent->m_pData = pTemp;
 
-    if(!cdf_object_copy(pChild, pParent->m_uData.objinfo + pParent->m_iLength)) { return false; }
+    cdf_retcode iCode = cdf_object_unwrap(pChild, pParent->m_pData + pParent->m_iLength);
+    if(iCode != CDF_OK) { return iCode; }
+
     pParent->m_iLength += iChildSize;
 
-    return true;
+    return CDF_OK;
 }
 
-bool cdf_object_by_nid(cdf_object* pParent, cdf_iterator* pTarget, uint32_t iNameIndex) {
-    CDF_CHECK( if(pParent == NULL || pTarget == NULL) { return false; } )
+cdf_retcode cdf_data_push_ex(cdf_document* pDoc, cdf_object* pParent, const char* sName, void* pData, size_t iDataLen, cdf_type iDataType) {
+    CDF_CHECK( if(pParent == NULL || pData == NULL) { return CDF_INV_INPUT; } )
 
-    cdf_iterator Iter;
-    cdf_iterator_init(&Iter);
+    cdf_object hObj;
+    cdf_retcode iCode = cdf_object_init_ex(pDoc, &hObj, sName, 0, iDataType);
+    if(iCode != CDF_OK) { return iCode; }
+    hObj.m_iLength = iDataLen;
 
-    while( cdf_object_iterate(pParent, &Iter) ) {
-        if(Iter.m_iNameID == iNameIndex) {
-            *pTarget = Iter;
-            return true;
-        }
-    }
+    size_t iChildLength = CDF_HEADER_SIZE + iDataLen;
+    void* pTemp = realloc(pParent->m_pData, pParent->m_iLength + iChildLength);
+    if(pTemp == NULL) { return CDF_ALLOC_FAILURE; }
+    pParent->m_pData = pTemp;
 
-    return false;
+    memcpy(pParent->m_pData + pParent->m_iLength, &hObj, CDF_HEADER_SIZE);
+    memcpy(pParent->m_pData + pParent->m_iLength + CDF_HEADER_SIZE, pData, iDataLen);
+
+    pParent->m_iLength += iChildLength;
+
+    return CDF_OK;
 }
 
-bool cdf_object_by_name(cdf_document* pDoc, cdf_object* pParent, cdf_iterator* pTarget, const char* sName) {
-    CDF_CHECK( if(pDoc == NULL || pParent == NULL || sName == NULL) { return false; } )
+int cdf_object_iterate(cdf_object* pParent, cdf_object* ppCurrent, size_t* pIter) {
+    CDF_CHECK( if(pParent == NULL || ppCurrent == NULL) { return 0; } )
+    CDF_CHECK( if(!cdf_type_iterable(pParent->m_iType)) { return 0; } )
 
-    uint32_t iNameIndex = cdf_nametable_find(pDoc, sName);
-    if(iNameIndex == 0) { return false; }
+    cdf_object* pCurrent = (cdf_object*)( pParent->m_pData + (*pIter) );
+    memcpy(ppCurrent, pCurrent, CDF_HEADER_SIZE);
+    ppCurrent->m_pData = pCurrent + CDF_HEADER_SIZE;
 
-    return cdf_object_by_nid(pParent, pTarget, iNameIndex);
+    (*pIter) += cdf_object_sizeof(pCurrent);
+    if((*pIter) > pParent->m_iLength) { return 0; }
+    return 1;
 }
 
-bool cdf_object_by_index(cdf_object* pParent, cdf_iterator* pTarget, uint32_t iIndex) {
-    CDF_CHECK(
-        if(pParent == NULL) { return NULL; }
-        if(pParent->m_iType != CDF_TYPE_ARRAY) { return NULL; }
-        if(pParent->m_iLength == 0 || pParent->m_uData.objinfo == NULL) { return NULL; }
-    )
-
-    cdf_object* pFirst = (cdf_object*)( pParent->m_uData.objinfo );
-
-    pTarget->m_iLength = pFirst->m_iLength;
-    pTarget->m_iType = pFirst->m_iType;
-    pTarget->m_iNameID = 0;
-    pTarget->m_pData = (uint8_t*)( pParent->m_uData.objinfo + cdf_object_sizeof(pFirst)*iIndex );
-
-    return true;
-}
-
-cdf_object* cdf_object_from_iter(cdf_object* pParent, cdf_iterator* pIter) {
-    CDF_CHECK( if(pParent == NULL || pIter == NULL) { return false; } )
-
-    cdf_object* pObj = (cdf_object*) malloc(sizeof(cdf_object));
-    memcpy(pObj, pIter, CDF_HEADER_SIZE);
-
-    if( cdf_type_complex(pIter->m_iType) ) {
-        pObj->m_uData.objinfo = (uint8_t*) malloc(pIter->m_iLength);
-        memcpy(pObj->m_uData.objinfo, pIter->m_pData, pIter->m_iLength);
-    }else{
-        memcpy(&pObj->m_uData, pIter->m_pData, pIter->m_iLength);
-    }
-
-    return pObj;
-}
-
-void cdf_object_destroy(cdf_document* pDoc, cdf_object** pObj, bool bStack) {
-    CDF_CHECK( if((*pObj) == NULL) { return; } )
-
-    if(pDoc != NULL) {
-        cdf_nametable_remove(pDoc, (*pObj)->m_iNameID);
-    }
-
-    if( cdf_type_complex((*pObj)->m_iType) ) {
-        if((*pObj)->m_uData.objinfo != NULL) {
-            free((*pObj)->m_uData.objinfo);
-        }
-    }
-
-    if(!bStack) {
-        free((*pObj));
-        (*pObj) = NULL;
-    }
-}
-
+#ifdef CDF_NAMETABLE_COPY
 void cdf_nametable_free(char** pTable, size_t iTableLen) {
     if(pTable != NULL) {
         for(size_t i = 1; i < iTableLen; i++) {
@@ -292,10 +236,11 @@ void cdf_nametable_free(char** pTable, size_t iTableLen) {
         free(pTable);
     }
 }
+#endif
 
-bool cdf_document_write(FILE* hFile, cdf_document* pDoc) {
-    CDF_CHECK( if(hFile == NULL) { return false; } )
-    CDF_CHECK( if(pDoc == NULL) { return false; } )
+cdf_retcode cdf_document_write(cdf_document* pDoc, FILE* hFile) {
+    CDF_CHECK( if(hFile == NULL) { return CDF_INV_INPUT; } )
+    CDF_CHECK( if(pDoc == NULL) { return CDF_INV_INPUT; } )
 
     size_t iStart = ftell(hFile);
 
@@ -304,41 +249,48 @@ bool cdf_document_write(FILE* hFile, cdf_document* pDoc) {
     for(size_t i = 1; i < pDoc->m_iNames; i++) {
         fwrite(pDoc->m_aNames[i], 1, strlen(pDoc->m_aNames[i])+1, hFile);
     }
-
-    size_t iLen = cdf_object_sizeof(&pDoc->m_hRoot);
+    
+    size_t iLen = cdf_object_sizeof(&pDoc->m_Root);
     uint8_t* pData = (uint8_t*) malloc(iLen);
 
-    cdf_object_copy(&pDoc->m_hRoot, pData);
+    cdf_object_unwrap(&pDoc->m_Root, pData);
     fwrite(pData, 1, iLen, hFile);
 
     free(pData);
-    return true;
+    return CDF_OK;
 }
 
-cdf_document* cdf_document_read(FILE* hFile) {
+cdf_retcode cdf_document_read(cdf_document** ppDoc, FILE* hFile) {
     CDF_CHECK( if(hFile == NULL) { return NULL; } )
 
     uint32_t iNames = 0;
-    if( fread(&iNames, sizeof(iNames), 1, hFile) != 1 ) { return NULL; }
+    if( fread(&iNames, sizeof(iNames), 1, hFile) != 1 ) { return CDF_UNEXPECTED_EOF; }
 
     char** aNames = (char**) malloc(sizeof(char*) * iNames);
-    if(aNames == NULL) { return NULL; }
+    if(aNames == NULL) { return CDF_ALLOC_FAILURE; }
     memset(aNames, 0, sizeof(char*)*iNames);
 
-    aNames[0] = CDF_ERRORNAME;
+    aNames[0] = CDF_NAME_ERROR;
     for(size_t i = 1; i < iNames; i++) {
         char cCurrent;
         size_t j = 0, iSize = 64;
         aNames[i] = (char*) malloc(iSize);
 
+        if(aNames[i] == NULL) { cdf_nametable_free(aNames, iNames); return CDF_ALLOC_FAILURE; }
+
         while( fread(&cCurrent, 1, 1, hFile) ) {
+            if(feof(hFile)) {
+                cdf_nametable_free(aNames, iNames);
+                return CDF_UNEXPECTED_EOF;
+            }
+
             if(j == iSize) {
                 iSize = iSize*2;
 
                 char* pTemp = (char*) realloc(aNames[i], iSize);
                 if(pTemp == NULL) {
                     cdf_nametable_free(aNames, iNames);
-                    return NULL;
+                    return CDF_ALLOC_FAILURE;
                 }
                 aNames[i] = pTemp;
             }
@@ -356,67 +308,64 @@ cdf_document* cdf_document_read(FILE* hFile) {
     cdf_document* pDoc = (cdf_document*) malloc(sizeof(cdf_document));
     if(pDoc == NULL) {
         cdf_nametable_free(aNames, iNames);
-        return NULL;
+        return CDF_ALLOC_FAILURE;
     }
 
     pDoc->m_iNames = iNames;
     pDoc->m_aNames = aNames;
 
-    if( fread(&pDoc->m_hRoot, sizeof(cdf_object) - sizeof(pDoc->m_hRoot.m_uData), 1, hFile) != 1 ) {
+    if( fread(&pDoc->m_Root, CDF_HEADER_SIZE, 1, hFile) != 1 ) {
         cdf_nametable_free(aNames, iNames);
         free(pDoc);
-        return NULL;
+        return CDF_UNEXPECTED_EOF;
     }
 
-    pDoc->m_hRoot.m_uData.objinfo = (uint8_t*) malloc(pDoc->m_hRoot.m_iLength);
-    if(pDoc->m_hRoot.m_uData.objinfo == NULL) {
+    pDoc->m_Root.m_pData = (uint8_t*) malloc(pDoc->m_Root.m_iLength);
+    if(pDoc->m_Root.m_pData == NULL) {
         cdf_nametable_free(aNames, iNames);
         free(pDoc);
-        return NULL;
+        return CDF_UNEXPECTED_EOF;
     }
 
-    if( fread(pDoc->m_hRoot.m_uData.objinfo, pDoc->m_hRoot.m_iLength, 1, hFile) != 1 ) {
+    if( fread(pDoc->m_Root.m_pData, pDoc->m_Root.m_iLength, 1, hFile) != 1 ) {
         cdf_nametable_free(aNames, iNames);
-        free(pDoc->m_hRoot.m_uData.objinfo);
+        free(pDoc->m_Root.m_pData);
         free(pDoc);
-        return NULL;
+        return CDF_UNEXPECTED_EOF;
     }
 
-    return pDoc;
+    (*ppDoc) = pDoc;
+    return CDF_OK;
 }
 
-bool cdf_push_generic(cdf_document* pDoc, cdf_object* pParent, const char* sName, void* pBinary, size_t iLength, CDF_OBJECT_TYPE iType) {
-    CDF_CHECK( if(pParent == NULL) { return false; } )
+cdf_retcode cdf_array_index(cdf_object* pObj, cdf_object* pTarget, cdf_uint iIndex) {
+    CDF_CHECK( if(pObj == NULL || pTarget == NULL) { return CDF_INV_INPUT; } )
+    if(pObj->m_iType != CDF_TYPE_ARRAY) { return CDF_NOT_AN_ARRAY; }
+    if(pObj->m_iLength == 0) { return CDF_INV_INPUT; }
 
-    cdf_object hObj;
-    cdf_object_init(pDoc, &hObj, sName, iType);
+    cdf_object* pFirst = (cdf_object*)( pObj->m_pData );
+    size_t iSize = cdf_object_sizeof(pFirst);
 
-    if(iType == CDF_TYPE_ARRAY || iType == CDF_TYPE_BINARY || iType == CDF_TYPE_STRING) {
-        hObj.m_uData.objinfo = (uint8_t*) malloc(iLength);
-        if(hObj.m_uData.objinfo == NULL) { return false; }
-        memcpy(hObj.m_uData.objinfo, pBinary, iLength);
-    }else{
-        memcpy(&hObj.m_uData, pBinary, iLength);
-    }
+    if(pObj->m_iLength % iSize != 0) { return CDF_NOT_AN_ARRAY; }
+    if(iIndex > pObj->m_iLength / iSize) { return CDF_OUT_OF_BOUNDS; }
 
-    cdf_object* pObj = &hObj;
-    bool bPush = cdf_object_push(pParent, pObj);
-    cdf_object_destroy(NULL, &pObj, true);
+    cdf_object* pIndex = (cdf_object*)( pObj->m_pData + iSize*iIndex );
+    memcpy(pTarget, pIndex, CDF_HEADER_SIZE);
+    pTarget->m_pData = pIndex + CDF_HEADER_SIZE;
 
-    return bPush;
+    return CDF_OK;
 }
 
-bool cdf_get_generic(cdf_object* pParent, void* pTarget, size_t iLength) {
-    CDF_CHECK( if(pParent == NULL) { return false; } )
-    if(pParent->m_iLength < iLength) { return false; }
+__cdf_push_func(cdf_int, CDF_TYPE_INT, int)
+__cdf_push_func(cdf_uint, CDF_TYPE_UINT, uint)
+__cdf_push_func(float, CDF_TYPE_FLOAT, float)
+__cdf_push_func(double, CDF_TYPE_DOUBLE, double)
+__cdf_push_func(cdf_vector, CDF_TYPE_VECTOR, vector)
 
-    void* pSource;
-    if( cdf_type_complex(pParent->m_iType) ) {
-        pSource = pParent->m_uData.objinfo;
-    }else{
-        pSource = &pParent->m_uData;
-    }
+cdf_retcode cdf_push_binary(cdf_document* pDoc, cdf_object* pParent, const char* sName, uint8_t* Value, size_t iLen) {
+    return cdf_data_push_ex(pDoc, pParent, sName, (void*)Value, iLen, CDF_TYPE_BINARY);
+}
 
-    memcpy(pTarget, pSource, iLength);
-    return true;
+cdf_retcode cdf_push_string(cdf_document* pDoc, cdf_object* pParent, const char* sName, const char* sValue) {
+    return cdf_data_push_ex(pDoc, pParent, sName, (void*)sValue, strlen(sValue), CDF_TYPE_STRING);
 }

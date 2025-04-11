@@ -7,23 +7,22 @@
 #include <string.h>
 
 namespace cbpp {
-    
+    bool SpriteSheet::Load(const char* sPath) noexcept {
+        File* hFile = OpenFile(PATH_TEXTURE, sPath);
+        if(hFile == NULL) { return false; }
+
+        m_pDoc = cdf_document_read(hFile->Handle());
+        if(m_pDoc == NULL) { return false; }
+    }
 }
 
 namespace cbpp {
-    bool SpriteSheet::Load(const char* sSheetName) {
-        File* hInput = OpenFile(PATH_TEXTURE, sSheetName);
+    SpriteSheet* LoadSheet(const char* sPath) noexcept {
+        SpriteSheet* pSheet = new SpriteSheet();
+        if(!pSheet->Load()) {
+            return NULL;
+        }
 
-        if(hInput == NULL) { return false; }
-
-        size_t iFileLen = hInput.Length();
-        uint8_t* aBuffer = (uint8_t*) malloc(iFileLen);
-
-        hInput->Read(aBuffer, iFileLen, 1);
-
-        bson_t* hRoot = bson_new_from_buffer(&aBuffer, iFileLen);
-    }
-
-    SpriteSheet::~SpriteSheet() {
+        return pSheet;
     }
 }

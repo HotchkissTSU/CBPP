@@ -54,7 +54,7 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     static cbpp::Event ev;
-	CreateEvent(ev);
+	CreateEvent(&ev);
 
 	ev.Type = Event::KEYBOARD;
 

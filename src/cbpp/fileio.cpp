@@ -207,21 +207,6 @@ namespace cbpp {
 		return NULL;
 	}
 
-	bson_t* ReadBSON(SEARCH_PATH iGroupIndex, const char* sPath) noexcept {
-		File *hStream = OpenFile(iGroupIndex, sPath, "rb");
-		if(hStream == NULL) { return NULL; }
-
-		size_t iFileSize = hStream->Length();
-		uint8_t* aBuffer = (uint8_t*) malloc(iFileSize);
-		hStream->Read(aBuffer, iFileSize);
-
-		bson_reader_t* pReader = bson_reader_new_from_data(aBuffer, iFileSize);
-		
-		//bson_t* 
-
-		free(aBuffer);
-	}
-
 	size_t GetFileExtension(const char* sPath, char* sBuffer = NULL) noexcept {
 		size_t iLen = strlen(sPath);
 		size_t iIndex = iLen;

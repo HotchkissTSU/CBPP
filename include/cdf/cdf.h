@@ -1,234 +1,125 @@
-#ifndef CBPP_ASSET_CDF_H
-#define CBPP_ASSET_CDF_H
+#ifndef CBPP_CDF_H
+#define CBPP_CDF_H
+
+#include "cdf/cdf_macros.h"
 
 #include <stdint.h>
-#include <stddef.h>
-#include <stdbool.h>
+#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
-#define CDF_ERRORNAME "[error]"
+typedef enum cdf_retcode {
+    CDF_OK,                     //Everything is probably cool
+    CDF_ALLOC_FAILURE,          //The allocator has fallen, centurion
+    CDF_INV_INPUT,              //One or many input args are NULL
+    CDF_NON_ITERABLE,           //Attempt to push a sub-value into a primitive object
+    CDF_TYPE_UNSUPPORTED,       //Unknown type ID found while reading
+    CDF_UNEXPECTED_EOF,         //That EOF should not be there!
+    CDF_OUT_OF_BOUNDS,
+    CDF_NOT_AN_ARRAY
+} cdf_retcode;
 
-#define CDF_HEADER_SIZE offsetof(cdf_object, m_uData)
+typedef enum cdf_type {
+    CDF_TYPE_INVALID,   //A special error value
 
-#ifdef CDF_SAFE_CHECKS
-    #define CDF_CHECK(code) code
-#else
-    #define CDF_CHECK(code)
-#endif
+    CDF_TYPE_INT,       //cdf_int, int32_t by default
+    CDF_TYPE_UINT,      //cdf_uint, uint32_t by default
+    CDF_TYPE_FLOAT,     //32-bit floating point value
+    CDF_TYPE_DOUBLE,    //64-bit floating point value
+    CDF_TYPE_VECTOR,    //Two floats combined together
 
-#define cdf_object_type(obj) obj->m_iType
-#define cdf_iterator_init(iter) memset(iter, 0, sizeof(cdf_iterator))
+    CDF_TYPE_STRING,    //An UTF-8 encoded string without a null-terminator
+    CDF_TYPE_BINARY,    //Any binary sequence
 
-//Push macros
-#define cdf_push_binary(doc, obj, name, data, len)\
-    cdf_push_generic(doc, obj, name, (void*)data, len, CDF_TYPE_BINARY)
+    CDF_TYPE_OBJECT,    //An object with sub-objects in it
+    CDF_TYPE_ARRAY,     //An object that stores any amount of identical sub-objects
 
-#define cdf_push_vector(doc, obj, name, x, y)\
-    {struct { float fx; float fy; } vec; vec.fx = x; vec.fy = y;\
-    cdf_push_generic(doc, obj, name, (void*)(&vec), sizeof(float)*2, CDF_TYPE_VECTOR);}
-
-#define cdf_push_float(doc, obj, name, f)\
-    {float fd = f; cdf_push_generic(doc, obj, name, (void*)(&fd), sizeof(float), CDF_TYPE_FLOAT);}
-
-#define cdf_push_int(doc, obj, name, i)\
-    {int32_t id = i; cdf_push_generic(doc, obj, name, (void*)(&id), sizeof(int32_t), CDF_TYPE_INT);}
-
-#define cdf_push_uint(doc, obj, name, i)\
-    {uint32_t ud = i; cdf_push_generic(doc, obj, name, (void*)(&ud), sizeof(uint32_t), CDF_TYPE_UINT);}
-
-#define cdf_push_string(doc, obj, name, string)\
-    cdf_push_generic(doc, obj, name, string, strlen(string), CDF_TYPE_STRING)
-
-//Get value macros
-#define cdf_get_binary(obj, target, len)\
-    cdf_get_generic(obj, (void*)target, len)
-
-#define cdf_get_vector(obj, target)\
-    cdf_get_generic(obj, (void*)target, sizeof(float)*2)
-
-#define cdf_get_float(obj, target)\
-    cdf_get_generic(obj, (void*)target, sizeof(float))
-
-#define cdf_get_int(obj, target)\
-    cdf_get_generic(obj, (void*)target, sizeof(int32_t))
-
-#define cdf_get_uint(obj, target)\
-    cdf_get_generic(obj, (void*)target, sizeof(uint32_t))
-
-typedef enum CDF_OBJECT_TYPE {
-    CDF_TYPE_INT,     //A signed 32-bit integer
-    CDF_TYPE_UINT,    //An unsigned 32-bit integer
-    CDF_TYPE_FLOAT,   //A 4-bytes float
-    CDF_TYPE_VECTOR,  //A 2D vector
-    CDF_TYPE_STRING,  //UTF-8 encoded string (w/o null-terminator)
-    CDF_TYPE_BINARY,  //Any binary sequence
-    
-    CDF_TYPE_OBJECT,  //An object with sub-objects in it
-    CDF_TYPE_ARRAY,   //A list of identical objects
-
-    CDF_CORE_TYPES_AMOUNT
-} CDF_OBJECT_TYPE;
+    CDF_TYPES_AMOUNT
+} cdf_type;
 
 typedef struct cdf_vector {
-    float fX, fY;
+    float m_fX, m_fY;
 } cdf_vector;
 
 typedef struct cdf_object {
-    uint32_t m_iNameID;
-    uint32_t m_iLength;
-    size_t m_iType;
-    
-    union {
-        int32_t i32;
-        uint32_t u32;
-        float f32;
-
-        cdf_vector v16;
-
-        char* utf8;
-        uint8_t* objinfo;
-    } m_uData;
-} cdf_object;
-
-typedef struct cdf_iterator {
-    uint32_t m_iNameID;
-    uint32_t m_iLength;
-    size_t m_iType;
-
-    uint8_t* m_pData;
-    size_t m_iIter;
-} cdf_iterator;
+    cdf_uint m_iLength;
+    cdf_uint m_iType;
+    cdf_uint m_iNameID;
+    void* m_pData;
+} __attribute__((packed)) cdf_object;
 
 typedef struct cdf_document {
-    uint32_t m_iNames;
+    cdf_uint m_iNames;
     char** m_aNames;
-
-    cdf_object m_hRoot;
+    cdf_object m_Root;
 } cdf_document;
 
-/*
-    Check if the given type is a complex one:
-    CDF_TYPE_ARRAY, CDF_TYPE_OBJECT or CDF_TYPE_STRING
-*/
-bool cdf_type_complex(CDF_OBJECT_TYPE iType);
+typedef struct cdf_verinfo {
+    uint16_t m_iVersionMajor, m_iVersionMinor;
+    uint8_t m_iIntSize;
+} __attribute__((packed)) cdf_verinfo;
 
-/*
-    Get the size of the selected CDF datatype.
-    Returns 0 for CDF_TYPE_ARRAY and CDF_TYPE_OBJECT.
-*/
-size_t cdf_sizeof(CDF_OBJECT_TYPE iType);
+//Get a string description of the chosen error code
+const char* cdf_get_error(cdf_retcode iCode);
 
-/*
-    Get amount of space needed to unwrap and store this object
-*/
+//Check if selected type lies before the CDF_TYPE_STRING in the types list
+int cdf_type_primitive(cdf_type iType);
+
+//Check is this type can be iterated (ARRAY and OBJECT)
+int cdf_type_iterable(cdf_type iType);
+
+//Get a size of a primitive value type
+size_t cdf_sizeof(cdf_type iType);
+
+//Get a size needed to unwrap this object
 size_t cdf_object_sizeof(cdf_object* pObj);
 
-/*
-    Read a document from the file
-*/
-cdf_document* cdf_document_read(FILE* hFile);
+cdf_document* cdf_document_create();
+cdf_retcode cdf_document_destroy(cdf_document* pDoc);
+
+cdf_retcode cdf_document_write(cdf_document* pDoc, FILE* hFile);
+cdf_retcode cdf_document_read(cdf_document** ppDoc, FILE* hFile);
+
+cdf_uint cdf_nametable_push(cdf_document* pDoc, const char* sName);
+cdf_uint cdf_nametable_find(cdf_document* pDoc, const char* sName);
+cdf_retcode cdf_nametable_remove(cdf_document* pDoc, cdf_uint iNameIndex);
+
+//Write an object to a plain buffer
+cdf_retcode cdf_object_unwrap(cdf_object* pObj, void* pTarget);
+
+//Initialize an object thet already exists
+cdf_retcode cdf_object_init_ex(cdf_document* pDoc, cdf_object* pObj, const char* sName, size_t iSize, cdf_type iType);
+
+//Allocate and initialize a new object
+cdf_object* cdf_object_create_ex(cdf_document* pDoc, const char* sName, cdf_uint iSize, cdf_type iType);
+void cdf_object_destroy_ex(cdf_document* pDoc, cdf_object* pObj, int bStackAllocated);
+
+//Append a sub-object
+cdf_retcode cdf_object_push(cdf_object* pParent, cdf_object* pChild);
+
+//Append a primitive data field
+cdf_retcode cdf_data_push_ex(cdf_document* pDoc, cdf_object* pParent, const char* sName, void* pData, size_t iDataLen, cdf_type iDataType);
+
+//Access an array member by it`s index
+cdf_retcode cdf_array_index(cdf_object* pObj, cdf_object* pTarget, cdf_uint iIndex);
 
 /*
-    Write a document in the file
+    Iterate an object. The iterator variable must be zeroed beforehand!
 */
-bool cdf_document_write(FILE* hFile, cdf_document* pDoc);
+int cdf_object_iterate(cdf_object* pParent, cdf_object* pCurrent, size_t* pIter);
 
-cdf_document* cdf_document_new();
+#ifdef CDF_NAMETABLE_COPY
+    void cdf_nametable_free(char** pTable, size_t iLen);
+#else
+    #define cdf_nametable_free(p, i)
+#endif
 
-/*
-    Obtain a pointer to the document`s root value;
-    It always has a type of CDF_TYPE_OBJECT, and
-    you should not attempt to deallocate it via cdf_object_destroy
-*/
-cdf_object* cdf_document_root(cdf_document* pDoc);
-void cdf_document_destroy(cdf_document** pDoc);
+__cdf_push_func_decl(cdf_int, CDF_TYPE_INT, int)
+__cdf_push_func_decl(cdf_uint, CDF_TYPE_UINT, uint)
+__cdf_push_func_decl(float, CDF_TYPE_FLOAT, float)
+__cdf_push_func_decl(double, CDF_TYPE_DOUBLE, double)
+__cdf_push_func_decl(cdf_vector, CDF_TYPE_VECTOR, vector)
 
-/*
-    Add a new name to the table and get it`s index
-*/
-uint32_t cdf_nametable_push(cdf_document* pDoc, const char* sName);
-
-/*
-    Find the index of the providen name, or a free place if the
-    second argument is NULL.
-*/
-uint32_t cdf_nametable_find(cdf_document* pDoc, const char* sName);
-
-bool cdf_nametable_remove(cdf_document* pDoc, uint32_t iNameIndex);
-bool cdf_nametable_remove_name(cdf_document* pDoc, const char* sName);
-
-void cdf_nametable_free(char** pTable, size_t iTableLen);
-
-/*
-    Set up object\`s insides. Can be used to initialize stack allocated values
-*/
-void cdf_object_init(cdf_document* pDoc, cdf_object* pObj, const char* sName, CDF_OBJECT_TYPE iType);
-
-/*
-    Allocate a new object of the given type.
-    If pDoc is not NULL, then this object`s name will be added to the
-    document`s nametable.
-*/
-cdf_object* cdf_object_new(cdf_document* pDoc, const char* sName, CDF_OBJECT_TYPE iType);
-
-/*
-    Create a copy of the given object
-*/
-cdf_object* cdf_object_new_from_obj(cdf_object* pObj);
-
-/*
-    Iterate through object\`s content.
-    Don\`t deallocate the pCurrent pointer as it points inside the parent object.
-    If you want to get a standalone object from it, use cdf_object_from_iter.
-
-    Iterator variable must be set to zero beforehand.
-*/
-bool cdf_object_iterate(cdf_object* pObj, cdf_iterator* pIter);
-
-/*
-    Allocate a new object from the iterator
-*/
-cdf_object* cdf_object_from_iter(cdf_object* pParent, cdf_iterator* pIter);
-
-uint8_t* cdf_object_data_from_iter(cdf_object* pParent, size_t iIter);
-
-/*
-    Deallocate an object and set it\`s pointer to NULL. 
-    If pDoc is not NULL, then this object`s name will be removed
-    from the document`s nametable.
-*/
-void cdf_object_destroy(cdf_document* pDoc, cdf_object** pObj, bool bStack);
-
-/*
-    Push a sub-object. Parent`s type must be CDF_TYPE_ARRAY or CDF_TYPE_OBJECT. 
-    All objects you are pushing into an array must have the same size.
-
-    All pushed objects are copied, so the source ones can be deleted without any concernes.
-*/
-bool cdf_object_push(cdf_object* pParent, cdf_object* pChild);
-
-/*
-    Unwrap an object into a plain buffer
-*/
-bool cdf_object_copy(cdf_object* pObj, uint8_t* pTarget);
-
-/*
-    Obtain an object by it`s nameID
-*/
-bool cdf_object_by_nid(cdf_object* pParent, cdf_iterator* pTarget, uint32_t iNameIndex);
-
-/*
-    Obtain an object by it`s string name
-*/
-bool cdf_object_by_name(cdf_document* pDoc, cdf_object* pParent, cdf_iterator* pTarget, const char* sName);
-
-/*
-    Obtain an object by it`s array index.
-*/
-bool cdf_object_by_index(cdf_object* pParent, cdf_iterator* pTarget, uint32_t iIndex);
-
-bool cdf_push_generic(cdf_document* pDoc, cdf_object* pParent, const char* sName, void* pBinary, size_t iLength, CDF_OBJECT_TYPE iType);
-bool cdf_get_generic(cdf_object* pParent, void* pTarget, size_t iLength);
+cdf_retcode cdf_push_binary(cdf_document* pDoc, cdf_object* pParent, const char* sName, uint8_t* Value, size_t iLen);
+cdf_retcode cdf_push_string(cdf_document* pDoc, cdf_object* pParent, const char* sName, const char* sValue);
 
 #endif

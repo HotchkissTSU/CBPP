@@ -36,7 +36,7 @@
 			"out_libfile" : "lib",
 			"src" : [ "src/sdk/cdftree.cpp" ],
 			"static" : [ "static" ],
-			"type" : "OBJ"
+			"type" : "EXE"
 		}
 	}
 }

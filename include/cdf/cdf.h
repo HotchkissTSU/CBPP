@@ -14,8 +14,9 @@ typedef enum cdf_retcode {
     CDF_NON_ITERABLE,           //Attempt to push a sub-value into a primitive object
     CDF_TYPE_UNSUPPORTED,       //Unknown type ID found while reading
     CDF_UNEXPECTED_EOF,         //That EOF should not be there!
-    CDF_OUT_OF_BOUNDS,
-    CDF_NOT_AN_ARRAY
+    CDF_OUT_OF_BOUNDS,          //Array index is out of bounds
+    CDF_NOT_AN_ARRAY,           //Attempt to index an object that is not an array
+    CDF_TYPE_MISMATCH           //Types mismatch during data extraction
 } cdf_retcode;
 
 typedef enum cdf_type {
@@ -51,6 +52,10 @@ typedef struct cdf_document {
     cdf_uint m_iNames;
     char** m_aNames;
     cdf_object m_Root;
+
+    #ifdef CDF_USE_ZLIB
+    uint8_t m_bCompressed;
+    #endif
 } cdf_document;
 
 typedef struct cdf_verinfo {
@@ -64,7 +69,7 @@ const char* cdf_get_error(cdf_retcode iCode);
 //Check if selected type lies before the CDF_TYPE_STRING in the types list
 int cdf_type_primitive(cdf_type iType);
 
-//Check is this type can be iterated (ARRAY and OBJECT)
+//Check if this type can be iterated (ARRAY and OBJECT)
 int cdf_type_iterable(cdf_type iType);
 
 //Get a size of a primitive value type
@@ -73,11 +78,22 @@ size_t cdf_sizeof(cdf_type iType);
 //Get a size needed to unwrap this object
 size_t cdf_object_sizeof(cdf_object* pObj);
 
+cdf_type cdf_object_type(cdf_object* pObj);
+
+//Get object`s length in bytes
+cdf_uint cdf_object_length(cdf_object* pObj);
+void* cdf_object_data(cdf_object* pObj);
+
 cdf_document* cdf_document_create();
 cdf_retcode cdf_document_destroy(cdf_document* pDoc);
 
 cdf_retcode cdf_document_write(cdf_document* pDoc, FILE* hFile);
 cdf_retcode cdf_document_read(cdf_document** ppDoc, FILE* hFile);
+
+cdf_retcode cdf_version_write(FILE* hFile);
+cdf_retcode cdf_version_read(FILE* hFile, cdf_verinfo* pTarget);
+
+int cdf_check_header(FILE* hFile);
 
 cdf_uint cdf_nametable_push(cdf_document* pDoc, const char* sName);
 cdf_uint cdf_nametable_find(cdf_document* pDoc, const char* sName);
@@ -118,6 +134,12 @@ __cdf_push_func_decl(cdf_uint, CDF_TYPE_UINT, uint)
 __cdf_push_func_decl(float, CDF_TYPE_FLOAT, float)
 __cdf_push_func_decl(double, CDF_TYPE_DOUBLE, double)
 __cdf_push_func_decl(cdf_vector, CDF_TYPE_VECTOR, vector)
+
+__cdf_get_func_decl(cdf_int, CDF_TYPE_INT, int)
+__cdf_get_func_decl(cdf_uint, CDF_TYPE_UINT, uint)
+__cdf_get_func_decl(float, CDF_TYPE_FLOAT, float)
+__cdf_get_func_decl(double, CDF_TYPE_DOUBLE, double)
+__cdf_get_func_decl(cdf_vector, CDF_TYPE_VECTOR, vector)
 
 cdf_retcode cdf_push_binary(cdf_document* pDoc, cdf_object* pParent, const char* sName, uint8_t* Value, size_t iLen);
 cdf_retcode cdf_push_string(cdf_document* pDoc, cdf_object* pParent, const char* sName, const char* sValue);

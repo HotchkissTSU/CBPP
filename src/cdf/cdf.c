@@ -4,22 +4,16 @@
 #include <stdlib.h>
 
 const char* cdf_get_error(cdf_retcode iCode) {
-    switch( iCode ) {
-        case CDF_OK:
-            return "No errors";
-        case CDF_INV_INPUT:
-            return "Invalid input";
-        case CDF_ALLOC_FAILURE:
-            return "Memory allocation failure";
-        case CDF_NON_ITERABLE:
-            return "Object is not iterable";
-        case CDF_UNEXPECTED_EOF:
-            return "Unexpected EOF encounter";
-        case CDF_TYPE_UNSUPPORTED:
-            return "Unknown type ID";
-        default:
-            return "Unknown error ID";
-    }
+    CDF_ENAME(CDF_OK)
+    CDF_ENAME(CDF_ALLOC_FAILURE)
+    CDF_ENAME(CDF_NON_ITERABLE)
+    CDF_ENAME(CDF_TYPE_UNSUPPORTED)
+    CDF_ENAME(CDF_UNEXPECTED_EOF)
+    CDF_ENAME(CDF_OUT_OF_BOUNDS)
+    CDF_ENAME(CDF_NOT_AN_ARRAY)
+    CDF_ENAME(CDF_TYPE_MISMATCH)
+
+    return "UNKNOWN";
 }
 
 int cdf_type_primitive(cdf_type iType) {
@@ -249,14 +243,10 @@ cdf_retcode cdf_document_write(cdf_document* pDoc, FILE* hFile) {
     for(size_t i = 1; i < pDoc->m_iNames; i++) {
         fwrite(pDoc->m_aNames[i], 1, strlen(pDoc->m_aNames[i])+1, hFile);
     }
-    
-    size_t iLen = cdf_object_sizeof(&pDoc->m_Root);
-    uint8_t* pData = (uint8_t*) malloc(iLen);
 
-    cdf_object_unwrap(&pDoc->m_Root, pData);
-    fwrite(pData, 1, iLen, hFile);
+    fwrite(&pDoc->m_Root, CDF_HEADER_SIZE, 1, hFile);
+    fwrite(pDoc->m_Root.m_pData, 1, pDoc->m_Root.m_iLength, hFile);
 
-    free(pData);
     return CDF_OK;
 }
 
@@ -264,7 +254,9 @@ cdf_retcode cdf_document_read(cdf_document** ppDoc, FILE* hFile) {
     CDF_CHECK( if(hFile == NULL) { return NULL; } )
 
     uint32_t iNames = 0;
+    int bCompressed = 0;
     if( fread(&iNames, sizeof(iNames), 1, hFile) != 1 ) { return CDF_UNEXPECTED_EOF; }
+    if( fread(&bCompressed, 1, 1, hFile) != 1 ) { return CDF_UNEXPECTED_EOF; }
 
     char** aNames = (char**) malloc(sizeof(char*) * iNames);
     if(aNames == NULL) { return CDF_ALLOC_FAILURE; }
@@ -356,11 +348,32 @@ cdf_retcode cdf_array_index(cdf_object* pObj, cdf_object* pTarget, cdf_uint iInd
     return CDF_OK;
 }
 
+cdf_type cdf_object_type(cdf_object* pObj) {
+    CDF_CHECK( if(pObj == NULL) { return CDF_TYPE_INVALID; } )
+    return pObj->m_iType;
+}
+
+cdf_uint cdf_object_length(cdf_object* pObj) {
+    CDF_CHECK( if(pObj == NULL) { return 0; } )
+    return pObj->m_iLength;
+}
+
+void* cdf_object_data(cdf_object* pObj) {
+    CDF_CHECK( if(pObj == NULL) { return NULL; } )
+    return pObj->m_pData;
+}
+
 __cdf_push_func(cdf_int, CDF_TYPE_INT, int)
 __cdf_push_func(cdf_uint, CDF_TYPE_UINT, uint)
 __cdf_push_func(float, CDF_TYPE_FLOAT, float)
 __cdf_push_func(double, CDF_TYPE_DOUBLE, double)
 __cdf_push_func(cdf_vector, CDF_TYPE_VECTOR, vector)
+
+__cdf_get_func(cdf_int, CDF_TYPE_INT, int)
+__cdf_get_func(cdf_uint, CDF_TYPE_UINT, uint)
+__cdf_get_func(float, CDF_TYPE_FLOAT, float)
+__cdf_get_func(double, CDF_TYPE_DOUBLE, double)
+__cdf_get_func(cdf_vector, CDF_TYPE_VECTOR, vector)
 
 cdf_retcode cdf_push_binary(cdf_document* pDoc, cdf_object* pParent, const char* sName, uint8_t* Value, size_t iLen) {
     return cdf_data_push_ex(pDoc, pParent, sName, (void*)Value, iLen, CDF_TYPE_BINARY);
@@ -368,4 +381,31 @@ cdf_retcode cdf_push_binary(cdf_document* pDoc, cdf_object* pParent, const char*
 
 cdf_retcode cdf_push_string(cdf_document* pDoc, cdf_object* pParent, const char* sName, const char* sValue) {
     return cdf_data_push_ex(pDoc, pParent, sName, (void*)sValue, strlen(sValue), CDF_TYPE_STRING);
+}
+
+cdf_retcode cdf_version_write(FILE* hFile) {
+    CDF_CHECK( if(hFile == NULL) { return CDF_INV_INPUT; } )
+
+    cdf_verinfo Ver;
+    Ver.m_iIntSize = CDF_INT_SIZE;
+    Ver.m_iVersionMajor = CDF_VERSION_MAJOR;
+    Ver.m_iVersionMinor = CDF_VERSION_MINOR;
+    fwrite(&Ver, sizeof(Ver), 1, hFile);
+    return CDF_OK;
+}
+
+cdf_retcode cdf_version_read(FILE* hFile, cdf_verinfo* pTarget) {
+    CDF_CHECK( if(hFile == NULL || pTarget == NULL) { return CDF_INV_INPUT; } )
+
+    if( fread(pTarget, sizeof(cdf_verinfo), 1, hFile) != 1 ) { return CDF_UNEXPECTED_EOF; }
+    return CDF_OK;
+}
+
+int cdf_check_header(FILE* hFile) {
+    CDF_CHECK( if(hFile == NULL) { return 0; } )
+
+    uint32_t iFileVer;
+    if(fread(&iFileVer, 4, 1, hFile) != 1) { return 0; }
+
+    return iFileVer == CDF_FILE_MARK;
 }

@@ -7,10 +7,8 @@
 #define CDF_VERSION_MAJOR 1
 #define CDF_VERSION_MINOR 0
 
-#define CDF_NAMETABLE_COPY
-
 /*
-    Should i perform null-checks in every function?
+    Should we perform null-checks in every function?
 */
 #ifdef CDF_SAFE_CHECK
     #define CDF_CHECK(code) code
@@ -19,7 +17,7 @@
 #endif
 
 /*
-    Should i copy a string while appending it to the nametable instead of referencing it?
+    Should we copy a string while appending it to the nametable instead of referencing it?
 */
 #ifdef CDF_NAMETABLE_COPY
     #define CDF_COPY(string) strdup(string)
@@ -29,6 +27,7 @@
 
 #define CDF_NAME_ERROR "<ERROR>"
 #define CDF_NAME_ROOT "root"
+#define CDF_FILE_MARK *((uint32_t*)("CDF"))
 #define CDF_HEADER_SIZE sizeof(cdf_object) - sizeof(void*)
 
 /*
@@ -51,5 +50,15 @@ cdf_retcode cdf_push_##deconame (cdf_document* pDoc, cdf_object* pParent, const 
 #define __cdf_push_func(type, itype, deconame)\
 cdf_retcode cdf_push_##deconame (cdf_document* pDoc, cdf_object* pParent, const char* sName, type Value) {\
     return cdf_data_push_ex(pDoc, pParent, sName, &Value, sizeof(Value), itype);}
+
+#define __cdf_get_func(type, itype, name)\
+cdf_retcode cdf_as_##name (cdf_object* pObj, type* pTarget) {\
+    if(pObj->m_iType != itype) { memset(pTarget, 0, sizeof(type)); return CDF_TYPE_MISMATCH; }\
+    memcpy(pTarget, pObj->m_pData, sizeof(type)); return CDF_OK;}
+
+#define __cdf_get_func_decl(type, itype, name)\
+cdf_retcode cdf_as_##name (cdf_object* pObj, type* pTarget);
+
+#define CDF_ENAME(e) if(iCode == e) { return #e; }
 
 #endif

@@ -4,16 +4,20 @@
 #include <stdlib.h>
 
 const char* cdf_get_error(cdf_retcode iCode) {
-    CDF_ENAME(CDF_OK)
-    CDF_ENAME(CDF_ALLOC_FAILURE)
-    CDF_ENAME(CDF_NON_ITERABLE)
-    CDF_ENAME(CDF_TYPE_UNSUPPORTED)
-    CDF_ENAME(CDF_UNEXPECTED_EOF)
-    CDF_ENAME(CDF_OUT_OF_BOUNDS)
-    CDF_ENAME(CDF_NOT_AN_ARRAY)
-    CDF_ENAME(CDF_TYPE_MISMATCH)
+    switch( iCode ) {
+        CDF_ENAME(CDF_OK)
+        CDF_ENAME(CDF_ALLOC_FAILURE)
+        CDF_ENAME(CDF_NON_ITERABLE)
+        CDF_ENAME(CDF_TYPE_UNSUPPORTED)
+        CDF_ENAME(CDF_UNEXPECTED_EOF)
+        CDF_ENAME(CDF_OUT_OF_BOUNDS)
+        CDF_ENAME(CDF_NOT_AN_ARRAY)
+        CDF_ENAME(CDF_TYPE_MISMATCH)
+        CDF_ENAME(CDF_NO_COMPRESSION)
+        CDF_ENAME(CDF_ZLIB_ERROR)
 
-    return "UNKNOWN";
+        default: return "UNKNOWN";
+    }
 }
 
 int cdf_type_primitive(cdf_type iType) {
@@ -21,17 +25,17 @@ int cdf_type_primitive(cdf_type iType) {
 }
 
 int cdf_type_iterable(cdf_type iType) {
-    return iType > CDF_TYPE_BINARY;
+    return iType == CDF_TYPE_OBJECT;
 }
 
 size_t cdf_sizeof(cdf_type iType) {
     switch (iType) {
         case CDF_TYPE_INT:
-            return CDF_INT_SIZE;
+            return sizeof(int32_t);
             break;
         
         case CDF_TYPE_UINT:
-            return CDF_INT_SIZE;
+            return sizeof(uint32_t);
             break;
 
         case CDF_TYPE_FLOAT:
@@ -66,7 +70,9 @@ cdf_document* cdf_document_create() {
 }
 
 cdf_uint cdf_nametable_push(cdf_document* pDoc, const char* sName) {
-    CDF_CHECK( if(pDoc == NULL || sName == NULL) { return 0; } )
+    CDF_CHECK( if(pDoc == NULL) { return 0; } )
+
+    if(sName == NULL) { return 0; }
     
     cdf_uint iIndex = cdf_nametable_find(pDoc, sName);
 
@@ -174,17 +180,11 @@ cdf_retcode cdf_object_push(cdf_object* pParent, cdf_object* pChild) {
     CDF_CHECK( if(!cdf_type_iterable(pParent->m_iType)) { return CDF_NON_ITERABLE; } )
 
     size_t iChildSize = cdf_object_sizeof(pChild);
+    size_t iOldLength = pParent->m_iLength;
 
-    void* pTemp = realloc(pParent->m_pData, pParent->m_iLength + iChildSize);
-    if(pTemp == NULL) { return CDF_ALLOC_FAILURE; }
-    pParent->m_pData = pTemp;
+    cdf_retcode iCode = cdf_object_realloc(pParent, pParent->m_iLength + iChildSize);
 
-    cdf_retcode iCode = cdf_object_unwrap(pChild, pParent->m_pData + pParent->m_iLength);
-    if(iCode != CDF_OK) { return iCode; }
-
-    pParent->m_iLength += iChildSize;
-
-    return CDF_OK;
+    return cdf_object_unwrap(pChild, pParent->m_pData + iOldLength);
 }
 
 cdf_retcode cdf_data_push_ex(cdf_document* pDoc, cdf_object* pParent, const char* sName, void* pData, size_t iDataLen, cdf_type iDataType) {
@@ -196,14 +196,13 @@ cdf_retcode cdf_data_push_ex(cdf_document* pDoc, cdf_object* pParent, const char
     hObj.m_iLength = iDataLen;
 
     size_t iChildLength = CDF_HEADER_SIZE + iDataLen;
-    void* pTemp = realloc(pParent->m_pData, pParent->m_iLength + iChildLength);
-    if(pTemp == NULL) { return CDF_ALLOC_FAILURE; }
-    pParent->m_pData = pTemp;
+    size_t iOldLength = pParent->m_iLength;
+    iCode = cdf_object_realloc(pParent, pParent->m_iLength + iChildLength);
 
-    memcpy(pParent->m_pData + pParent->m_iLength, &hObj, CDF_HEADER_SIZE);
-    memcpy(pParent->m_pData + pParent->m_iLength + CDF_HEADER_SIZE, pData, iDataLen);
+    if(iCode != CDF_OK) { return iCode; }
 
-    pParent->m_iLength += iChildLength;
+    memcpy(pParent->m_pData + iOldLength, &hObj, CDF_HEADER_SIZE);
+    memcpy(pParent->m_pData + iOldLength + CDF_HEADER_SIZE, pData, iDataLen);
 
     return CDF_OK;
 }
@@ -222,7 +221,7 @@ int cdf_object_iterate(cdf_object* pParent, cdf_object* ppCurrent, size_t* pIter
 }
 
 #ifdef CDF_NAMETABLE_COPY
-void cdf_nametable_free(char** pTable, size_t iTableLen) {
+void cdf_nametable_free(char** pTable, cdf_uint iTableLen) {
     if(pTable != NULL) {
         for(size_t i = 1; i < iTableLen; i++) {
             if(pTable[i] != NULL) { free(pTable[i]); }
@@ -232,17 +231,24 @@ void cdf_nametable_free(char** pTable, size_t iTableLen) {
 }
 #endif
 
-cdf_retcode cdf_document_write(cdf_document* pDoc, FILE* hFile) {
+cdf_retcode cdf_nametable_write(FILE* hFile, char** aTable, cdf_uint iNum) {
+    CDF_CHECK( if(feof(hFile) || aTable == NULL || iNum == 0) { return CDF_INV_INPUT; } )
+
+    for(size_t i = 1; i < iNum; i++) {
+        fwrite(aTable[i], 1, strlen(aTable[i])+1, hFile);
+    }
+
+    return CDF_OK;
+}
+
+cdf_retcode cdf_document_write(FILE* hFile, cdf_document* pDoc) {
     CDF_CHECK( if(hFile == NULL) { return CDF_INV_INPUT; } )
     CDF_CHECK( if(pDoc == NULL) { return CDF_INV_INPUT; } )
 
-    size_t iStart = ftell(hFile);
-
     fwrite(pDoc, sizeof(pDoc->m_iNames), 1, hFile);
 
-    for(size_t i = 1; i < pDoc->m_iNames; i++) {
-        fwrite(pDoc->m_aNames[i], 1, strlen(pDoc->m_aNames[i])+1, hFile);
-    }
+    cdf_retcode iCode = cdf_nametable_write(hFile, pDoc->m_aNames, pDoc->m_iNames);
+    if(iCode != CDF_OK) { return iCode; }
 
     fwrite(&pDoc->m_Root, CDF_HEADER_SIZE, 1, hFile);
     fwrite(pDoc->m_Root.m_pData, 1, pDoc->m_Root.m_iLength, hFile);
@@ -250,13 +256,8 @@ cdf_retcode cdf_document_write(cdf_document* pDoc, FILE* hFile) {
     return CDF_OK;
 }
 
-cdf_retcode cdf_document_read(cdf_document** ppDoc, FILE* hFile) {
-    CDF_CHECK( if(hFile == NULL) { return NULL; } )
-
-    uint32_t iNames = 0;
-    int bCompressed = 0;
-    if( fread(&iNames, sizeof(iNames), 1, hFile) != 1 ) { return CDF_UNEXPECTED_EOF; }
-    if( fread(&bCompressed, 1, 1, hFile) != 1 ) { return CDF_UNEXPECTED_EOF; }
+cdf_retcode cdf_nametable_read(FILE* hFile, char*** pTable, cdf_uint iNames) {
+    CDF_CHECK( if(feof(hFile) || pTable == NULL) { return CDF_INV_INPUT; } )
 
     char** aNames = (char**) malloc(sizeof(char*) * iNames);
     if(aNames == NULL) { return CDF_ALLOC_FAILURE; }
@@ -297,6 +298,22 @@ cdf_retcode cdf_document_read(cdf_document** ppDoc, FILE* hFile) {
         aNames[i] = (char*) realloc(aNames[i], j);
     }
 
+    (*pTable) = aNames;
+    return CDF_OK;
+}
+
+cdf_retcode cdf_document_read(FILE* hFile, cdf_document** ppDoc) {
+    CDF_CHECK( if(hFile == NULL) { return NULL; } )
+
+    uint32_t iNames = 0;
+    char** aNames;
+
+    int bCompressed = 0;
+    if( fread(&iNames, sizeof(iNames), 1, hFile) != 1 ) { return CDF_UNEXPECTED_EOF; }
+
+    cdf_retcode iCode = cdf_nametable_read(hFile, &aNames, iNames);
+    if(iCode != CDF_OK) { return iCode; }
+
     cdf_document* pDoc = (cdf_document*) malloc(sizeof(cdf_document));
     if(pDoc == NULL) {
         cdf_nametable_free(aNames, iNames);
@@ -330,22 +347,68 @@ cdf_retcode cdf_document_read(cdf_document** ppDoc, FILE* hFile) {
     return CDF_OK;
 }
 
+cdf_retcode cdf_object_realloc(cdf_object* pObj, size_t iNewLength) {
+    CDF_CHECK( if(pObj == NULL) { return CDF_INV_INPUT; } )
+
+    void* pTemp = realloc( pObj->m_pData, iNewLength );
+    if(pTemp == NULL) { return CDF_ALLOC_FAILURE; }
+    pObj->m_pData = pTemp;
+    pObj->m_iLength = iNewLength;
+
+    return CDF_OK;
+}
+
 cdf_retcode cdf_array_index(cdf_object* pObj, cdf_object* pTarget, cdf_uint iIndex) {
     CDF_CHECK( if(pObj == NULL || pTarget == NULL) { return CDF_INV_INPUT; } )
     if(pObj->m_iType != CDF_TYPE_ARRAY) { return CDF_NOT_AN_ARRAY; }
     if(pObj->m_iLength == 0) { return CDF_INV_INPUT; }
 
-    cdf_object* pFirst = (cdf_object*)( pObj->m_pData );
-    size_t iSize = cdf_object_sizeof(pFirst);
+    if( iIndex > cdf_array_length(pObj) ) { return CDF_OUT_OF_BOUNDS; }
 
-    if(pObj->m_iLength % iSize != 0) { return CDF_NOT_AN_ARRAY; }
-    if(iIndex > pObj->m_iLength / iSize) { return CDF_OUT_OF_BOUNDS; }
-
-    cdf_object* pIndex = (cdf_object*)( pObj->m_pData + iSize*iIndex );
-    memcpy(pTarget, pIndex, CDF_HEADER_SIZE);
-    pTarget->m_pData = pIndex + CDF_HEADER_SIZE;
+    cdf_object* pFirst = (cdf_object*)(pObj->m_pData);
+    memcpy(pTarget, pFirst, CDF_HEADER_SIZE);
+    pTarget->m_pData = (void*)pFirst + CDF_HEADER_SIZE + iIndex*pFirst->m_iLength;
 
     return CDF_OK;
+}
+
+cdf_retcode cdf_array_data_push_ex(cdf_object* pObj, void* pData, size_t iDataLen, cdf_type iDataType) {
+    CDF_CHECK( if(pObj == NULL) { return CDF_INV_INPUT; } )
+
+    //Arrays store only the header of the first member
+    if( pObj->m_iLength == 0 ) {
+        return cdf_data_push_ex(NULL, pObj, NULL, pData, iDataLen, iDataType);
+    }
+
+    cdf_object* pFirst = (cdf_object*)( pObj->m_pData );
+    if(iDataLen != pFirst->m_iLength) { return CDF_TYPE_MISMATCH; }
+
+    if(iDataLen == 0) { iDataLen = pFirst->m_iLength; }
+    if(iDataType == 0) { iDataType = pFirst->m_iType; }
+
+    size_t iOldLength = pObj->m_iLength;
+    cdf_retcode iCode = cdf_object_realloc( pObj, pObj->m_iLength + iDataLen );
+    if(iCode != CDF_OK) { return iCode; }
+
+    memcpy(pObj->m_pData + iOldLength, pData, iDataLen);
+    return CDF_OK;
+}
+
+cdf_retcode cdf_array_push_object(cdf_object* pParent, cdf_object* pChild) {
+    CDF_CHECK( if(pParent == NULL) { return CDF_INV_INPUT; } )
+    //return cdf_array_data_push_ex(pParent, pChild, cdf_object_sizeof(pChild), );
+}
+
+__cdf_arrpush_func(int32_t, CDF_TYPE_INT, int)
+__cdf_arrpush_func(uint32_t, CDF_TYPE_UINT, uint)
+__cdf_arrpush_func(float, CDF_TYPE_FLOAT, float)
+__cdf_arrpush_func(double, CDF_TYPE_DOUBLE, double)
+__cdf_arrpush_func(cdf_vector, CDF_TYPE_VECTOR, vector)
+
+cdf_uint cdf_array_length(cdf_object* pObj) {
+    CDF_CHECK( if(pObj == NULL) { return 0; } )
+    cdf_object* pFirst = (cdf_object*)(pObj->m_pData);
+    return (pObj->m_iLength - CDF_HEADER_SIZE) / pFirst->m_iLength;
 }
 
 cdf_type cdf_object_type(cdf_object* pObj) {
@@ -363,17 +426,39 @@ void* cdf_object_data(cdf_object* pObj) {
     return pObj->m_pData;
 }
 
-__cdf_push_func(cdf_int, CDF_TYPE_INT, int)
-__cdf_push_func(cdf_uint, CDF_TYPE_UINT, uint)
+__cdf_push_func(int32_t, CDF_TYPE_INT, int)
+__cdf_push_func(uint32_t, CDF_TYPE_UINT, uint)
 __cdf_push_func(float, CDF_TYPE_FLOAT, float)
 __cdf_push_func(double, CDF_TYPE_DOUBLE, double)
 __cdf_push_func(cdf_vector, CDF_TYPE_VECTOR, vector)
 
-__cdf_get_func(cdf_int, CDF_TYPE_INT, int)
-__cdf_get_func(cdf_uint, CDF_TYPE_UINT, uint)
+__cdf_get_func(int32_t, CDF_TYPE_INT, int)
+__cdf_get_func(uint32_t, CDF_TYPE_UINT, uint)
 __cdf_get_func(float, CDF_TYPE_FLOAT, float)
 __cdf_get_func(double, CDF_TYPE_DOUBLE, double)
 __cdf_get_func(cdf_vector, CDF_TYPE_VECTOR, vector)
+
+__cdf_is_func(CDF_TYPE_INT, int)
+__cdf_is_func(CDF_TYPE_UINT, uint)
+__cdf_is_func(CDF_TYPE_FLOAT, float)
+__cdf_is_func(CDF_TYPE_DOUBLE, double)
+__cdf_is_func(CDF_TYPE_VECTOR, vector)
+__cdf_is_func(CDF_TYPE_BINARY, binary)
+__cdf_is_func(CDF_TYPE_STRING, string)
+__cdf_is_func(CDF_TYPE_OBJECT, object)
+
+int cdf_is_array(cdf_object* pObj) {
+    if(pObj->m_iType != CDF_TYPE_ARRAY) {
+        return 0;
+    }
+    //The array is empty so we can`t verify it`s data integrity
+    if(pObj->m_iLength == 0) { return 1; }
+
+    cdf_object* pFirst = (cdf_object*)(pObj->m_pData);
+    return pObj->m_iLength % cdf_object_sizeof(pFirst) == 0;
+    //This check can possibly give false positive results, but it should work
+    //properly in the most scenarios
+}
 
 cdf_retcode cdf_push_binary(cdf_document* pDoc, cdf_object* pParent, const char* sName, uint8_t* Value, size_t iLen) {
     return cdf_data_push_ex(pDoc, pParent, sName, (void*)Value, iLen, CDF_TYPE_BINARY);
@@ -386,7 +471,7 @@ cdf_retcode cdf_push_string(cdf_document* pDoc, cdf_object* pParent, const char*
 cdf_retcode cdf_version_write(FILE* hFile) {
     CDF_CHECK( if(hFile == NULL) { return CDF_INV_INPUT; } )
 
-    cdf_verinfo Ver;
+    static cdf_verinfo Ver;
     Ver.m_iIntSize = CDF_INT_SIZE;
     Ver.m_iVersionMajor = CDF_VERSION_MAJOR;
     Ver.m_iVersionMinor = CDF_VERSION_MINOR;
@@ -409,3 +494,30 @@ int cdf_check_header(FILE* hFile) {
 
     return iFileVer == CDF_FILE_MARK;
 }
+
+#ifdef CDF_USE_ZLIB
+cdf_retcode cdf_object_compress(cdf_object* pObj, void* pTarget, size_t* iCompressedSize) {
+    CDF_CHECK( if(pObj == NULL) { return CDF_INV_INPUT; } )
+
+    size_t iSize = cdf_object_sizeof(pObj);
+    (*iCompressedSize) = iSize;
+    void* pBuffer = malloc(iSize);
+    if(pBuffer == NULL) {
+        return CDF_ALLOC_FAILURE;
+    }
+
+    cdf_retcode iCode = cdf_object_unwrap(pObj, pBuffer);
+    if(iCode != CDF_OK) { free(pBuffer); return iCode; }
+
+    int iZlibCode = compress(pTarget, iCompressedSize, pBuffer, iSize);
+    if(iZlibCode != Z_OK) { free(pBuffer); return CDF_ZLIB_ERROR; }
+
+    return CDF_OK;
+}
+
+cdf_retcode cdf_object_decompress(cdf_object* pTarget, void* pSource, size_t iSourceLen) {
+    CDF_CHECK( if(pTarget == NULL) { return CDF_INV_INPUT; } )
+
+    
+}
+#endif

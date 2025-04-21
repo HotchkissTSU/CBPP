@@ -9,6 +9,7 @@
 #include "cbpp/vec2.h"
 #include "cbvs/texture.h"
 #include "cbpp/fileio.h"
+#include "cbpp/asset/resource.h"
 
 #include "cdf/cdf.h"
 
@@ -35,8 +36,12 @@ namespace cbpp {
             friend SpriteSheet* LoadSheet(const char* sPath) noexcept;
 
         private:
+            bool LoadMapping(cdf_object* pSource) noexcept;
+            bool LoadImage(cdf_object* pSource) noexcept;
+
             GLuint m_hTexture = 0;
-            cdf_document* m_pDoc = NULL;
+            Sprite* m_aSprites = NULL;
+            uint32_t m_iSprites = 0;
     };
 
     SpriteSheet* LoadSheet(const char* sPath) noexcept;

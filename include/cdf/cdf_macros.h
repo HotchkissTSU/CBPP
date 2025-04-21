@@ -27,8 +27,8 @@
 
 #define CDF_NAME_ERROR "<ERROR>"
 #define CDF_NAME_ROOT "root"
-#define CDF_FILE_MARK *((uint32_t*)("CDF"))
-#define CDF_HEADER_SIZE (sizeof(cdf_object) - sizeof(void*))
+#define CDF_FILE_MARK (*((uint32_t*)("CDF")))
+#define CDF_HEADER_SIZE offsetof(cdf_object, m_pData)
 #define CDF_COMPRESSION_SUPPORTED defined(CDF_USE_ZLIB)
 
 /*
@@ -63,12 +63,12 @@ cdf_retcode cdf_array_push_##deconame (cdf_object* pObj, type value) {\
     return cdf_array_data_push_ex(pObj, &value, sizeof(value), itype);}
 
 #define __cdf_get_func(type, itype, name)\
-cdf_retcode cdf_as_##name (cdf_object* pObj, type* pTarget) {\
+cdf_retcode cdf_get_##name (cdf_object* pObj, type* pTarget) {\
     if(pObj->m_iType != itype) { memset(pTarget, 0, sizeof(type)); return CDF_TYPE_MISMATCH; }\
     memcpy(pTarget, pObj->m_pData, sizeof(type)); return CDF_OK;}
 
 #define __cdf_get_func_decl(type, itype, name)\
-cdf_retcode cdf_as_##name (cdf_object* pObj, type* pTarget);
+cdf_retcode cdf_get_##name (cdf_object* pObj, type* pTarget);
 
 #define __cdf_is_func_decl(i, name)\
 int cdf_is_##name (cdf_object* pObj);

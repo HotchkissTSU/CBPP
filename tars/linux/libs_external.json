@@ -30,7 +30,7 @@
 			"include" : [ "include" ],
 			"obj" : "obj/cdf",
 			"out" : "static",
-			"src" : [ "src/cdf/*.c" ],
+			"src" : [ "src/cdf/cdf.c" ],
 			"type" : "STATIC"
 		},
 
@@ -42,6 +42,17 @@
 			"obj" : "obj/cdf",
 			"out" : "bin",
 			"src" : [ "src/cdf/test/cdftest.c" ],
+			"type" : "EXE"
+		},
+
+		"cdftree" : 
+		{
+			"comp_params" :"-g3",
+			"link_static":["cdf"],
+			"include" : [ "include" ],
+			"obj" : "obj/cdf",
+			"out" : "bin/sdk",
+			"src" : [ "src/cdf/cdftree.c" ],
 			"type" : "EXE"
 		}
 	}

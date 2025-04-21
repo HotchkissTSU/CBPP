@@ -1,11 +1,11 @@
 {
     "configurations": [
         {
-            "name": "cdftest",
+            "name": "cdftree",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/cdftest",
-            "args": [],
+            "program": "${workspaceFolder}/bin/sdk/cdftree",
+            "args": ["-f", "arrtest.cdf"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",
             "environment": [],

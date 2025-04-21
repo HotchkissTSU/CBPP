@@ -20,12 +20,13 @@ int main(int argc, char** argv) {
 
     for(cdf_uint i = 0; i < cdf_array_length(pArray); i++) {
         cdf_array_index(pArray, &Tmp, i);
-        cdf_as_int(&Tmp, &iValue);
+        cdf_get_int(&Tmp, &iValue);
         printf("arr[%d] = %d\n", i, iValue);
     }
-
+    
     FILE* hFile = fopen("arrtest.cdf", "wb");
-    cdf_document_write(hFile, pDoc);
+    
+    cdf_file_write(hFile, pDoc, 1);
 
     return 0;
 }

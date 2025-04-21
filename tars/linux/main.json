@@ -61,7 +61,7 @@
 		"assets" : 
 		{
 			"dynamic" : [ ],
-			"include" : [ "include", "include/cbpp" ],
+			"include" : [ "include", "include/cbpp", "include/cbpp/asset" ],
 			"link_dynamic" : [ ],
 			"link_params" : "-m64",
 			"link_static" : [ ],

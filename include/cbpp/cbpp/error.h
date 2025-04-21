@@ -42,7 +42,8 @@ namespace cbpp {
 		ERROR_IO,      //Error within the Input/Output system
 		ERROR_MEM,     //Error with the memory management (NULL-pointer, invalid size etc.)
 		ERROR_TCODE,   //Error with text encoding
-		ERROR_GL       //Error in the OpenGL API
+		ERROR_GL,      //Error in the OpenGL API
+		ERROR_CDF
 	};
 
 	const char* ErrorNameByCode(ERROR_CODE iCode) noexcept;

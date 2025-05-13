@@ -1,3 +1,4 @@
+
 {
 	"base" : 
 	{
@@ -14,15 +15,15 @@
 			"include" : [ "include\\cbpp", "include" ],
 			"link_dynamic" : [],
 			"link_params" : "-Wl,-rpath=.",
-			"link_static" : [ "glfw3", "cbpp", "z" ],
+			"link_static" : [ "glfw3", "cbpp" ],
 			"obj" : "obj\\main",
 			"out" : "bin",
 			"out_libfile" : "lib",
 			"src" : [ "src\\main\\*.cpp" ],
-			"static" : [ "bin" ],
+			"static" : [ "bin", "static" ],
 			"type" : "EXE"
 		},
-		"cbpp_o" : 
+		"cbpp" : 
 		{
 			"dynamic" : [ "lib" ],
 			"include" : [ "include\\cbpp", "include\\cbpp\\ttype", "include" ],
@@ -72,21 +73,7 @@
 			"static" : [ "static" ],
 			"type" : "OBJ"
 		},
-		"cbseq" : 
-		{
-			"dynamic" : [ ],
-			"include" : [ "include", "include/cbpp" ],
-			"link_dynamic" : [ ],
-			"link_params" : "-m64",
-			"link_static" : [ ],
-			"obj" : "obj\\cbpp_base",
-			"out" : "bin",
-			"out_libfile" : "lib",
-			"src" : [ "src\\cbpp\\cbseq\\*.cpp" ],
-			"static" : [ "static" ],
-			"type" : "OBJ"
-		},
-		"cbvs_o" : 
+		"cbvs" : 
 		{
 			"dynamic" : [ "lib" ],
 			"include" : [ "include\\cbpp", "include" ],
@@ -107,33 +94,33 @@
 			"link_dynamic" : [],
 			"link_params" : "",
 			"link_static" : [],
-			"obj" : "obj",
+			"obj" : "obj/cbpp_base",
 			"out" : "bin",
 			"out_libfile" : "lib",
 			"src" : [ "src\\glad.c" ],
 			"static" : [ "static" ],
 			"type" : "OBJ"
 		},
-		"soil" : 
+		"soil_shared" : 
 		{
 			"compiler":"gcc",
-			"comp_params":"-fPIC -O3 -D GLFW_INCLUDE_NONE",
+			"comp_params":"-fPIC -D GLFW_INCLUDE_NONE",
 			"dynamic" : [ "lib" ],
 			"include" : [ "include", "include\\SOIL" ],
 			"link_dynamic" : [],
 			"link_params" : "",
 			"link_static" : [],
-			"obj" : "obj\\soil",
-			"out" : "bin",
+			"obj" : "obj\\cbpp_base",
+			"out" : "static",
 			"out_libfile" : "lib",
 			"src" : [ "src\\soil\\*.c" ],
 			"static" : [ "static" ],
 			"type" : "OBJ"
 		},
-		"yyjson" : 
+		"yyjson_shared" : 
 		{
 			"compiler":"gcc",
-			"comp_params":"-fPIC",
+			"comp_params":"-fPIC -O2",
 			"dynamic" : [ "lib" ],
 			"include" : [ "include/cbpp" ],
 			"link_dynamic" : [],
@@ -146,6 +133,24 @@
 			"static" : [ "static" ],
 			"type" : "OBJ"
 		},
+		
+		"cdf_shared" : 
+		{
+			"compiler":"gcc",
+			"comp_params":"-fPIC -O2 -ffast-math -D CDF_NAMETABLE_COPY -D CDF_USE_ZLIB",
+			"dynamic" : [ "lib" ],
+			"include" : [ "include" ],
+			"link_dynamic" : [],
+			"link_params" : "",
+			"link_static" : ["z"],
+			"obj" : "obj\\cbpp_base",
+			"out" : "bin",
+			"out_libfile" : "lib",
+			"src" : [ "src/cdf/cdf.c" ],
+			"static" : [ "static" ],
+			"type" : "OBJ"
+		},
+		
 		"libcbpp" : 
 		{
 			"dynamic" : [ "lib" ],
@@ -153,11 +158,11 @@
 			"include" : [ "include\\cbpp" ],
 			"link_dynamic" : [],
 			"link_params" : "",
-			"link_static" : [ "glfw3", "z", "cdf" ],
+			"link_static" : [ "glfw3" ],
 			"obj" : "obj\\cbpp_base",
 			"out" : "bin",
 			"out_libfile" : "lib",
-			"src" : [ "obj\\cbpp_base\\*.o", "obj\\cbvs\\*.o", "obj\\glad.o", "obj\\soil\\*.o" ],
+			"src" : [ "obj\\cbpp_base\\*.o", "obj\\cbvs\\*.o", "obj\\glad.o" ],
 			"static" : [ "static", "bin" ],
 			"type" : "DLL"
 		}

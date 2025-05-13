@@ -26,7 +26,8 @@
 		
 		"libcdf" : 
 		{
-			"comp_params":"-g3 -ffast-math -Wno-discarded-qualifiers -D CDF_NAMETABLE_COPY",
+			"comp_params":"-g3 -ffast-math -Wno-discarded-qualifiers -D CDF_USE_ZLIB",
+			"link_static" :[ "z" ],
 			"include" : [ "include" ],
 			"obj" : "obj/cdf",
 			"out" : "static",
@@ -37,7 +38,7 @@
 		"cdftest" : 
 		{
 			"comp_params" :"-g3",
-			"link_static":["cdf"],
+			"link_static":["cdf", "z"],
 			"include" : [ "include" ],
 			"obj" : "obj/cdf",
 			"out" : "bin",
@@ -45,15 +46,32 @@
 			"type" : "EXE"
 		},
 
-		"cdftree" : 
-		{
-			"comp_params" :"-g3",
-			"link_static":["cdf"],
-			"include" : [ "include" ],
-			"obj" : "obj/cdf",
-			"out" : "bin/sdk",
-			"src" : [ "src/cdf/cdftree.c" ],
-			"type" : "EXE"
+		"libsoil_nogl" : {
+			"comp_params" : "-O2 -D SOIL_NO_OGL",
+			"include" : ["include", "include/SOIL"],
+			"link_static" : ["m"],
+			"obj" : "obj/soil",
+			"out" : "static",
+			"src" : [ "src/soil/*.c" ],
+			"type" : "STATIC"
+		},
+
+		"libyyjson" : {
+			"comp_params" : "-O2",
+			"include" : ["include", "include/cbpp"],
+			"obj" : "obj/yyjson",
+			"out" : "static",
+			"src" : [ "src/cbpp/yyjson.c" ],
+			"type" : "STATIC"
+		},
+
+		"libglad" : {
+			"comp_params" : "-O2",
+			"include" : ["include", "include/glad", "include/KHR"],
+			"obj" : "obj",
+			"out" : "static",
+			"src" : [ "src/glad.c" ],
+			"type" : "STATIC"
 		}
 	}
 }

@@ -13,8 +13,10 @@
 	* everybody at gamedev.net
 */
 
+#ifndef SOIL_NO_OGL
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
+#endif
 
 #include "SOIL/SOIL.h"
 #include "SOIL/stb_image_aug.h"
@@ -33,6 +35,8 @@ enum{
 	SOIL_CAPABILITY_NONE = 0,
 	SOIL_CAPABILITY_PRESENT = 1
 };
+
+#ifndef SOIL_NO_OGL
 static int has_cubemap_capability = SOIL_CAPABILITY_UNKNOWN;
 int query_cubemap_capability( void );
 #define SOIL_TEXTURE_WRAP_R					0x8072
@@ -1305,8 +1309,8 @@ unsigned int
 		} else
 		{
 			/*	instruct OpenGL _NOT_ to use the MIPmaps	*/
-			glTexParameteri( opengl_texture_type, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-			glTexParameteri( opengl_texture_type, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+			glTexParameteri( opengl_texture_type, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+			glTexParameteri( opengl_texture_type, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 			check_for_GL_errors( "GL_TEXTURE_MIN/MAG_FILTER" );
 		}
 		/*	does the user want clamping, or wrapping?	*/
@@ -1400,6 +1404,8 @@ int
     SOIL_free_image_data( pixel_data );
 	return save_result;
 }
+
+#endif //SOIL_NO_OGL
 
 unsigned char*
 	SOIL_load_image
@@ -1509,6 +1515,7 @@ const char*
 	return result_string_pointer;
 }
 
+#ifndef SOIL_NO_OGL
 unsigned int SOIL_direct_load_DDS_from_memory(
 		const unsigned char *const buffer,
 		int buffer_length,
@@ -1974,3 +1981,5 @@ int query_DXT_capability( void )
 	/*	let the user know if we can do DXT or not	*/
 	return has_DXT_capability;
 }
+
+#endif

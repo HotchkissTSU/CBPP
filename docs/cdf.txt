@@ -1,0 +1,34 @@
+CDF 1.0
+
+The main type in the libCDF is an object.
+The single object can contain value of any type and unlimited amount of sub-objects.
+
+When pushing any data in the object, everything is copied (not referenced).
+
+cdf object structure:
+    1)Length, 4 bytes
+    2)Type,   4 bytes
+    3)NameID, 4 bytes        (NameID`s count starts from 1, as 0 is reserved for an error value)
+    4)Data,   <Length> bytes
+
+cdf file structure:
+    1)Format signature "CDF", 4 bytes
+    2)Version info,           4 bytes
+    3)CDF ClassID,            2 bytes (User-defined "class id", isn`t used in the library directly)
+    4)Compression info,       5 bytes
+
+    5)NameTable length,       4 bytes (The amount of names)
+    6)NameTable                       (<NT length> null-terminated strings, written one after one, including the '\0' byte at the end of each string)
+
+    7)Root cdf_object
+
+Compiler options:
+    -D CDF_USE_ZLIB
+        Enable file compression support.
+
+    -D CDF_NAMETABLE_NOCOPY
+        Disable strdup() calls when appending names to the nametable. 
+        Can be extremely tricky and dangerous, use very carefully.
+
+    -D CDF_SAFE_CHECK
+        Enable safe-checks in almost every function. Meant to be used during debugging.

@@ -24,9 +24,14 @@ int main(int argc, char** argv) {
         printf("arr[%d] = %d\n", i, iValue);
     }
     
-    FILE* hFile = fopen("arrtest.cdf", "wb");
-    
-    cdf_file_write(hFile, pDoc, 1);
+    FILE* hFile = fopen("arrtest_pure.cdf", "wb");
+    cdf_file_write(hFile, pDoc, 1, 0);
+    fclose(hFile);
+
+    hFile = fopen("arrtest_compressed.cdf", "wb");
+    cdf_file_write(hFile, pDoc, 1, 1);
+
+    fclose(hFile);
 
     return 0;
 }

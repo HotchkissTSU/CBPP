@@ -12,7 +12,7 @@ int g_iBinaryOutputLength = 16;
 cdf_document* g_pDoc;
 
 void puttabs(int iAmount) {
-    for(int i = 0; i < iAmount; i++) { printf("  "); }
+    for(int i = 0; i < iAmount; i++) { printf("\t"); }
 }
 
 void validate_cdf(cdf_retcode iCode) {
@@ -120,10 +120,10 @@ void print_cdf_object(cdf_object* pCurrent, int iDepth, int bSupressNaming) {
                 iLen = g_iBinaryOutputLength;
             }
 
-            printf("binary (%d): [", iLen);
+            printf("binary (%d): [", cdf_object_length(pCurrent));
             for(size_t i = 0; i < iLen; i++) {
-                printf("%x", pData[i]);
-                if(i != iLen-1) { printf(", "); }
+                printf("0x%x", pData[i]);
+                if(i != iLen-1) { printf(" "); }
             }
             printf("]\n");
             break;
@@ -139,6 +139,7 @@ void print_cdf_object(cdf_object* pCurrent, int iDepth, int bSupressNaming) {
                 validate_cdf(iCode);
                 print_cdf_object(&pObj, iDepth+1, 1);
             }
+            break;
         }
 
         case CDF_TYPE_OBJECT: {
@@ -148,6 +149,7 @@ void print_cdf_object(cdf_object* pCurrent, int iDepth, int bSupressNaming) {
             while(cdf_object_iterate(pCurrent, &Obj, &iIter)) {
                 print_cdf_object(&Obj, iDepth+1, 0);
             }
+            break;
         }
     }
 }
@@ -164,7 +166,6 @@ int main( int argc, char** argv ) {
             case 'f': sFileName = sOpt; bHasFilename = 1; break;
             case 'd': g_iMaxDepth = atoi(sOpt); break;
             case 'b': g_iBinaryOutputLength = atoi(sOpt); break;
-            case '?': printf("Invalid option: '-%c'\n", c); break;
         }
     }
 
@@ -182,8 +183,10 @@ int main( int argc, char** argv ) {
     cdf_verinfo Version;
     int16_t iClassID;
 
-    cdf_retcode iCode = cdf_file_read(hInput, &g_pDoc, NULL, &iClassID);
+    cdf_retcode iCode = cdf_file_read(hInput, &g_pDoc, &Version, &iClassID);
     validate_cdf(iCode);
+
+    fclose(hInput);
 
     cdf_object* pRoot = cdf_document_root(g_pDoc);
     print_cdf_object(pRoot, 0, 0);

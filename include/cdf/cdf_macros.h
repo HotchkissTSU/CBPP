@@ -18,8 +18,9 @@
 
 /*
     Should we copy a string while appending it to the nametable instead of referencing it?
+    Please note that strings after reading from a file are heap-allocated.
 */
-#ifdef CDF_NAMETABLE_COPY
+#ifndef CDF_NAMETABLE_NOCOPY
     #define CDF_COPY(string) strdup(string)
 #else
     #define CDF_COPY(string) string
@@ -43,7 +44,7 @@ typedef int32_t  cdf_int;
     cdf_object_create_ex(pDoc, sName, cdf_sizeof(iType), iType)
 
 #define cdf_object_destroy(pDoc, pObj)\
-    cdf_object_destroy_ex(pDoc, pObj, false);
+    cdf_object_destroy_ex(pDoc, pObj, 0)
 
 #define cdf_document_root(pDoc)\
     &pDoc->m_Root
@@ -74,7 +75,7 @@ cdf_retcode cdf_get_##name (cdf_object* pObj, type* pTarget);
 int cdf_is_##name (cdf_object* pObj);
 
 #define __cdf_is_func(i, name)\
-int cdf_is_##name (cdf_object* pObj) { return cdf_object_type(pObj) == i; }
+int cdf_is_##name (cdf_object* pObj) { return (cdf_object_type(pObj) == i); }
 
 #define CDF_ENAME(e) case e: return #e;
 

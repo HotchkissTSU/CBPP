@@ -1,0 +1,36 @@
+{
+	"base" : {
+		"comp_params" : "-g3 -m64",
+		"compiler" : "g++",
+		"dynamic" : "",
+		"from_obj" : 0,
+		"include" : [ "include", "include/cbpp", "src/sdk" ],
+		"link_dynamic" : [],
+		"link_params" : "-Wl,-rpath=..",
+		"link_static" : [ "cbpp" ],
+		"obj" : "obj/sdk",
+		"out" : "bin/sdk",
+		"out_libfile" : "lib",
+		"static" : [ "bin", "static" ],
+		"type" : "EXE"
+	},
+
+	"name" : "CBPP SDK project file",
+
+	"targets" : 
+	{		
+		"cdftree" : 
+		{
+			"compiler" : "gcc",
+			"link_static" : ["cdf", "z"],
+			"src" : ["src/sdk/cdftree.c"]
+		},
+
+		"shtool" : 
+		{
+			"compiler" : "gcc",
+			"link_static" : ["cdf", "yyjson", "soil_nogl", "m", "z"],
+			"src" : ["src/sdk/shtool.c"]
+		}
+	}
+}

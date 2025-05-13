@@ -9,7 +9,7 @@
 			"from_obj":0,
 			"type":"DLL",
 			"include":["include\\cbpp", "module\\include", "include"],
-			"static":["module\\static", "bin"],
+			"static":["module\\static", "bin", "static"],
 			"dynamic":["module\\lib", "lib"],
 			"out":"bin\\modules",
 			"out_libfile":"lib",

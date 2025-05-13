@@ -29,6 +29,10 @@ namespace cbpp {
 
         return true;
     }
+    
+    bool SpriteSheet::LoadImage(cdf_object* pSource) noexcept {
+        return true;
+    }
 
     bool SpriteSheet::Load(const char* sPath) noexcept {
         File* hFile = OpenFile(PATH_TEXTURE, sPath, "rb");

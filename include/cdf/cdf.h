@@ -3,14 +3,14 @@
 
 #include "cdf/cdf_macros.h"
 
-#ifdef CDF_USE_ZLIB
-#include "zlib.h"
-#endif
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum cdf_retcode {
     CDF_OK,                     //Everything is probably cool
@@ -53,23 +53,21 @@ typedef struct cdf_vector {
 } cdf_vector;
 
 typedef struct cdf_object {
-    size_t m_iLength;
+    cdf_uint m_iLength;
     cdf_uint m_iType;
     cdf_uint m_iNameID;
     void* m_pData;
 } cdf_object;
 
+typedef struct cdf_cinfo {
+    uint8_t m_bCompressed;
+    cdf_uint m_iOrigSize;
+} __attribute__((packed)) cdf_cinfo;
+
 typedef struct cdf_document {
     cdf_uint m_iNames;
     char** m_aNames;
     cdf_object m_Root;
-
-    #ifdef CDF_USE_ZLIB
-    struct {
-        uint8_t m_bCompressed;
-        size_t m_iOrigSize;
-    } m_CompressionInfo;
-    #endif
 } cdf_document;
 
 typedef struct cdf_verinfo {
@@ -77,7 +75,7 @@ typedef struct cdf_verinfo {
     uint8_t m_iIntSize;
 } __attribute__((packed)) cdf_verinfo;
 
-//Get a string description of the chosen error code
+//Get a string description of the given error code
 const char* cdf_get_error(cdf_retcode iCode);
 
 //Check if the selected type is primitive (i.e. has constant size)
@@ -102,13 +100,10 @@ void* cdf_object_data(cdf_object* pObj);
 cdf_document* cdf_document_create();
 cdf_retcode cdf_document_destroy(cdf_document* pDoc);
 
-cdf_retcode cdf_document_write(FILE* hFile, cdf_document* pDoc);
-cdf_retcode cdf_document_read(FILE* hFile, cdf_document** ppDoc);
-
 cdf_retcode cdf_version_write(FILE* hFile);
 cdf_retcode cdf_version_read(FILE* hFile, cdf_verinfo* pTarget);
 
-cdf_retcode cdf_file_write(FILE* hFile, cdf_document* pDoc, int16_t iClassID);
+cdf_retcode cdf_file_write(FILE* hFile, cdf_document* pDoc, int16_t iClassID, int bCompress);
 cdf_retcode cdf_file_read(FILE* hFile, cdf_document** ppDoc, cdf_verinfo* pVersion, int16_t* pClassID);
 
 int cdf_check_header(FILE* hFile);
@@ -140,34 +135,27 @@ cdf_retcode cdf_data_push_ex(cdf_document* pDoc, cdf_object* pParent, const char
 
 //Access an array member by it`s index
 cdf_retcode cdf_array_index(cdf_object* pObj, cdf_object* pTarget, cdf_uint iIndex);
+
+//Get the amount of members in the array
 cdf_uint cdf_array_length(cdf_object* pObj);
 
 //Get size of the single array unit
 uint64_t cdf_array_usize(cdf_object* pObj);
 cdf_type cdf_array_type(cdf_object* pObj);
 
-/*
-    Push some data into an array
-*/
+//Push some data into an array
 cdf_retcode cdf_array_data_push_ex(cdf_object* pObj, void* pData, size_t iDataLen, cdf_type iDataType);
 
-/*
-    Iterate an object. The iterator variable must be zeroed beforehand!
-*/
+//Iterate an object. The iterator variable must be zeroed beforehand!
 int cdf_object_iterate(cdf_object* pParent, cdf_object* pCurrent, size_t* pIter);
 
-#ifdef CDF_NAMETABLE_COPY
+//Create a new copied object
+cdf_object* cdf_object_copy(cdf_object* pSource);
+
+#ifndef CDF_NAMETABLE_NOCOPY
     void cdf_nametable_free(char** aTable, cdf_uint iLen);
 #else
-    #define cdf_nametable_free(p, i)
-#endif
-
-#ifdef CDF_USE_ZLIB
-    cdf_retcode cdf_object_compress(cdf_object* pObj, void* pTarget, size_t* iCompressedSize);
-    cdf_retcode cdf_object_decompress(cdf_object* pTarget, void* pSource, size_t iSourceLen);
-#else
-    #define cdf_object_compress(o, p, i) CDF_NO_COMPRESSION
-    #define cdf_object_decompress(o, p, i) CDF_NO_COMPRESSION
+    #define cdf_nametable_free(p, i) CDF_OK
 #endif
 
 __cdf_push_func_decl(int32_t, CDF_TYPE_INT, int)
@@ -211,5 +199,20 @@ cdf_retcode cdf_push_string(cdf_document* pDoc, cdf_object* pParent, const char*
 cdf_retcode cdf_get_binary(cdf_object* pObj, uint8_t** sString);
 
 cdf_retcode cdf_array_push_object(cdf_object* pParent, cdf_object* pChild);
+
+#ifdef CDF_USE_ZLIB
+//Create a compressed copy of the given object. Note that using library functions on compressed objects is UB
+cdf_retcode cdf_object_compress(cdf_object* pObj, cdf_object** pTarget);
+
+//Modify the given object by decompressing it
+cdf_retcode cdf_object_decompress(cdf_object* pObj, size_t iOrigSize);
+#else
+#define cdf_object_compress(o, p) CDF_NO_COMPRESSION
+#define cdf_object_decompress(o, i) CDF_NO_COMPRESSION
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

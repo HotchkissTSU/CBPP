@@ -3,8 +3,12 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef CDF_USE_ZLIB
+#include "zlib/zlib.h"
+#endif
+
 const char* cdf_get_error(cdf_retcode iCode) {
-    switch( iCode ) {
+	switch( iCode ) {
         CDF_ENAME(CDF_OK)
         CDF_ENAME(CDF_ALLOC_FAILURE)
         CDF_ENAME(CDF_NON_ITERABLE)
@@ -35,7 +39,7 @@ size_t cdf_sizeof(cdf_type iType) {
         case CDF_TYPE_INT:
             return sizeof(int32_t);
             break;
-        
+
         case CDF_TYPE_UINT:
             return sizeof(uint32_t);
             break;
@@ -228,7 +232,7 @@ int cdf_object_iterate(cdf_object* pParent, cdf_object* ppCurrent, size_t* pIter
     return 1;
 }
 
-#ifdef CDF_NAMETABLE_COPY
+#ifndef CDF_NAMETABLE_NOCOPY
 void cdf_nametable_free(char** pTable, cdf_uint iTableLen) {
     if(pTable != NULL) {
         for(size_t i = 1; i < iTableLen; i++) {
@@ -248,10 +252,22 @@ cdf_retcode cdf_nametable_write(FILE* hFile, char** aTable, cdf_uint iNum) {
 
     return CDF_OK;
 }
-
-cdf_retcode cdf_document_write(FILE* hFile, cdf_document* pDoc) {
+/*
+cdf_retcode cdf_document_write(FILE* hFile, cdf_document* pDoc, int bCompress, cdf_cinfo* pCompData) {
     CDF_CHECK( if(hFile == NULL) { return CDF_INV_INPUT; } )
     CDF_CHECK( if(pDoc == NULL) { return CDF_INV_INPUT; } )
+
+    #ifndef CDF_USE_ZLIB
+    if(bCompress != 0) {
+        bCompress = 0;
+    }
+    #endif
+
+    if(bCompress != 0 && pCompData == NULL) { return CDF_INV_INPUT; }
+
+    cdf_cinfo CompInfo;
+    void* pComp = NULL;
+    CompInfo.m_bCompressed = bCompress;
 
     fwrite(pDoc, sizeof(pDoc->m_iNames), 1, hFile);
 
@@ -259,11 +275,16 @@ cdf_retcode cdf_document_write(FILE* hFile, cdf_document* pDoc) {
     if(iCode != CDF_OK) { return iCode; }
 
     fwrite(&pDoc->m_Root, CDF_HEADER_SIZE, 1, hFile);
-    fwrite(pDoc->m_Root.m_pData, 1, pDoc->m_Root.m_iLength, hFile);
+        fwrite(pDoc->m_Root.m_pData, 1, pDoc->m_Root.m_iLength, hFile);
+    }
+
+    if(pCompData != NULL) {
+        (*pCompData) = CompInfo;
+    }
 
     return CDF_OK;
 }
-
+*/
 cdf_retcode cdf_nametable_read(FILE* hFile, char*** pTable, cdf_uint iNames) {
     CDF_CHECK( if(feof(hFile) || pTable == NULL) { return CDF_INV_INPUT; } )
 
@@ -309,14 +330,24 @@ cdf_retcode cdf_nametable_read(FILE* hFile, char*** pTable, cdf_uint iNames) {
     (*pTable) = aNames;
     return CDF_OK;
 }
-
-cdf_retcode cdf_document_read(FILE* hFile, cdf_document** ppDoc) {
+/*
+cdf_retcode cdf_document_read(FILE* hFile, cdf_document** ppDoc, cdf_cinfo* pCompInfo) {
     CDF_CHECK( if(hFile == NULL) { return NULL; } )
 
     uint32_t iNames = 0;
     char** aNames;
 
-    int bCompressed = 0;
+    cdf_cinfo CompInfo;
+
+    if(pCompInfo != NULL) {
+        CompInfo = (*pCompInfo);
+        #ifndef CDF_USE_ZLIB
+        if(CompInfo.m_bCompressed != 0) { return CDF_NO_COMPRESSION; }
+        #endif
+    }else{
+        memset(&CompInfo, 0, sizeof(CompInfo));
+    }
+
     if( fread(&iNames, sizeof(iNames), 1, hFile) != 1 ) { return CDF_UNEXPECTED_EOF; }
 
     cdf_retcode iCode = cdf_nametable_read(hFile, &aNames, iNames);
@@ -331,17 +362,44 @@ cdf_retcode cdf_document_read(FILE* hFile, cdf_document** ppDoc) {
     pDoc->m_iNames = iNames;
     pDoc->m_aNames = aNames;
 
-    if( fread(&pDoc->m_Root, CDF_HEADER_SIZE, 1, hFile) != 1 ) {
+    if( fread(&pDoc->m_Root, CDF_HEADER_SIZE, 1, hFile) != 1 ) { //The root`s header is not compressed
         cdf_nametable_free(aNames, iNames);
         free(pDoc);
         return CDF_UNEXPECTED_EOF;
+    }
+
+    if(CompInfo.m_bCompressed != 0) {
+        #ifndef CDF_USE_ZLIB
+        return CDF_NO_COMPRESSION;
+        #endif
+        uint8_t* pDecomp = (uint8_t*) malloc(pDoc->m_Root.m_iLength);
+        if(pDecomp == NULL) { return CDF_ALLOC_FAILURE; }
+
+        uint8_t* pComp = (uint8_t*) malloc(CompInfo.m_iCompSize);
+        if(pComp == NULL) { return CDF_ALLOC_FAILURE; }
+
+        if( fread(pComp, CompInfo.m_iCompSize, 1, hFile) != 1 ) {
+            free(pDecomp);
+            free(pComp);
+            return CDF_UNEXPECTED_EOF;
+        }
+
+        int iZResult = uncompress(pDecomp, &pDoc->m_Root.m_iLength, pComp, CompInfo.m_iCompSize);
+        if(iZResult != Z_OK) {
+            free(pComp);
+            return CDF_ZLIB_ERROR;
+        }
+
+        pDoc->m_Root.m_pData = pDecomp;
+        free(pComp);
+        return CDF_OK;
     }
 
     pDoc->m_Root.m_pData = (uint8_t*) malloc(pDoc->m_Root.m_iLength);
     if(pDoc->m_Root.m_pData == NULL) {
         cdf_nametable_free(aNames, iNames);
         free(pDoc);
-        return CDF_UNEXPECTED_EOF;
+        return CDF_ALLOC_FAILURE;
     }
 
     if( fread(pDoc->m_Root.m_pData, pDoc->m_Root.m_iLength, 1, hFile) != 1 ) {
@@ -354,6 +412,7 @@ cdf_retcode cdf_document_read(FILE* hFile, cdf_document** ppDoc) {
     (*ppDoc) = pDoc;
     return CDF_OK;
 }
+*/
 
 cdf_retcode cdf_object_realloc(cdf_object* pObj, size_t iNewLength) {
     CDF_CHECK( if(pObj == NULL) { return CDF_INV_INPUT; } )
@@ -397,7 +456,7 @@ cdf_retcode cdf_array_data_push_ex(cdf_object* pObj, void* pData, size_t iDataLe
     if(iDataLen != pFirst->m_iLength) { return CDF_TYPE_MISMATCH; }
 
     if(iDataLen == 0) { iDataLen = pFirst->m_iLength; }
-    if(iDataType == 0) { iDataType = pFirst->m_iType; }
+    if(iDataType == 0) { iDataType = (cdf_type)(pFirst->m_iType); }
 
     size_t iOldLength = pObj->m_iLength;
     cdf_retcode iCode = cdf_object_realloc( pObj, pObj->m_iLength + iDataLen );
@@ -447,12 +506,12 @@ cdf_uint cdf_array_length(cdf_object* pObj) {
 cdf_type cdf_array_type(cdf_object* pObj) {
     CDF_CHECK( if(pObj == NULL) { return CDF_TYPE_INVALID; } )
     if(pObj->m_iLength == 0) { return CDF_TYPE_INVALID; }
-    return ((cdf_object*)pObj->m_pData)->m_iType;
+    return (cdf_type)(((cdf_object*)pObj->m_pData)->m_iType);
 }
 
 cdf_type cdf_object_type(cdf_object* pObj) {
     CDF_CHECK( if(pObj == NULL) { return CDF_TYPE_INVALID; } )
-    return pObj->m_iType;
+    return (cdf_type)(pObj->m_iType);
 }
 
 cdf_uint cdf_object_length(cdf_object* pObj) {
@@ -521,7 +580,7 @@ cdf_retcode cdf_version_read(FILE* hFile, cdf_verinfo* pTarget) {
 
 cdf_retcode cdf_get_binary(cdf_object* pObj, uint8_t** sString) {
     CDF_CHECK( if(pObj == NULL) { return CDF_INV_INPUT; } )
-    if(pObj->m_iType != CDF_TYPE_BINARY || pObj->m_iType != CDF_TYPE_STRING) {
+    if(pObj->m_iType != CDF_TYPE_BINARY && pObj->m_iType != CDF_TYPE_STRING) {
         return CDF_TYPE_MISMATCH;
     }
     *sString = (uint8_t*)(pObj->m_pData);
@@ -549,18 +608,40 @@ const char* cdf_object_name(cdf_document* pDoc, cdf_object* pObj) {
     return (const char*)(pDoc->m_aNames[pObj->m_iNameID]);
 }
 
-cdf_retcode cdf_file_write(FILE* hFile, cdf_document* pDoc, int16_t iClassID) {
+cdf_retcode cdf_file_write(FILE* hFile, cdf_document* pDoc, int16_t iClassID, int bCompress) {
     CDF_CHECK( if(pDoc == NULL || hFile == NULL) { return CDF_INV_INPUT; } )
     cdf_retcode iCode;
 
-    fwrite(&CDF_FILE_MARK, sizeof(uint32_t), 1, hFile);
-    fwrite(&iClassID, sizeof(iClassID), 1, hFile);
-
-    iCode = cdf_version_write(hFile);
+    fwrite(&CDF_FILE_MARK, sizeof(uint32_t), 1, hFile); //format signature
+    iCode = cdf_version_write(hFile);                   //version info
     if(iCode != CDF_OK) { return iCode; }
+    fwrite(&iClassID, sizeof(iClassID), 1, hFile);      //class id
 
-    iCode = cdf_document_write(hFile, pDoc);
-    if(iCode != CDF_OK) { return iCode; }
+    cdf_cinfo CompInfo;
+    cdf_object* pRoot;
+
+    if(bCompress) {
+        iCode = cdf_object_compress(&pDoc->m_Root, &pRoot);
+        if(iCode != CDF_OK) { return CDF_OK; }
+    }else {
+        pRoot = &pDoc->m_Root;
+    }
+    
+    CompInfo.m_iOrigSize = pDoc->m_Root.m_iLength;
+    CompInfo.m_bCompressed = (bCompress > 0);
+
+    fwrite(&CompInfo, sizeof(CompInfo), 1, hFile);              //compression info
+    fwrite(&pDoc->m_iNames, sizeof(pDoc->m_iNames), 1, hFile);  //nametable length
+
+    iCode = cdf_nametable_write(hFile, pDoc->m_aNames, pDoc->m_iNames); //nametable itself
+    if(iCode != CDF_OK) { if(bCompress) { cdf_object_destroy(NULL, pRoot); } return iCode; }
+
+    fwrite(pRoot, CDF_HEADER_SIZE, 1, hFile);           //root object header
+    fwrite(pRoot->m_pData, pRoot->m_iLength, 1, hFile); //root object data
+
+    if(bCompress) {
+        cdf_object_destroy(NULL, pRoot);
+    }
 
     return CDF_OK;
 }
@@ -568,18 +649,12 @@ cdf_retcode cdf_file_write(FILE* hFile, cdf_document* pDoc, int16_t iClassID) {
 cdf_retcode cdf_file_read(FILE* hFile, cdf_document** ppDoc, cdf_verinfo* pVersion, int16_t* pClassID) {
     CDF_CHECK( if(hFile == NULL) { return CDF_INV_INPUT; } )
 
-    int iHeader = cdf_check_header(hFile);
-    if(iHeader == 0) { return CDF_HEADER_MISMATCH; }
-
     cdf_retcode iCode = CDF_OK;
 
-    if( pClassID != NULL ) {
-        if( fread(pClassID, sizeof(int16_t), 1, hFile) != 1 ) { return CDF_UNEXPECTED_EOF; }
-    }else{
-        fseek(hFile, sizeof(int16_t), SEEK_CUR);
-    }
+    int iHeader = cdf_check_header(hFile); //signature
+    if(iHeader == 0) { return CDF_HEADER_MISMATCH; }
 
-    if( pVersion != NULL ) {
+    if( pVersion != NULL ) { //version info
         iCode = cdf_version_read(hFile, pVersion);
         if(iCode != CDF_OK) { return iCode; }
 
@@ -589,8 +664,60 @@ cdf_retcode cdf_file_read(FILE* hFile, cdf_document** ppDoc, cdf_verinfo* pVersi
         fseek(hFile, sizeof(cdf_verinfo), SEEK_CUR);
     }
 
-    iCode = cdf_document_read(hFile, ppDoc);
+    if( pClassID != NULL ) { //class id
+        if( fread(pClassID, sizeof(int16_t), 1, hFile) != 1 ) { return CDF_UNEXPECTED_EOF; }
+    }else{
+        fseek(hFile, sizeof(int16_t), SEEK_CUR);
+    }
+
+    cdf_cinfo CompInfo;
+    if( fread(&CompInfo, sizeof(CompInfo), 1, hFile) != 1 ) { //compression info
+        return CDF_UNEXPECTED_EOF;
+    }
+
+    cdf_uint iNTLength;
+    if( fread(&iNTLength, sizeof(iNTLength), 1, hFile) != 1 ) { //nametable length
+        return CDF_UNEXPECTED_EOF;
+    }
+
+    char** pTable;
+    iCode = cdf_nametable_read(hFile, &pTable, iNTLength);
     if(iCode != CDF_OK) { return iCode; }
+
+    cdf_document* pDoc = (cdf_document*) malloc(sizeof(cdf_document));
+    if(pDoc == NULL) {
+        free(pTable);
+        return CDF_ALLOC_FAILURE;
+    }
+    //i`m writing this function while beight high as fuck so it must not work at all
+    if( fread(&pDoc->m_Root, CDF_HEADER_SIZE, 1, hFile) != 1 ) { //root object header
+        free(pDoc);
+        cdf_nametable_free(pTable, iNTLength);
+        return CDF_UNEXPECTED_EOF;
+    }
+
+    pDoc->m_Root.m_pData = malloc(pDoc->m_Root.m_iLength);
+    if(pDoc->m_Root.m_pData == NULL) {
+        free(pDoc);
+        cdf_nametable_free(pTable, iNTLength);
+        return CDF_ALLOC_FAILURE;
+    }
+
+    if( fread(pDoc->m_Root.m_pData, pDoc->m_Root.m_iLength, 1, hFile) != 1 ) { //root object data
+        free(pDoc);
+        cdf_nametable_free(pTable, iNTLength);
+        return CDF_UNEXPECTED_EOF;
+    }
+
+    if(CompInfo.m_bCompressed != 0) {
+        iCode = cdf_object_decompress(&pDoc->m_Root, CompInfo.m_iOrigSize);
+        if(iCode != CDF_OK) { return iCode; }
+    }
+
+    pDoc->m_aNames = pTable;
+    pDoc->m_iNames = iNTLength;
+
+    (*ppDoc) = pDoc;
 
     return CDF_OK;
 }
@@ -606,29 +733,68 @@ cdf_retcode cdf_document_destroy(cdf_document* pDoc) {
     free(pDoc);
 }
 
+cdf_object* cdf_object_copy(cdf_object* pSource) {
+    CDF_CHECK( if(pSource == NULL) { return NULL; } )
+
+    cdf_object* pObj = (cdf_object*) malloc(cdf_object_sizeof(pSource));
+    if(pObj == NULL) { return NULL; }
+    memcpy(pObj, pSource, CDF_HEADER_SIZE);
+
+    pObj->m_pData = malloc(pObj->m_iLength);
+    if(pObj->m_pData == NULL) { free(pObj); return NULL; }
+    memcpy(pObj->m_pData, pSource->m_pData, pObj->m_iLength);
+
+    return pObj;
+}
+
 #ifdef CDF_USE_ZLIB
-cdf_retcode cdf_object_compress(cdf_object* pObj, void* pTarget, size_t* iCompressedSize) {
+cdf_retcode cdf_object_compress(cdf_object* pObj, cdf_object** pTarget) {
     CDF_CHECK( if(pObj == NULL) { return CDF_INV_INPUT; } )
 
-    size_t iSize = cdf_object_sizeof(pObj);
-    (*iCompressedSize) = iSize;
-    void* pBuffer = malloc(iSize);
-    if(pBuffer == NULL) {
-        return CDF_ALLOC_FAILURE;
+    size_t iCompBound = compressBound(pObj->m_iLength);
+
+    void* pCompressed = malloc(iCompBound);
+    if(pCompressed == NULL) { return CDF_ALLOC_FAILURE; }
+
+    int iZCode = compress(pCompressed, &iCompBound, pObj->m_pData, pObj->m_iLength);
+    if(iZCode != Z_OK) {
+        free(pCompressed);
+        return CDF_ZLIB_ERROR;
     }
 
-    cdf_retcode iCode = cdf_object_unwrap(pObj, pBuffer);
-    if(iCode != CDF_OK) { free(pBuffer); return iCode; }
+    void* pTemp;
+    if((pTemp = realloc(pCompressed, iCompBound)) == NULL) {
+        return CDF_ALLOC_FAILURE;
+    }
+    pCompressed = pTemp;
 
-    int iZlibCode = compress(pTarget, iCompressedSize, pBuffer, iSize);
-    if(iZlibCode != Z_OK) { free(pBuffer); return CDF_ZLIB_ERROR; }
+    (*pTarget) = cdf_object_copy(pObj);
+    if((*pTarget) == NULL) { return CDF_ALLOC_FAILURE; }
+
+    (*pTarget)->m_iLength = iCompBound;
+
+    free((*pTarget)->m_pData);
+    (*pTarget)->m_pData = pCompressed;
 
     return CDF_OK;
 }
 
-cdf_retcode cdf_object_decompress(cdf_object* pTarget, void* pSource, size_t iSourceLen) {
-    CDF_CHECK( if(pTarget == NULL) { return CDF_INV_INPUT; } )
+cdf_retcode cdf_object_decompress(cdf_object* pObj, size_t iOrigSize) {
+    void* pDecomp = malloc(iOrigSize);
+    if(pDecomp == NULL) { return CDF_ALLOC_FAILURE; }
 
-    
+    int iZCode = uncompress(pDecomp, &iOrigSize, pObj->m_pData, pObj->m_iLength);
+
+    if(iZCode != Z_OK) {
+        free(pDecomp);
+        return CDF_ZLIB_ERROR;
+    }
+
+    pObj->m_iLength = iOrigSize;
+
+    free(pObj->m_pData);
+    pObj->m_pData = pDecomp;
+
+    return CDF_OK;
 }
 #endif

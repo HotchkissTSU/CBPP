@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "cbpp.h"
 
+#include "cbvs/error_check.h"
+
 using namespace cbpp;
 
 cbvs::Texture* g_pTest;
@@ -15,7 +17,13 @@ extern "C" {
         ddraw::SetColor(Color(255,255,0,255));
 
         g_pTest = new cbvs::Texture;
-        g_pTest->Load("ddraw/font.png", cbvs::IMG_RGB);
+        g_pTest->Load("weapon/sheet_weapon_01.png", cbvs::IMG_RGBA);
+
+        GLuint hTest = g_pTest->GetHandle();
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+        glCheck();
 
         CbBenchmark(stdout);
 

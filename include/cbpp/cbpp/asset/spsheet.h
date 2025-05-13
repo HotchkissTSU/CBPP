@@ -12,6 +12,7 @@
 #include "cbpp/asset/resource.h"
 
 #include "cdf/cdf.h"
+#include "sdk_structs.h"
 
 #include <stdint.h>
 #include <stddef.h>
@@ -22,12 +23,6 @@
 namespace cbpp {
     class SpriteSheet {
         public:
-            struct Sprite {
-                size_t iNameID;
-                float fX, fY;
-                float fW, fH;
-            };
-
             SpriteSheet() = default;
             ~SpriteSheet() noexcept;
 
@@ -40,7 +35,7 @@ namespace cbpp {
             bool LoadImage(cdf_object* pSource) noexcept;
 
             GLuint m_hTexture = 0;
-            Sprite* m_aSprites = NULL;
+            sdk_Sprite* m_aSprites = NULL;
             uint32_t m_iSprites = 0;
     };
 

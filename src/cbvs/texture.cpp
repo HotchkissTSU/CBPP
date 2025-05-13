@@ -19,7 +19,11 @@ namespace cbvs {
 
         delete hInput;
 
-        uint8_t* aImage = SOIL_load_image_from_memory(aFileData, iFileLength, (int*)&m_iWidth, (int*)&m_iHeight, NULL, iLoadFormat);    
+        int iChannels;
+
+        uint8_t* aImage = SOIL_load_image_from_memory(aFileData, iFileLength, (int*)&m_iWidth, (int*)&m_iHeight, &iChannels, SOIL_LOAD_AUTO);    
+
+        printf("'%s' : channels(%d)\n", sPath, iChannels);
 
         bool bIsFallback = false;
         if(aImage == NULL) {
@@ -28,10 +32,33 @@ namespace cbvs {
             m_iWidth = 32;
             bIsFallback = true;
         }
-        
+
         free(aFileData);
 
-        m_hTexture = SOIL_create_OGL_texture(aImage, m_iWidth, m_iHeight, iLoadFormat, 0, iGLflag);  
+        GLenum iSourceChannels;
+        switch(iChannels) {
+            case 1:
+                iSourceChannels = GL_RED; break;
+
+            case 2:
+                iSourceChannels = GL_RG; break;
+            
+            case 3:
+                iSourceChannels = GL_RGB; break;
+
+            case 4:
+                iSourceChannels = GL_RGBA; break;
+
+            default:
+                iSourceChannels = GL_RGBA;
+        }
+
+        glGenTextures(1, &m_hTexture);
+        glBindTexture(GL_TEXTURE_2D, m_hTexture);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_iWidth, m_iHeight, 0, iSourceChannels, GL_UNSIGNED_BYTE, aImage);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glBindTexture(GL_TEXTURE_2D, 0);
 
         if(!bIsFallback) { //We really should not free the default texture buffer
             SOIL_free_image_data(aImage);
@@ -39,7 +66,7 @@ namespace cbvs {
 
         return !bIsFallback;
     }
-    
+
     bool Texture::Load(const Image& refImage) noexcept {
         m_hTexture = SOIL_create_OGL_texture(refImage.Array(), refImage.Width(), refImage.Height(), refImage.Channels(), NULL, FLAG_POWER_OF_2);
         m_iWidth = refImage.Width();

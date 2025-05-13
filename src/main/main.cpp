@@ -390,6 +390,9 @@ int main( int argc, char** argv ) {
 	cbvs::ScreenRatio = cbvs::ScreenSize.x / cbvs::ScreenSize.y;*/
 	glViewport(0,0,GameData.WindowW, GameData.WindowH);
 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	PrintGLInfo();
 	PrintSearchPaths();
 

@@ -1,3 +1,11 @@
+/*
+	Hotchkiss
+	2025, April
+
+	A slightly modified version with a "-D SOIL_NO_OGL" option to completely
+	disable any OpenGL-related calls and references to turn SOIL into a pure image reading/writing library
+*/
+
 /**
 	@mainpage SOIL
 
@@ -149,6 +157,8 @@ enum
 	\param flags can be any of SOIL_FLAG_POWER_OF_TWO | SOIL_FLAG_MIPMAPS | SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_MULTIPLY_ALPHA | SOIL_FLAG_INVERT_Y | SOIL_FLAG_COMPRESS_TO_DXT | SOIL_FLAG_DDS_LOAD_DIRECT
 	\return 0-failed, otherwise returns the OpenGL texture handle
 **/
+
+#ifndef SOIL_NO_OGL
 unsigned int
 	SOIL_load_OGL_texture
 	(
@@ -364,6 +374,9 @@ int
 	count).
 	\return 0 if failed, otherwise returns 1
 **/
+
+#endif //SOIL_NO_OGL
+
 unsigned char*
 	SOIL_load_image
 	(

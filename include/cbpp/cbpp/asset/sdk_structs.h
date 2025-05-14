@@ -2,7 +2,8 @@
 #define CBPP_SDK_DATATYPES_H
 
 /*
-    Definitions for standart I/O datatypes, shared by the engine and the SDK
+    Definitions for standart I/O datatypes, shared by the engine and the SDK.
+    The CBPP SDK is designed to be as independent from the engine as possible
 */
 
 #include "cdf/cdf.h"

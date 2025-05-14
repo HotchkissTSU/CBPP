@@ -103,7 +103,7 @@ cdf_retcode cdf_document_destroy(cdf_document* pDoc);
 cdf_retcode cdf_version_write(FILE* hFile);
 cdf_retcode cdf_version_read(FILE* hFile, cdf_verinfo* pTarget);
 
-cdf_retcode cdf_file_write(FILE* hFile, cdf_document* pDoc, int16_t iClassID, int bCompress);
+cdf_retcode cdf_file_write(FILE* hFile, cdf_document* pDoc, int16_t iClassID, int iCompressLevel);
 cdf_retcode cdf_file_read(FILE* hFile, cdf_document** ppDoc, cdf_verinfo* pVersion, int16_t* pClassID);
 
 int cdf_check_header(FILE* hFile);
@@ -125,9 +125,11 @@ cdf_retcode cdf_object_init_ex(cdf_document* pDoc, cdf_object* pObj, const char*
 
 //Allocate and initialize a new object
 cdf_object* cdf_object_create_ex(cdf_document* pDoc, const char* sName, cdf_uint iSize, cdf_type iType);
+
+//Works the same way as cdf_object_destroy() does, but also allows for stack-allocated objects deletion
 void cdf_object_destroy_ex(cdf_document* pDoc, cdf_object* pObj, int bStackAllocated);
 
-//Append a sub-object
+//Append a sub-object. The both objects are supposed to belong to the single document
 cdf_retcode cdf_object_push(cdf_object* pParent, cdf_object* pChild);
 
 //Append a primitive data field to an object
@@ -202,7 +204,7 @@ cdf_retcode cdf_array_push_object(cdf_object* pParent, cdf_object* pChild);
 
 #ifdef CDF_USE_ZLIB
 //Create a compressed copy of the given object. Note that using library functions on compressed objects is UB
-cdf_retcode cdf_object_compress(cdf_object* pObj, cdf_object** pTarget);
+cdf_retcode cdf_object_compress(cdf_object* pObj, cdf_object** pTarget, int iCompressLevel);
 
 //Modify the given object by decompressing it
 cdf_retcode cdf_object_decompress(cdf_object* pObj, size_t iOrigSize);

@@ -1,7 +1,7 @@
 /*
-    Cuber Texture Atlas (CTA) packaging/mapping tool
+    Cuber Texture Atlas (CTA) packaging tool
     The format is based on the CDF, so you can
-    use sdk/cdftree on any .cta file to check it`s tree structure.
+    use /sdk/cdftree on any .cta file to check it`s tree structure.
 */
 
 #include "cdf/cdf.h"
@@ -15,49 +15,21 @@
 #include "cbpp/asset/cdf_classes.h"
 #include "cbpp/asset/sdk_structs.h"
 
-const char* g_sArgs = "hm:f:o:";
+const char* g_sArgs = "hlf:o:c:";
 
-const char* g_aModes[] = {
-    "comp",
-    "amap"
-};
+const char* g_sHelpMsg = "CBPP SDK\nshtool:\n'-h' - Display this message and exit\n'-f' - Input file path\n\
+'-o' - Output file path\n'-c' - Specify the compression level (0-9), 6 by default\n\
+'-l' - Treat output path as relative to the input .json file path, disabled by default\n";
 
-const char* g_sHelpMsg = "CBPP SDK\nshtool:\n'-h' - display this message\n'-m' - select the tool`s mode\n\'-o' - General output path\n\n\
-Mode 'comp' - compile a sheet:\n\t'-f' - Path to the sheet .json file\n\nMode 'amap' - perform automatic mapping:\n\t'--offset X,Y' - Set the X and Y offset\
-of the entire map\n\t'--spacing X,Y' - Set the spacing between the tiles\n\t'--size X,Y' - Set the size of the single tile";
-
-int g_iX = 0, g_iY = 0;
-int g_iW = 16, g_iH = 16;
-int g_iRow = 8, g_iNumRows = 8;
+int g_iCompressionLevel = 6;
 
 const char* g_sFilePath;
 char g_bHasFile = 0;
+char g_bOutLocal = 0;
 
 char* g_sOutputPath = NULL;
 
-void compile_sheet() {
-    printf("file = %s\n", g_sFilePath);
-
-    FILE* pFile = fopen(g_sFilePath, "rb");
-    if(pFile == NULL) { sdk_errorf("Cant open file '%s'", g_sFilePath); }
-
-    fseek(pFile, 0, SEEK_END);
-    size_t iFileLength = ftell(pFile);
-    fseek(pFile, 0, SEEK_SET);
-
-    char* aFileBuffer = (char*) malloc(iFileLength+1);
-    aFileBuffer[iFileLength] = '\0';
-    fread(aFileBuffer, 1, iFileLength, pFile);
-    fclose(pFile);
-
-    yyjson_doc* jDoc = yyjson_read_opts(aFileBuffer, iFileLength, CBPP_JSONREAD_OPTS, NULL, NULL);
-    if(jDoc == NULL) { sdk_error("Failed to parse JSON file"); }
-
-    free(aFileBuffer);
-
-    yyjson_val* jRoot = yyjson_doc_get_root(jDoc);
-    if(jRoot == NULL) { sdk_error("JSON has no root value"); }
-
+void compile_sheet(yyjson_val* jRoot) {
     yyjson_val* jRaster = yyjson_obj_get(jRoot, "raster");
     if(!yyjson_is_str(jRaster)) { sdk_error("JSON file has no proper 'raster' string specified"); }
 
@@ -65,31 +37,30 @@ void compile_sheet() {
     if(!yyjson_is_obj(jMapping)) { sdk_error("JSON file has no proper 'mapping' dictionary specified"); }
 
     const char* sRasterPath = yyjson_get_str(jRaster);
-    size_t iRasterNameLength = strlen(sRasterPath);
 
-    size_t iPathBuffLen = strlen(g_sFilePath)+1;
-    char* sPathBuffer = (char*) malloc(iPathBuffLen);
-    memcpy(sPathBuffer, g_sFilePath, iPathBuffLen);
+    char* pSeparator = strrchr(g_sFilePath, '/');
+    char* sDirectory = (char*) malloc(strlen(g_sFilePath) + strlen(sRasterPath) + 5);
+    sDirectory[0] = '\0';
 
-    FILE* pRasterFile = NULL;
-    char* pDot = strrchr(sPathBuffer, '/');
-    if(pDot != NULL) {
-        *pDot = '\0';
-        iPathBuffLen += iRasterNameLength + 2;
-        sPathBuffer = (char*) realloc(sPathBuffer, iPathBuffLen);
-        strcat(sPathBuffer, "/");
-        strcat(sPathBuffer, sRasterPath);
+    if(pSeparator != NULL) {
+        *pSeparator = '\0';
+        strcat(sDirectory, g_sFilePath);
+        strcat(sDirectory, "/");
+        *pSeparator = '/';
 
-        pRasterFile = fopen(sPathBuffer, "rb");
-    }else{
-        pRasterFile = fopen(sRasterPath, "rb");
+        sDirectory = realloc(sDirectory, strlen(sDirectory)+1);
     }
+
+    char* sPathBuffer = (char*) malloc( strlen(sDirectory) + strlen(sRasterPath) + 1 );
+    sPathBuffer[0] = '\0';
+    strcat(sPathBuffer, sDirectory);
+    strcat(sPathBuffer, sRasterPath);
+
+    FILE* pRasterFile = fopen(sPathBuffer, "rb");
 
     if(pRasterFile == NULL) {
         sdk_errorf("Unable to open raster image file '%s'", sPathBuffer);
     }
-    
-    free(sPathBuffer);
 
     fseek(pRasterFile, 0, SEEK_END);
     size_t iRasterLength = ftell(pRasterFile);
@@ -108,8 +79,6 @@ void compile_sheet() {
     if(pRawImage == NULL) {
         sdk_errorf("SOIL: %s", SOIL_last_result());
     }
-
-    printf("w=%d h=%d d=%d i=%x\n", iWidth, iHeight, iChannels, pRawImage);
 
     cdf_document* pDoc = cdf_document_create();
     cdf_object* pRoot = cdf_document_root(pDoc);
@@ -142,57 +111,99 @@ void compile_sheet() {
         sdk_cdf_validate( cdf_array_data_push_ex(pMappingObj, &SpriteBuffer, sizeof(sdk_Sprite), CDF_TYPE_BINARY) )
     }
 
+    uint8_t aImgData[9];
+    memcpy(aImgData,     &iWidth,  4);
+    memcpy(aImgData + 4, &iHeight, 4);
+    aImgData[8] = (uint8_t)(iChannels);
+
+    sdk_cdf_validate( cdf_push_binary(pDoc, pRoot, "imginfo", aImgData, sizeof(aImgData)) )
     sdk_cdf_validate( cdf_object_push(pRoot, pMappingObj) )
     sdk_cdf_validate( cdf_push_binary(pDoc, pRoot, "raster", pRawImage, iWidth*iHeight*iChannels) )
 
-    FILE* hFile = fopen(g_sOutputPath, "wb");
+    FILE* hFile = NULL;
+    
+    if(g_bOutLocal == 0) {
+        hFile = fopen(g_sOutputPath, "wb");
+    }else{
+        sPathBuffer = (char*) realloc(sPathBuffer, strlen(sDirectory) + strlen(g_sOutputPath) + 1);
+
+        sPathBuffer[0] = '\0';
+        strcat(sPathBuffer, sDirectory);
+        strcat(sPathBuffer, g_sOutputPath);
+
+        hFile = fopen(sPathBuffer, "wb");
+    }
+
     if(hFile == NULL) {
         sdk_errorf("Unable to open output file '%s'", g_sOutputPath);
     }
     
-    sdk_cdf_validate( cdf_file_write(hFile, pDoc, CDF_CLASS_SPRITESHEET, 1) )
+    sdk_cdf_validate( cdf_file_write(hFile, pDoc, CDF_CLASS_SPRITESHEET, g_iCompressionLevel) )
     fclose(hFile);
     cdf_document_destroy(pDoc);
     cdf_object_destroy(NULL, pMappingObj);
 
     SOIL_free_image_data(pRawImage);
+
+    free(sDirectory);
+    free(sPathBuffer);
 }
 
-void do_automap() {
+void compile_font() {
+
 }
 
 int main(int argc, char** argv) {
-    char* sMode = NULL;
+    const char* sMode;
 
     char c;
     while( (c = getopt(argc, argv, g_sArgs)) != -1 ) {
         const char* sOpt = optarg;
         switch ( c ) {
-            case 'm': sMode = optarg; break;
             case 'h': printf("%s\n", g_sHelpMsg); exit(EXIT_SUCCESS);
             case 'f': g_sFilePath = sOpt; g_bHasFile = 1; break;
-            case 'x': g_iX = atoi(sOpt); break;
-            case 'y': g_iY = atoi(sOpt); break;
-            case 'X': g_iW = atoi(sOpt); break;
-            case 'Y': g_iH = atoi(sOpt); break;
-            case 'r': g_iRow = atoi(sOpt); break;
-            case 'n': g_iNumRows = atoi(sOpt); break;
             case 'o': g_sOutputPath = optarg; break;
+            case 'c': g_iCompressionLevel = atoi(optarg); break;
+            case 'l': g_bOutLocal = 1; break;
         }
     }
 
-    if(sMode == NULL) {
-        printf("WARNING: No mode selected, pretending to be in the compiling mode\n");
-        sMode = "comp";
+    if(!g_bHasFile) { sdk_error("No input file providen"); }
+
+    FILE* pFile = fopen(g_sFilePath, "rb");
+    if(pFile == NULL) { sdk_errorf("Can`t open file '%s'", g_sFilePath); }
+
+    fseek(pFile, 0, SEEK_END);
+    size_t iFileLength = ftell(pFile);
+    fseek(pFile, 0, SEEK_SET);
+
+    char* aFileBuffer = (char*) malloc(iFileLength+1);
+    aFileBuffer[iFileLength] = '\0';
+    fread(aFileBuffer, 1, iFileLength, pFile);
+    fclose(pFile);
+
+    yyjson_doc* jDoc = yyjson_read_opts(aFileBuffer, iFileLength, CBPP_JSONREAD_OPTS, NULL, NULL);
+    if(jDoc == NULL) { sdk_error("Failed to parse JSON file"); }
+
+    free(aFileBuffer);
+
+    yyjson_val* jRoot = yyjson_doc_get_root(jDoc);
+    if(jRoot == NULL) { sdk_error("JSON has no root value"); }
+
+    yyjson_val* jType = yyjson_obj_get(jRoot, "type");
+    if(jType == NULL) { sdk_error("JSON file has no proper 'type' string specified"); }
+    if(yyjson_is_str(jType)){
+        sMode = yyjson_get_str( jType );
+    }else{
+        sMode = "atlas";
     }
 
-    if( strcmp("comp", sMode) == 0 ) {
-        if(!g_bHasFile) { sdk_error("No input file providen"); }
-        compile_sheet();
-    }else if( strcmp("amap", sMode) == 0 ) {
+    if( strcmp("atlas", sMode) == 0 ) {
+        compile_sheet(jRoot);
+    }else if( strcmp("font", sMode) == 0 ) {
 
     }else{
-        sdk_errorf("Unknown mode: '%s'", sMode);
+        sdk_errorf("Unknown type: '%s'", sMode);
     }
 
     return EXIT_SUCCESS;

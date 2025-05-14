@@ -1,6 +1,10 @@
 #ifndef CBPP_CDF_MACRO_H
 #define CBPP_CDF_MACRO_H
 
+/*
+    Scary ugly ape-ish macro`s used in the library source code
+*/
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -16,10 +20,6 @@
     #define CDF_CHECK(code)
 #endif
 
-/*
-    Should we copy a string while appending it to the nametable instead of referencing it?
-    Please note that strings after reading from a file are heap-allocated.
-*/
 #ifndef CDF_NAMETABLE_NOCOPY
     #define CDF_COPY(string) strdup(string)
 #else
@@ -40,9 +40,19 @@ typedef int32_t  cdf_int;
 
 #define CDF_INT_SIZE sizeof(cdf_uint)
 
+/*
+    Create a new object of the given type.
+    Note that the memory for arrays, strings, objects and binaries 
+    is not allocated automatically.
+*/
 #define cdf_object_create(pDoc, sName, iType)\
     cdf_object_create_ex(pDoc, sName, cdf_sizeof(iType), iType)
 
+/*
+    Deallocate the previously heap-allocated object.
+    If pDoc is not-NULL, then the nameID of this object is excluded from
+    the nametable.
+*/
 #define cdf_object_destroy(pDoc, pObj)\
     cdf_object_destroy_ex(pDoc, pObj, 0)
 

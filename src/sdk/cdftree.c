@@ -5,11 +5,13 @@
 #include <stdint.h>
 
 const char* g_sHelpString = "CBPP SDK\ncdftree:\n'-h' - display this message\n'-f' - specify a source CDF file\n\
-'-b' - specify the output length of the CDF_TYPE_BINARY values\n'-d' - set the maximal depth for the recursion\n";
+'-b' - specify the output length of the CDF_TYPE_BINARY values\n'-d' - set the maximal depth for the recursion\n\
+'-t' - Also print the file`s nametable\n";
 
 int g_iMaxDepth = 32;
 int g_iBinaryOutputLength = 16;
 cdf_document* g_pDoc;
+int g_bPrintNT = 0;
 
 void puttabs(int iAmount) {
     for(int i = 0; i < iAmount; i++) { printf("\t"); }
@@ -122,7 +124,7 @@ void print_cdf_object(cdf_object* pCurrent, int iDepth, int bSupressNaming) {
 
             printf("binary (%d): [", cdf_object_length(pCurrent));
             for(size_t i = 0; i < iLen; i++) {
-                printf("0x%x", pData[i]);
+                printf("%.2x", pData[i]);
                 if(i != iLen-1) { printf(" "); }
             }
             printf("]\n");
@@ -159,13 +161,14 @@ int main( int argc, char** argv ) {
     int bHasFilename = 0;
 
     char c;
-    while( (c = getopt(argc, argv, "hf:d:b:")) != -1 ) {
+    while( (c = getopt(argc, argv, "htf:d:b:")) != -1 ) {
         const char* sOpt = optarg;
         switch ( c ) {
             case 'h': printf("%s", g_sHelpString); exit(EXIT_SUCCESS);
             case 'f': sFileName = sOpt; bHasFilename = 1; break;
             case 'd': g_iMaxDepth = atoi(sOpt); break;
             case 'b': g_iBinaryOutputLength = atoi(sOpt); break;
+            case 't': g_bPrintNT = 1; break;
         }
     }
 
@@ -187,6 +190,12 @@ int main( int argc, char** argv ) {
     validate_cdf(iCode);
 
     fclose(hInput);
+
+    if(g_bPrintNT != 0) {
+        for(cdf_uint i = 1; i < g_pDoc->m_iNames; i++) {
+            printf("[%.4d] %s\n", i, g_pDoc->m_aNames[i]);
+        }
+    }
 
     cdf_object* pRoot = cdf_document_root(g_pDoc);
     print_cdf_object(pRoot, 0, 0);

@@ -7,15 +7,15 @@
 #include "cbpp/asset/cdf_classes.h"
 
 namespace cbpp {
-    bool SpriteSheet::LoadMapping(cdf_object* pSource) noexcept {
+    bool LoadMapping(cdf_object* pSource, sdk_Sprite*& pSpriteArray, uint32_t& iSprites) noexcept {
         if( !cdf_is_array(pSource) ) {
             return false;
         }
 
         cdf_uint iLength = cdf_array_length(pSource);
 
-        m_aSprites = (Sprite*) malloc(sizeof(Sprite) * iLength);
-        m_iSprites = iLength;
+        pSpriteArray = (sdk_Sprite*) malloc(sizeof(sdk_Sprite) * iLength);
+        iSprites = iLength;
 
         cdf_object Current;
         cdf_retcode iCode;
@@ -24,13 +24,32 @@ namespace cbpp {
             iCode = cdf_array_index(pSource, &Current, i);
             if(iCode != CDF_OK) { return false; }
 
-            memcpy(&m_aSprites[i], cdf_object_data(&Current), sizeof(Sprite));
+            if(cdf_object_length(&Current) != sizeof(sdk_Sprite)) {
+                char sBuff[128];
+                snprintf(sBuff, 128, "Invalid mapping info for the sprite '%d'", i);
+                cbpp::PushError(ERROR_IO, sBuff);
+                memset(&pSpriteArray[i], 0, sizeof(sdk_Sprite));
+                continue;
+            }
+
+            memcpy(&pSpriteArray[i], cdf_object_data(&Current), sizeof(sdk_Sprite));
         }
 
         return true;
     }
     
-    bool SpriteSheet::LoadImage(cdf_object* pSource) noexcept {
+    bool SpriteSheet::LoadImage(cdf_object* pSource, uint8_t*& pImageBytes, size_t& iImageLen) noexcept {
+        pImageBytes = (uint8_t*)(cdf_object_data(pSource));
+        iImageLen = cdf_object_length(pSource);
+        return true;
+    }
+
+    bool SpriteSheet::LoadImgData(cdf_object* pSource, sdk_ImageInfo& ImgData) noexcept {
+        if(cdf_object_length(pSource) != sizeof(sdk_ImageInfo)) {
+            cbpp::PushError(ERROR_IO, "Invalid CTA image info");
+            return false;
+        }
+        memcpy(&ImgData, cdf_object_data(pSource), sizeof(sdk_ImageInfo));
         return true;
     }
 
@@ -43,6 +62,7 @@ namespace cbpp {
         int16_t iClassID;
 
         cdf_retcode iCode = cdf_file_read((FILE*)hFile->Handle(), &pDoc, &Version, &iClassID);
+        hFile->Close();
 
         if(iCode != CDF_OK) {
             cbpp::PushError(ERROR_CDF, cdf_get_error(iCode));
@@ -58,21 +78,66 @@ namespace cbpp {
         cdf_object* pRoot = cdf_document_root(pDoc);
 
         cdf_object Current;
-        size_t iIter;
+        size_t iIter = 0;
+
+        uint8_t bLoadInfo[3];
+        memset(bLoadInfo, 0, 3);
+
+        uint8_t* pImageBytes = NULL;
+        size_t iImageLength = 0;
+        sdk_ImageInfo ImgData;
 
         while( cdf_object_iterate(pRoot, &Current, &iIter) ) {
             const char* sName = cdf_object_name(pDoc, &Current);
 
-            if( strcmp(sName, "mapping") == 0 ) {
-                if(!this->LoadMapping(&Current)) { cdf_document_destroy(pDoc); return false; }
+            if( strcmp(sName, "cta_mapping") == 0 ) {
+                bLoadInfo[0] = 1;
+                if(!LoadMapping(&Current, m_aSprites, m_iSprites)) { cdf_document_destroy(pDoc); return false; }
             }
 
-            if( strcmp(sName, "image") == 0 ) {
-                if(!this->LoadImage(&Current)) { cdf_document_destroy(pDoc); return false; }
+            if( strcmp(sName, "cta_raster") == 0 ) {
+                bLoadInfo[1] = 1;
+                if(!LoadImage(&Current, pImageBytes, iImageLength)) { cdf_document_destroy(pDoc); return false; }
+            }
+
+            if( strcmp(sName, "cta_imginfo") == 0 ) {
+                bLoadInfo[2] = 1;
+                if(!LoadImgData(&Current, ImgData)) { cdf_document_destroy(pDoc); return false; }
             }
         }
 
-        hFile->Close();
+        for(int i = 0; i < sizeof(bLoadInfo); i++) {
+            if(bLoadInfo[i] == 0) {
+                cbpp::PushError(ERROR_IO, "Incomplete CTA file");
+                cdf_document_destroy(pDoc);
+                return false;
+            }
+        }
+
+        GLenum iSourceChannels;
+        switch(ImgData.m_iChannels) {
+            case 1:
+                iSourceChannels = GL_RED; break;
+
+            case 2:
+                iSourceChannels = GL_RG; break;
+            
+            case 3:
+                iSourceChannels = GL_RGB; break;
+
+            case 4:
+                iSourceChannels = GL_RGBA; break;
+
+            default:
+                iSourceChannels = GL_RGBA;
+        }
+
+        glGenTextures(1, &m_hTexture);
+        glBindTexture(GL_TEXTURE_2D, m_hTexture);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ImgData.m_iWidth, ImgData.m_iHeight, 0, iSourceChannels, GL_UNSIGNED_BYTE, pImageBytes);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glBindTexture(GL_TEXTURE_2D, 0);
 
         cdf_document_destroy(pDoc);
         return true;

@@ -1,0 +1,17 @@
+Cuber Texture Atlas
+Based of CDF (see cdf.txt)
+
+ROOT:
+    imginfo, binary (9) : [ImageWidth, 4 bytes][ImageHeight, 4 bytes][ImageChannels, 1 byte]
+    mapping, array - stores any amount of binary structures:
+        [int32 NameID, 4 bytes][float X, 4 bytes][float Y, 4 bytes][float W, 4 bytes][float H, 4 bytes]
+
+        Sprites` names are stored in the CDF nametable.
+
+    raster, binary - the raw pixel data of the source raster image.
+
+The sprite mapping info is stored in the form of normalized texture coordinates.
+
+Packaging a CTA file:
+    For creating .cta files, 'shtool' SDK utility exists.
+    It takes a .json info file as input, you can check it`s structure in docs/spritesheet_example.json

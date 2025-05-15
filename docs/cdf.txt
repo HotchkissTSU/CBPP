@@ -8,7 +8,7 @@ The single object can contain value of any type and unlimited amount of sub-obje
 When pushing any data in the object, everything is copied (not referenced).
 
 You can use the built-in nametable by yourself by adding your new entries. For example,
-the engine`s spritesheet format is utilizing this to store sptites` names without repeats.
+the engine`s spritesheet format is utilizing this to store sprites` names.
 
 cdf object structure:
     1)Length, 4 bytes
@@ -38,33 +38,78 @@ Compiler options:
     -D CDF_SAFE_CHECK
         Enable safe-checks in almost every function. Meant to be used during debugging.
 
+CDF datatypes categories:
+    Static types - types that have constant size:
+        INT, UINT, FLOAT, DOUBLE, LONG, ULONG, VECTOR
+
+    Dynamic types - types with variable length:
+        ARRAY, OBJECT, BINARY, STRING
+
+    Complex types - types, that allow storing sub-values
+        ARRAY, OBJECT
+
 Examples:
     For more detailed examples go check the 'cdftree' source code.
 
-    Iterate an object:
+    Iterate an OBJECT:
         The iterator variable stands for the byte offset from the beginning of the parent
         object`s data. After each iteration, this offset is increased with the current object`s size.
 
-        ///
-        cdf_object Current;
-        size_t iIter = 0; //This iterator must be zeroed
+            ///
+            cdf_object Current;
+            size_t iIter = 0; //This iterator must be zeroed
 
-        while( cdf_object_iterate(pParentObject, &Current, &iIter) ) {
-            /* Do something here */
-        }
-        ///
+            while( cdf_object_iterate(pParentObject, &Current, &iIter) ) {
+                /* Do something here */
+            }
+            ///
 
-    Iterate an array:
+    Iterate an ARRAY:
         Array member access happens in O(1).
         Arrays store the object header only for the first member.
         All array members` NameID is 0.
 
-        ///
-        cdf_object Current;
-        size_t iLength = cdf_array_length(pArrayObject);
+            ///
+            /*
+                The iterator can be stack-allocated as it does not have any heap-allocated memory inside.
+                The m_pData points inside the parent object`s memory block.
+            */
+            cdf_object Current;
+            size_t iLength = cdf_array_length(pArrayObject);
 
-        for(size_t i = 0; i < iLength; i++) {
-            const cdf_retcode iCode = cdf_array_index(pArrayObject, &Current, i);
-            /* Do something here */
-        }
-        ///
+            for(size_t i = 0; i < iLength; i++) {
+                const cdf_retcode iCode = cdf_array_index(pArrayObject, &Current, i);
+                /* Do something here */
+            }
+            ///
+
+    Pushing data into an OBJECT:
+        For pushing any non-complex sub-values, you can use the cdf_push_* calls family.
+        There is no dedicated cdf_push_string() call as cdf_push_binary() is functionally identical.
+            ///
+                cdf_retcode iCode = cdf_push_int(pDoc, pParent, "my_int", 165);
+            ///
+
+        To append a complex sub-object, you have to create and setup it first:
+            ///
+                //Allocate a new object
+                cdf_object* pMyObj = cdf_object_create(pDoc, "my_sub_object", CDF_TYPE_OBJECT);
+
+                //Push some data into it
+                cdf_push_int(pDoc, pMyObj, "sub_int", -1000);
+                cdf_push_float(pDoc, pMyObj, "sub_float", 0.5f);
+
+                //Append the newly created object into the parent one
+                cdf_object_push(pParentObject, pMyObj);
+
+                //Appending copies the data, so we can safely deallocate our temporal object
+                //We pass NULL as pDoc so the call will not remove this object`s name from the nametable
+                cdf_object_destroy(NULL, pMyObj);
+            ///
+
+        For appending any data into arrays, another calls family exists, cdf_array_push_*.
+        Note that any data you are pushing must be the same size, or nothing will happen.
+        The array`s type is defined by the first member you have pushed in.
+            ///
+                cdf_retcode iCode = cdf_array_push_int(pArray, 1000);
+            ///

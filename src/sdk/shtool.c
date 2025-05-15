@@ -82,7 +82,7 @@ void compile_sheet(yyjson_val* jRoot) {
 
     cdf_document* pDoc = cdf_document_create();
     cdf_object* pRoot = cdf_document_root(pDoc);
-    cdf_object* pMappingObj = cdf_object_create(pDoc, "mapping", CDF_TYPE_ARRAY);
+    cdf_object* pMappingObj = cdf_object_create(pDoc, "cta_mapping", CDF_TYPE_ARRAY);
 
     yyjson_val *jKey, *jVal;
     yyjson_obj_iter Iter = yyjson_obj_iter_with(jMapping);
@@ -111,14 +111,14 @@ void compile_sheet(yyjson_val* jRoot) {
         sdk_cdf_validate( cdf_array_data_push_ex(pMappingObj, &SpriteBuffer, sizeof(sdk_Sprite), CDF_TYPE_BINARY) )
     }
 
-    uint8_t aImgData[9];
-    memcpy(aImgData,     &iWidth,  4);
-    memcpy(aImgData + 4, &iHeight, 4);
-    aImgData[8] = (uint8_t)(iChannels);
+    sdk_ImageInfo ImgData;
+    ImgData.m_iChannels = iChannels;
+    ImgData.m_iHeight = iHeight;
+    ImgData.m_iWidth = iWidth;
 
-    sdk_cdf_validate( cdf_push_binary(pDoc, pRoot, "imginfo", aImgData, sizeof(aImgData)) )
+    sdk_cdf_validate( cdf_push_binary(pDoc, pRoot, "cta_imginfo", (uint8_t*)&ImgData, sizeof(ImgData)) )
     sdk_cdf_validate( cdf_object_push(pRoot, pMappingObj) )
-    sdk_cdf_validate( cdf_push_binary(pDoc, pRoot, "raster", pRawImage, iWidth*iHeight*iChannels) )
+    sdk_cdf_validate( cdf_push_binary(pDoc, pRoot, "cta_raster", pRawImage, iWidth*iHeight*iChannels) )
 
     FILE* hFile = NULL;
     

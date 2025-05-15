@@ -1,4 +1,5 @@
 #!/bin/sh
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 export PATH=$PATH:"$SCRIPT_DIR/bin/sdk"
+export CBPP_SDK_PATH="$SCRIPT_DIR/bin/sdk"
 echo CBPP SDK is set up and ready to rock

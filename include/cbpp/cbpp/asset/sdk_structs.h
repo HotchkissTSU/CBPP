@@ -14,6 +14,11 @@ typedef struct {
     float fX,fY,fW,fH;
 } sdk_Sprite;
 
+typedef struct {
+    uint32_t m_iWidth, m_iHeight;
+    uint32_t m_iChannels;
+} sdk_ImageInfo;
+
 //See docs/glyth.jpg
 typedef struct {
     uint32_t iKeycode;  //An UTF-32 codepoint

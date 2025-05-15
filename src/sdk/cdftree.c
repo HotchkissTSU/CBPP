@@ -4,8 +4,8 @@
 #include <unistd.h>  
 #include <stdint.h>
 
-const char* g_sHelpString = "CBPP SDK\ncdftree:\n'-h' - display this message\n'-f' - specify a source CDF file\n\
-'-b' - specify the output length of the CDF_TYPE_BINARY values\n'-d' - set the maximal depth for the recursion\n\
+const char* g_sHelpString = "CBPP SDK\ncdftree:\n'-h' - Display this message\n'-f' - Specify a source CDF file\n\
+'-b' - Specify the output length of the CDF_TYPE_BINARY values\n'-d' - Set the maximal depth for the recursion\n\
 '-t' - Also print the file`s nametable\n";
 
 int g_iMaxDepth = 32;
@@ -19,7 +19,7 @@ void puttabs(int iAmount) {
 
 void validate_cdf(cdf_retcode iCode) {
     if(iCode != CDF_OK) {
-        printf("\nCDF error: %s\n", cdf_get_error(iCode));
+        printf("CDF error: %s\n", cdf_get_error(iCode));
         exit(EXIT_FAILURE);
     }
 }

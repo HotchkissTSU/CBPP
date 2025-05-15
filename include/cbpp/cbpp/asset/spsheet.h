@@ -31,8 +31,9 @@ namespace cbpp {
             friend SpriteSheet* LoadSheet(const char* sPath) noexcept;
 
         private:
-            bool LoadMapping(cdf_object* pSource) noexcept;
-            bool LoadImage(cdf_object* pSource) noexcept;
+            static bool LoadMapping(cdf_object* pSource, sdk_Sprite*& pSpriteArray, uint32_t& iSprites) noexcept;
+            static bool LoadImage(cdf_object* pSource, uint8_t*& pImageBytes, size_t& iImageLen) noexcept;
+            static bool LoadImgData(cdf_object* pSource, sdk_ImageInfo& ImgData) noexcept;
 
             GLuint m_hTexture = 0;
             sdk_Sprite* m_aSprites = NULL;

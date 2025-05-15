@@ -87,9 +87,10 @@
 			"static" : [ "static" ],
 			"type" : "OBJ"
 		},
-		"glad" : 
+		"glad_shared" : 
 		{
 			"dynamic" : [ "lib" ],
+			"comp_params" : "-fPIC",
 			"include" : [ "include", "include\\glad", "include\\KHR" ],
 			"link_dynamic" : [],
 			"link_params" : "",
@@ -137,7 +138,7 @@
 		"cdf_shared" : 
 		{
 			"compiler":"gcc",
-			"comp_params":"-fPIC -O2 -ffast-math -D CDF_NAMETABLE_COPY -D CDF_USE_ZLIB",
+			"comp_params":"-fPIC -O2 -ffast-math -D CDF_USE_ZLIB",
 			"dynamic" : [ "lib" ],
 			"include" : [ "include" ],
 			"link_dynamic" : [],
@@ -162,7 +163,7 @@
 			"obj" : "obj\\cbpp_base",
 			"out" : "bin",
 			"out_libfile" : "lib",
-			"src" : [ "obj\\cbpp_base\\*.o", "obj\\cbvs\\*.o", "obj\\glad.o" ],
+			"src" : [ "obj\\cbpp_base\\*.o", "obj\\cbvs\\*.o" ],
 			"static" : [ "static", "bin" ],
 			"type" : "DLL"
 		}

@@ -574,7 +574,7 @@ cdf_retcode cdf_file_read(FILE* hFile, cdf_document** ppDoc, cdf_verinfo* pVersi
         free(pTable);
         return CDF_ALLOC_FAILURE;
     }
-    //i`m writing this function while beight high as fuck so it must not work at all
+
     if( fread(&pDoc->m_Root, CDF_HEADER_SIZE, 1, hFile) != 1 ) { //root object header
         free(pDoc);
         cdf_nametable_free(pTable, iNTLength);

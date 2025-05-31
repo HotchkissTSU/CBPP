@@ -45,12 +45,12 @@ namespace cbpp {
 
     void __print_pass() noexcept;
     
-    template <typename t_first, typename... args_t> void __print_pass(t_first t_Value, args_t&&... vaArgs) noexcept {
+    template <typename t_first, typename... args_t> void __print_pass(t_first&& t_Value, args_t&&... vaArgs) noexcept {
         Print(t_Value);
         __print_pass(vaArgs...);
     }
 
-    template <typename... args_t> void Printf(args_t... vaArgs) noexcept {
+    template <typename... args_t> void Printf(args_t&&... vaArgs) noexcept {
         __print_pass(vaArgs...);
     }
 

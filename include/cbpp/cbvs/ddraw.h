@@ -42,7 +42,7 @@ namespace ddraw {
 
     void Text(cbpp::Vec2 vPos, const char* sSource, cbpp::float_t fScale = 1.0f) noexcept;
 
-    void Texture(cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbvs::Texture& hImage, bool bKeepRatio = true) noexcept;
+    //void Texture(cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbvs::Texture& hImage, bool bKeepRatio = true) noexcept;
 
     void MeshOutline(const cbpp::Vec2* aSource, size_t iSourceLength, cbpp::Vec2 vOffset) noexcept;
 }

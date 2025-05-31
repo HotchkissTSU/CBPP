@@ -38,10 +38,10 @@ namespace cbpp {
         size_t iNameLen = String::str32len(aName);
         size_t iTextLen = String::str32len(aText);
 
-        char* sName = (char*)malloc(iNameLen+1);
+        char* sName = Malloc<char>(iNameLen+1);
         sName[iNameLen] = '\0';
 
-        Char* sText = (Char*)malloc(sizeof(Char)*(iTextLen+1));
+        Char* sText = Malloc<Char>(iTextLen+1);
         sText[iTextLen] = U'\0';
 
         bool bNarrowWarning = false;
@@ -169,6 +169,10 @@ namespace cbpp {
             }
         }
 
+        if(sSourcePrep != NULL) {
+            Free(sSourcePrep);
+        }
+
         return bOut;
     }
 
@@ -217,6 +221,10 @@ namespace cbpp {
         snprintf(sJsonPath, 512, "%s.json", sPath);
 
         File* hInput = OpenFile(PATH_LOCALE, sJsonPath, "rb");
+
+        if(hInput == NULL) {
+            return;
+        }
 
         size_t iFileLen = hInput->Length();
         

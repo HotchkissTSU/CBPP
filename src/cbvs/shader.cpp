@@ -167,12 +167,18 @@ namespace cbvs {
     }
     
     GLint Pipe::GetUniform(const char* sName) const noexcept {
+        static int s_iUniformErrorCounter = 0;
+
         GLint hOut = glGetUniformLocation(m_hPipeID, sName);
 
         if(hOut == -1) {
-            char sBuffer[128];
-            snprintf(sBuffer, 128, "Failed to get '%s' uniform location from the pipe '%s'", sName, m_sName);
-            cbpp::PushError(cbpp::ERROR_GL, sBuffer); //This can potentially fill the entire client`s memory with errors
+            if(s_iUniformErrorCounter < 16) {
+                char sBuffer[128];
+                snprintf(sBuffer, 128, "Failed to get '%s' uniform location from the pipe '%s'", sName, m_sName);
+                cbpp::PushError(cbpp::ERROR_GL, sBuffer);
+            }
+
+            s_iUniformErrorCounter++;
         }
 
         return hOut;

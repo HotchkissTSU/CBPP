@@ -11,11 +11,11 @@
 
 typedef struct {
     cdf_uint iNameID;
-    float fX,fY,fW,fH;
+    uint32_t iX, iY, iW, iH;
 } sdk_Sprite;
 
 typedef struct {
-    uint32_t m_iWidth, m_iHeight;
+    uint32_t m_iResolution;
     uint32_t m_iChannels;
 } sdk_ImageInfo;
 

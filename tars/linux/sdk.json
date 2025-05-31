@@ -23,7 +23,8 @@
 		{
 			"compiler" : "gcc",
 			"link_static" : ["cdf", "z"],
-			"src" : ["src/sdk/cdftree.c"]
+			"src" : ["src/sdk/cdftree.c"],
+			"comp_params" : "-m64 -O2"
 		},
 
 		"shtool" : 

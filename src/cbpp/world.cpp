@@ -25,7 +25,7 @@ namespace cbpp {
             return;
         }
 
-        m_aEntityBuffer = Allocate<BaseEntity*>(CBPP_ENTBUFFER_INIT_SIZE);
+        m_aEntityBuffer = Malloc<BaseEntity*>(CBPP_ENTBUFFER_INIT_SIZE);
         m_iEntityBufferLen = CBPP_ENTBUFFER_INIT_SIZE;
     }
 
@@ -34,7 +34,7 @@ namespace cbpp {
             return;
         }
 
-        m_aChunks = Allocate<MapChunk>(m_iChunksPerBorder*m_iChunksPerBorder);
+        m_aChunks = Malloc<MapChunk>(m_iChunksPerBorder*m_iChunksPerBorder);
     }
 
     entid_t World::FindFreeEntityID() {
@@ -51,7 +51,7 @@ namespace cbpp {
     void World::AddEntityPlaces(entid_t iAmount) {
         entid_t iOldLen = m_iEntityBufferLen;
         m_iEntityBufferLen += iAmount;
-        BaseEntity** pTemp = Reallocate<BaseEntity*>(m_aEntityBuffer, m_iEntityBufferLen-iAmount, m_iEntityBufferLen);
+        BaseEntity** pTemp = Realloc<BaseEntity*>(m_aEntityBuffer, m_iEntityBufferLen);
         if(pTemp != NULL) {
             m_aEntityBuffer = pTemp;
         }
@@ -207,7 +207,7 @@ namespace cbpp {
     }
 
     void World::FindEntitiesInCircle(Vec2 vOrigin, float_t fRadius) {
-        float_t fRadSquare = fRadius*fRadius;
+        const float_t fRadSquare = fRadius*fRadius;
         m_aFindBuffer.Clear();
         for(entid_t i = 0; i < m_iEntities; i++) {
             BaseEntity* eCandidate = m_aEntityBuffer[i];
@@ -221,7 +221,7 @@ namespace cbpp {
     }
 
     void World::FindEntitiesInSector(Vec2 vOrigin, Vec2 vDirection, float_t fRadius, float_t fAngle) {
-        float_t fRadSquare = fRadius*fRadius;
+        const float_t fRadSquare = fRadius*fRadius;
         m_aFindBuffer.Clear();
         for(entid_t i = 0; i < m_iEntities; i++) {
             BaseEntity* eCandidate = m_aEntityBuffer[i];
@@ -244,7 +244,7 @@ namespace cbpp {
     }
 
     World::~World() {
-        //Free all the entities
+        //Free all entities
         if(m_aEntityBuffer != NULL) {
             for(entid_t i = 0; i < m_iEntityBufferLen; i++) {
                 BaseEntity* eCurrent = m_aEntityBuffer[i];
@@ -253,11 +253,11 @@ namespace cbpp {
                 }
             }
 
-            Free<BaseEntity*>(m_aEntityBuffer, m_iEntityBufferLen);
+            Free(m_aEntityBuffer);
         }
 
         //Free map chunks
-        Free<MapChunk>(m_aChunks, m_iChunksPerBorder*m_iChunksPerBorder);
+        Free(m_aChunks);
     }
 
     MapChunk::MapChunk(size_t iPolyAmount) {

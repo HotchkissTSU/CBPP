@@ -92,30 +92,6 @@ namespace ddraw {
         glBindTexture(GL_TEXTURE_2D, 0);
 
         bOut = bOut && glCheck() == GL_NO_ERROR;
-
-        cbvs::Texture hFontTexture;
-        hFontTexture.Load("ddraw/font.png", cbvs::IMG_L);
-        g_hFontTexture = hFontTexture.GetHandle();
-        
-        /*
-        bOut = bOut && glCheck() == GL_NO_ERROR;
-
-        glGenVertexArrays(1, &g_hTextVAO);
-        glGenBuffers(1, &g_hTextVBO);
-
-        glBindVertexArray(1);
-            glEnableVertexAttribArray(0);
-            glEnableVertexAttribArray(1);
-
-            glBindBuffer(GL_ARRAY_BUFFER, g_hTextVBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(g_aMeshBuffer), g_aMeshBuffer, GL_DYNAMIC_DRAW);
-
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*2+1, (GLvoid*)0); //X,Y
-            glVertexAttribPointer(1, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(GLfloat)*2+1, (GLvoid*)(sizeof(GLfloat)*2)); //character ID
-        glBindVertexArray(0);
-        
-        bOut = bOut && glCheck() == GL_NO_ERROR;
-        */
         return bOut;
     }
 
@@ -244,7 +220,7 @@ namespace ddraw {
 
         glCheck();
     }
-
+/*
     void Texture(cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbvs::Texture& hImage, bool bKeepRatio) noexcept {
         g_hTexture->Use();
 
@@ -275,7 +251,7 @@ namespace ddraw {
 
         glCheck();
     }
-
+*/
     void Text(cbpp::Vec2 vPos, const char* sSource, cbpp::float_t fScale) noexcept {
 
     }

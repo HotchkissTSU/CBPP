@@ -4,132 +4,71 @@
 #include "cbpp/error.h"
 #include "cbvs/error_check.h"
 #include "cbpp/texture_default.h"
-
-using namespace cbpp;
+#include "cbpp/geomath.h"
 
 namespace cbvs {
-    bool Texture::Load(const char* sPath, IMG_FORMAT iLoadFormat, OGL_FLAG iGLflag) noexcept {
-        File* hInput = OpenFile(PATH_TEXTURE, sPath, "rb");
-        if(hInput == NULL) { return false; }
+    struct PixelRGB { char r,g,b; };
+    struct PixelLA  { char l,a; };
 
-        size_t iFileLength = hInput->Length();
-        uint8_t* aFileData = (uint8_t*) malloc(iFileLength);
-
-        hInput->Read(aFileData, iFileLength);
-
-        delete hInput;
-
-        int iChannels;
-
-        uint8_t* aImage = SOIL_load_image_from_memory(aFileData, iFileLength, (int*)&m_iWidth, (int*)&m_iHeight, &iChannels, SOIL_LOAD_AUTO);    
-
-        printf("'%s' : channels(%d)\n", sPath, iChannels);
-
-        bool bIsFallback = false;
-        if(aImage == NULL) {
-            aImage = (uint8_t*)cbpp::g_aDefaultTexture;
-            m_iHeight = 32;
-            m_iWidth = 32;
-            bIsFallback = true;
-        }
-
-        free(aFileData);
-
-        GLenum iSourceChannels;
-        switch(iChannels) {
-            case 1:
-                iSourceChannels = GL_RED; break;
-
-            case 2:
-                iSourceChannels = GL_RG; break;
-            
-            case 3:
-                iSourceChannels = GL_RGB; break;
-
-            case 4:
-                iSourceChannels = GL_RGBA; break;
-
-            default:
-                iSourceChannels = GL_RGBA;
-        }
-
-        glGenTextures(1, &m_hTexture);
-        glBindTexture(GL_TEXTURE_2D, m_hTexture);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_iWidth, m_iHeight, 0, iSourceChannels, GL_UNSIGNED_BYTE, aImage);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        if(!bIsFallback) { //We really should not free the default texture buffer
-            SOIL_free_image_data(aImage);
-        }
-
-        return !bIsFallback;
+    cbpp::Color ConvertPixelRGB(const uint8_t* aSourceRGB) {
+        const PixelRGB Data = *(const PixelRGB*)(aSourceRGB);
+        return cbpp::Color(Data.r, Data.g, Data.b, 255);
     }
 
-    bool Texture::Load(const Image& refImage) noexcept {
-        m_hTexture = SOIL_create_OGL_texture(refImage.Array(), refImage.Width(), refImage.Height(), refImage.Channels(), NULL, FLAG_POWER_OF_2);
-        m_iWidth = refImage.Width();
-        m_iHeight = refImage.Height();
+    cbpp::Color ConvertPixelLA(const uint8_t* aSourceLA) {
+        const PixelLA Data = *(const PixelLA*)(aSourceLA);
+        return cbpp::Color(Data.l, Data.l, Data.l, Data.a);
+    }
+
+    cbpp::Color ConvertPixelL(const uint8_t* aSourceL) {
+        const char Data = *(const char*)(aSourceL);
+        return cbpp::Color(Data, Data, Data, 255);
+    }
+
+    bool ConvertImage(int iSrcChannels, const uint8_t* aSource, cbpp::Color* pTarget, texres_t iW, texres_t iH) {
+        cbpp::Color (*pConvFunc)(const uint8_t*);
+
+        switch ( iSrcChannels ) {
+            case 1:
+                pConvFunc = &ConvertPixelL; break;
+
+            case 2:
+                pConvFunc = &ConvertPixelLA; break;
+
+            case 3:
+                pConvFunc = &ConvertPixelRGB; break;
+
+            default:
+                cbpp::PushError(cbpp::ERROR_IO, "Invalid source image format for converting it to RGBA");
+                return false;
+        }
+
+        for( texres_t x = 0; x < iW; x++ ) {
+            for(texres_t y = 0; y < iH; y++) {
+                const uint8_t* pPixel = aSource + x*(y+1)*iSrcChannels;
+                pTarget[x*y + x] = pConvFunc(pPixel);
+            }
+        }
 
         return true;
     }
 
-    GLuint Texture::GetHandle() const noexcept { return m_hTexture; }
-
-    uint32_t Texture::Width() const noexcept { return m_iWidth; }
-    uint32_t Texture::Height() const noexcept { return m_iHeight; }
-
-    void Texture::Free() const noexcept {
-        glDeleteTextures(1, &m_hTexture);
-    }
-}
-
-namespace cbvs {
-    uint8_t* Image::Convert(const Image& refImage, IMG_FORMAT iTargetFormat) noexcept {
-        size_t iNewLength = refImage.Width() * refImage.Height() * iTargetFormat;
-        uint8_t* pNewImage = (uint8_t*)malloc(iNewLength);
+    bool Image::IsSheetCompatible() const noexcept {
+        return cbpp::math::IsPOT(m_iH) && cbpp::math::IsPOT(m_iW);
     }
 
-    Image::Image(const uint8_t* aPixels, uint16_t iX, uint16_t iY, IMG_FORMAT iChannels) noexcept : m_iH(iY), m_iW(iX), m_iChannels(iChannels) {
-        size_t iArraySize = (uint8_t)iChannels * iX * iY;
-        m_aPixels = (uint8_t*)malloc(iArraySize);
-        memcpy(m_aPixels, aPixels, (uint8_t)iChannels * iX * iY);
+    Image::Image(const uint8_t* aPixels, texres_t iW, texres_t iH, int iChannels) noexcept : m_iH(iH), m_iW(iW) {
+        m_aImageData = cbpp::Malloc<cbpp::Color> (iW*iH);
+        ConvertImage(iChannels, aPixels, m_aImageData, iW, iH);
     }
 
-    bool Image::Render(const Image& refOther, uint16_t iX, uint16_t iY, bool bClip) noexcept {
-        if(iX > m_iW || iY > m_iH) {
-            return false;
-        }
-
-        if(refOther.Channels() != m_iChannels) {
-            cbpp::PushError(cbpp::ERROR_MEM, "Images` formats mismatch");
-            return false;
-        }
-
-        uint16_t iWidth = refOther.Width();
-        uint16_t iHeight = refOther.Height();
-
-        if((iX + iWidth > m_iW) || (iY + iHeight > m_iH)) {
-            if(bClip) {
-                iWidth = cbpp::math::Clamp<uint16_t>(iWidth, 0, m_iW - iX);
-                iHeight = cbpp::math::Clamp<uint16_t>(iHeight, 0, m_iH - iY);
-            }else{
-                cbpp::PushError(cbpp::ERROR_MEM, "Image sticks out of the target canvas with clipping disabled");
-                return false;
-            }
-        }
-
-        uint8_t* pRow;
-        for(uint16_t iRow = 0; iRow < iHeight; iRow++) {
-            pRow = m_aPixels + (iRow + iY)*m_iChannels*m_iW;
-            memcpy(pRow + iX, refOther.Array() + iRow*m_iChannels, iWidth*m_iChannels);
-        }
+    Image::Image(texres_t iW, texres_t iH) noexcept {
+        m_aImageData = cbpp::Malloc<cbpp::Color> (iW*iH);
     }
-
+    
     Image::~Image() {
-        if(m_aPixels != NULL) {
-            free(m_aPixels);
+        if(m_aImageData != NULL) {
+            cbpp::Free(m_aImageData);
         }
     }
 }

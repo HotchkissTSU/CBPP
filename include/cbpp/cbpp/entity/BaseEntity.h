@@ -6,11 +6,14 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "cdf/cdf.h"
+
 #include "cbpp/vec2.h"
 #include "cbpp/cbdef.h"
 #include "cbpp/error.h"
 #include "cbpp/yyjson.h"
 #include "cbpp/print.h"
+#include "cbpp/cbstring.h"
 
 /*
     Connect a class to a custom text label
@@ -138,7 +141,7 @@ namespace cbpp {
 
 namespace cbpp {
     //Entity ID
-    typedef size_t entid_t;
+    typedef uint32_t entid_t;
 
     class World;
 
@@ -155,13 +158,9 @@ namespace cbpp {
             BaseEntity(){ ConstructProps(); }
             BaseEntity(BaseEntity* pMaster) : m_pMaster(pMaster) { ConstructProps(); }
 
-            size_t GetDumpLength() const noexcept;
-            void Dump(uint8_t* pTarget) const noexcept;
-            void Load(uint8_t* pSource) noexcept;
+            cdf_object* Dump(cdf_document* pDoc = NULL) const noexcept;
+            bool Load(cdf_object* pSource) noexcept;
 
-            yyjson_mut_val* ToJSON() const noexcept;
-            void FromJSON(yyjson_val* jValue) noexcept;
-            
             virtual void ConstructProps() noexcept {
                 m_pPropsHead = NULL;
                 CB_EPROP_EX(m_vPos, "position", "Position of the entity")
@@ -214,7 +213,7 @@ namespace cbpp {
         }
     }
 
-    std::map<const char*, BaseEntity* (*)(void)>& GetEntityFactories() noexcept;
+    std::map<CString, BaseEntity* (*)(void)>& GetEntityFactories() noexcept;
 
     //An extremely dumb way of executing some code outside of any function
     //This bro simply inserts a function pointer in a global static table

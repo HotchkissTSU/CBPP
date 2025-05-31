@@ -18,12 +18,16 @@ cdf object structure:
 
 cdf file structure:
     1)Format signature "CDF", 4 bytes
-    2)Version info,           4 bytes
-    3)CDF ClassID,            2 bytes (User-defined "class id", isn`t used in the library directly)
-    4)Compression info,       5 bytes
+    2)Version info:
+        2.1) Major version,                     2 bytes
+        2.2) Minor version,                     2 bytes
+    3)CDF ClassID,                              2 bytes (User-defined "class id", isn`t used in the library directly)
+    4)Compression info:
+        4.1) Compression level,                 1 byte
+        4.2) Original (uncompressed) length,    4 bytes
 
-    5)NameTable length,       4 bytes (The amount of names)
-    6)NameTable                       (<NT length> null-terminated strings, written one after one, including the '\0' byte at the end of each string)
+    5)Nametable length,                         4 bytes (The amount of names)
+    6)Nametable                                     (<NT length> null-terminated strings, written one after one, including the '\0' byte at the end of each string)
 
     7)Root cdf_object
 
@@ -39,10 +43,10 @@ Compiler options:
         Enable safe-checks in almost every function. Meant to be used during debugging.
 
 CDF datatypes categories:
-    Static types - types that have constant size:
+    Static types - types with constant size:
         INT, UINT, FLOAT, DOUBLE, LONG, ULONG, VECTOR
 
-    Dynamic types - types with variable length:
+    Dynamic types - types with variatic length:
         ARRAY, OBJECT, BINARY, STRING
 
     Complex types - types, that allow storing sub-values
@@ -66,7 +70,7 @@ Examples:
 
     Iterate an ARRAY:
         Array member access happens in O(1).
-        Arrays store the object header only for the first member.
+        Arrays store an object header only for the first member.
         All array members` NameID is 0.
 
             ///
@@ -84,7 +88,7 @@ Examples:
             ///
 
     Pushing data into an OBJECT:
-        For pushing any non-complex sub-values, you can use the cdf_push_* calls family.
+        For pushing any non-complex sub-values, you can use the cdf_push_* call family.
         There is no dedicated cdf_push_string() call as cdf_push_binary() is functionally identical.
             ///
                 cdf_retcode iCode = cdf_push_int(pDoc, pParent, "my_int", 165);
@@ -99,7 +103,7 @@ Examples:
                 cdf_push_int(pDoc, pMyObj, "sub_int", -1000);
                 cdf_push_float(pDoc, pMyObj, "sub_float", 0.5f);
 
-                //Append the newly created object into the parent one
+                //Append the newly created object to the parent one
                 cdf_object_push(pParentObject, pMyObj);
 
                 //Appending copies the data, so we can safely deallocate our temporal object
@@ -107,8 +111,8 @@ Examples:
                 cdf_object_destroy(NULL, pMyObj);
             ///
 
-        For appending any data into arrays, another calls family exists, cdf_array_push_*.
-        Note that any data you are pushing must be the same size, or nothing will happen.
+        For appending any data into arrays, another call family exists, cdf_array_push_*.
+        Note that any data you are pushing must have the same size, or nothing will happen.
         The array`s type is defined by the first member you have pushed in.
             ///
                 cdf_retcode iCode = cdf_array_push_int(pArray, 1000);

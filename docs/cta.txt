@@ -2,7 +2,7 @@ Cuber Texture Atlas
 Based of CDF (see cdf.txt)
 
 ROOT:
-    imginfo, binary (9) : [ImageWidth, 4 bytes][ImageHeight, 4 bytes][ImageChannels, 1 byte]
+    imginfo, binary (12) : [ImageRes, 4 bytes][ImageChannels, 4 bytes]
     mapping, array - stores any amount of binary structures:
         [int32 NameID, 4 bytes][float X, 4 bytes][float Y, 4 bytes][float W, 4 bytes][float H, 4 bytes]
 
@@ -10,7 +10,8 @@ ROOT:
 
     raster, binary - the raw pixel data of the source raster image.
 
-The sprite mapping info is stored in the form of normalized texture coordinates.
+The sprite mapping info is stored in the form of the normalized texture coordinates.
+Only square POT images are allowed as input for the rendering optimisations reason.
 
 Packaging a CTA file:
     For creating .cta files, 'shtool' SDK utility exists.

@@ -97,6 +97,9 @@ _type Get##_pretty_name () const { return _vname; } private:
 namespace cbpp {
     // The type to use in the engine`s CPU-side math (Vectors, Meshes etc.)
     typedef float float_t;
+
+    // Texture resolution
+    typedef uint32_t texres_t;
 }
 
 #endif

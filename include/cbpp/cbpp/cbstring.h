@@ -11,9 +11,11 @@
 #include <uchar.h>
 
 #include <typeinfo>
+#include <functional>
 
 #include "cbpp/cbdef.h"
 #include "cbpp/error.h"
+#include "cbpp/cb_hash.h"
 
 namespace cbpp {
     //4-byte character type used by the engine
@@ -216,5 +218,11 @@ namespace cbpp {
             char* m_sData = NULL;
     };
 }
+
+template<> struct std::hash<cbpp::CString> {
+    size_t operator()(const cbpp::CString& sKey) {
+        return cbpp::Hash<size_t>((const char*)(sKey));
+    }
+};
 
 #endif

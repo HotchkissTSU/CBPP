@@ -4,7 +4,6 @@
 
 namespace cbpp::math {
     Intersection g_IsecBuffer;
-    Vec2 g_IsecPtsBuffer[CBPP_MATH_ISEC_POINTS_BUFFER_SIZE];
 
     bool Equal(float_t A, float_t B) noexcept {
         return (float_t)fabs(A - B) < CBPP_MATH_EPSILON;
@@ -94,10 +93,6 @@ namespace cbpp::math {
         return &g_IsecBuffer;
     }
 
-    Vec2* GetIntersectionPoints() noexcept {
-        return g_IsecPtsBuffer;
-    }
-
     bool Intersect(Intersection* pTarget, Line& A, Line& B) {
         if(pTarget == NULL) {
             pTarget = &g_IsecBuffer;
@@ -114,10 +109,10 @@ namespace cbpp::math {
 
         pTarget->bResult = true;
         pTarget->iCollPointsNum = 1;
-        g_IsecPtsBuffer[0] = Vec2(fIsecX, fIsecY);
+        pTarget->aPoints[0] = Vec2(fIsecX, fIsecY);
 
         pTarget->fDistance = 0.0f;
-        pTarget->vAvgCollidePos = g_IsecPtsBuffer[0];
+        pTarget->vAvgCollidePos = pTarget->aPoints[0];
 
         return true;
     }
@@ -152,10 +147,10 @@ namespace cbpp::math {
             pTarget->iCollPointsNum = 2;
             pTarget->fDistance = Distance(Vec2(), A);
 
-            g_IsecPtsBuffer[0] = Vec2(x1,y1) + B.vPos;
-			g_IsecPtsBuffer[1] = Vec2(x2,y2) + B.vPos;
+            pTarget->aPoints[0] = Vec2(x1,y1) + B.vPos;
+			pTarget->aPoints[1] = Vec2(x2,y2) + B.vPos;
 
-            pTarget->vAvgCollidePos = (g_IsecPtsBuffer[0] + g_IsecPtsBuffer[1]) / 2;
+            pTarget->vAvgCollidePos = (pTarget->aPoints[0] + pTarget->aPoints[1]) / 2;
 
 			return true;
 			
@@ -167,9 +162,9 @@ namespace cbpp::math {
             pTarget->iCollPointsNum = 1;
             pTarget->fDistance = B.fRadius;
 
-			g_IsecPtsBuffer[0] = Vec2(x,y) + B.vPos;
+			pTarget->aPoints[0] = Vec2(x,y) + B.vPos;
 
-            pTarget->vAvgCollidePos = g_IsecPtsBuffer[0];
+            pTarget->vAvgCollidePos = pTarget->aPoints[0];
 			
 			return true;
 		}
@@ -192,8 +187,8 @@ namespace cbpp::math {
             pTarget->iCollPointsNum = 2;
             pTarget->vAvgCollidePos = A.vPos;
 
-            g_IsecPtsBuffer[0] = A.vPos + Vec2(0.0f,-k);
-            g_IsecPtsBuffer[1] = A.vPos + Vec2(0.0f, k);
+            pTarget->aPoints[0] = A.vPos + Vec2(0.0f,-k);
+            pTarget->aPoints[1] = A.vPos + Vec2(0.0f, k);
 			
 			return true;
 		}
@@ -221,10 +216,10 @@ namespace cbpp::math {
             pTarget->fDistance = B.vPos.Length();
             pTarget->iCollPointsNum = 2;
 
-            g_IsecPtsBuffer[0] = Vec2(x1,y1);
-            g_IsecPtsBuffer[1] = Vec2(x2,y2);
+            pTarget->aPoints[0] = Vec2(x1,y1);
+            pTarget->aPoints[1] = Vec2(x2,y2);
 
-            pTarget->vAvgCollidePos = (g_IsecPtsBuffer[0] + g_IsecPtsBuffer[1]) / 2;
+            pTarget->vAvgCollidePos = (pTarget->aPoints[0] + pTarget->aPoints[1]) / 2;
             return true;
 			
 		}else if(Equal(d, 0.0f)){
@@ -235,9 +230,9 @@ namespace cbpp::math {
             pTarget->fDistance = B.fRadius;
             pTarget->iCollPointsNum = 1;
 
-            g_IsecPtsBuffer[0] = Vec2(x,y);
+            pTarget->aPoints[0] = Vec2(x,y);
 
-            pTarget->vAvgCollidePos = g_IsecPtsBuffer[0];
+            pTarget->vAvgCollidePos = pTarget->aPoints[0];
 			
 			return true;
 		}

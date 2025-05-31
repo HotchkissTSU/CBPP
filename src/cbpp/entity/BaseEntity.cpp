@@ -5,8 +5,8 @@
 #include "cbpp/error.h"
 
 namespace cbpp {
-    std::map<const char*, BaseEntity* (*)(void)>& GetEntityFactories() noexcept {
-        static std::map<const char*, BaseEntity* (*)(void)> s_mEntityFactoryDict;
+    std::map<CString, BaseEntity* (*)(void)>& GetEntityFactories() noexcept {
+        static std::map<CString, BaseEntity* (*)(void)> s_mEntityFactoryDict;
         return s_mEntityFactoryDict;
     }
     
@@ -15,7 +15,7 @@ namespace cbpp {
             CbThrowErrorf("Attempt to re-register entity class with name '%s'", classname);
         }
 
-        GetEntityFactories()[classname] = pfactory;
+        GetEntityFactories()[CString(classname)] = pfactory;
     }
 
     BaseEntity* CreateEntity(const char* sClassName) {
@@ -34,52 +34,21 @@ namespace cbpp {
         return const_cast<const EPropNode*>(m_pPropsHead);
     }
 
-    size_t BaseEntity::GetDumpLength() const noexcept {
-        EPropNode* pCurrent = m_pPropsHead;
-        size_t iOutLen = 0;
-
-        while(pCurrent != NULL) {
-            iOutLen = iOutLen + pCurrent->m_pProperty->Sizeof();
-            pCurrent = pCurrent->m_pNextNode;
-        }
-
-        return iOutLen;
-    }
-
-    void BaseEntity::Dump(uint8_t* pTarget) const noexcept {
-        size_t iOffset = 0;
-        EPropNode* pCurrent = NULL;
-        size_t iPropSize;
-
-        while(pCurrent != NULL) {
-            iPropSize = pCurrent->m_pProperty->Sizeof();
-
-            memcpy(pTarget + iOffset, pCurrent->m_pProperty->GetBuffer(), iPropSize);
-            iOffset = iOffset + iPropSize;
-            pCurrent = pCurrent->m_pNextNode;
-        }
-    }
-
-    void BaseEntity::Load(uint8_t* pTarget) noexcept {
-        size_t iOffset = 0;
-        EPropNode* pCurrent = NULL;
-        size_t iPropSize;
-
-        while(pCurrent != NULL) {
-            iPropSize = pCurrent->m_pProperty->Sizeof();
-            pCurrent->m_pProperty->Deserialize(pTarget + iOffset);
-
-            iOffset = iOffset + iPropSize;
-            pCurrent = pCurrent->m_pNextNode;
-        }
-    }
-
     BaseEntity::~BaseEntity() {
         delete m_pPropsHead;
     }
+    
+    cdf_object* BaseEntity::Dump(cdf_document* pDoc) const noexcept {
+        cdf_object* pOut = cdf_object_create(pDoc, Class(), CDF_TYPE_OBJECT);
 
-    yyjson_mut_val* BaseEntity::ToJSON() const noexcept {
-        
+        EPropNode* pCurrent = m_pPropsHead;
+        while(pCurrent != NULL) {
+            IProperty* pProp = pCurrent->m_pProperty;
+            cdf_data_push_ex(pDoc, pOut, pProp->Name(), (void*)(pProp->GetBuffer()), pProp->Sizeof(), CDF_TYPE_BINARY);
+            pCurrent = pCurrent->m_pNextNode;
+        }
+
+        return pOut;
     }
 
     EPropNode::EPropNode(EPropNode* pPrevNode, IProperty* pValue) {

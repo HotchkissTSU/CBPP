@@ -9,16 +9,10 @@
 
 #include "cbpp/vec2.h"
 
-#define CBPP_MATH_EPSILON (float_t)(1e-5f)
+#define CBPP_MATH_EPSILON ((cbpp::float_t)(1e-5f))
 
-#define CBPP_MATH_PI (float_t)(3.1415926535f)
-#define CBPP_MATH_2PI (float_t)(2.0f) * CBPP_MATH_PI
-
-/*
-    We have an internal buffer to store intersection points.
-    This is NOT thread-safe.
-*/
-#define CBPP_MATH_ISEC_POINTS_BUFFER_SIZE 16
+#define CBPP_MATH_PI ((cbpp::float_t)(3.1415926535f))
+#define CBPP_MATH_2PI ((cbpp::float_t)(2.0f) * CBPP_MATH_PI)
 
 namespace cbpp {
     namespace math {
@@ -66,27 +60,23 @@ namespace cbpp {
 
         struct Intersection {
             bool bResult = false;
-            float_t fDistance = 0.0f; //A distance between the primitives
-
-            Vec2 vAvgCollidePos;
-
-            size_t iCollPointsNum = 0;
+            float_t fDistance = 0.0f;       //A distance between the primitives
+            Vec2 vAvgCollidePos;            //Average intersection point
+            char iCollPointsNum = 0;        //Count of the intersections (0,1 or 2)
+            Vec2 aPoints[2];                //Intersection points
         };
 
-        //Obtain a reference to an internal reusable line
+        //Obtain a reference to the internal reusable line
         Line& LINE() noexcept;
 
-        //Obtain a reference to an internal reusable circle
+        //Obtain a reference to the internal reusable circle
         Circle& CIRCLE() noexcept;
 
         /*
             If NULL is passed to these functions as pTarget, then the result
-            is written in an internal buffer and can be obtained with GetLastIntersection().
+            is written in the internal buffer and can be obtained with GetLastIntersection().
 
             The data in this pointer is valid until any next Intersect() call.
-            The intersection points array is buffered too and is also valid until
-            upcoming calls. It can be obtained with GetIntersectionPoints().
-
             If bResult is false then you should not trust any other data in the structure.
         */
 
@@ -94,7 +84,6 @@ namespace cbpp {
         bool Intersect(Intersection* pTarget, Line& A, Circle& B);
         bool Intersect(Intersection* pTarget, Circle& A, Circle& B);
 
-        Vec2* GetIntersectionPoints() noexcept;
         Intersection* GetLastIntersection() noexcept;
 
         float_t Distance(Vec2 A, Vec2 B) noexcept;
@@ -106,13 +95,15 @@ namespace cbpp {
         Vec2 ClosestPoint(Line& A, Circle& B) noexcept;
 
         extern Intersection g_IsecBuffer;
-        extern Vec2 g_IsecPtsBuffer[];
+
+        template<typename INT_T> bool IsPOT(INT_T iValue) noexcept {
+            return (iValue > 0) && ((iValue & (iValue - 1)) == 0);
+        }
 
         //Lock value between two borders
         template<typename NUM_T> NUM_T Clamp(NUM_T Value, NUM_T MinValue, NUM_T MaxValue) noexcept {
-            if(Value > MaxValue) { return MaxValue; }
-            if(Value < MinValue) { return MinValue; }
-            return Value;
+            const NUM_T Temp = Value < MinValue ? MinValue : Value;
+            return Temp > MaxValue ? MaxValue : Temp;
         }
 
         //MIN <= X <= MAX

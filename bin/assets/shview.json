@@ -5,7 +5,7 @@
         "all" : ["assets/"],
         "locale" : ["assets/locales/shview"],
         "texture" : ["assets/textures/"],
-        "shader": ["assets/shaders/", "assets/shaders/shview"]
+        "shader": ["assets/shaders/"]
     },
 
     "locales" : {

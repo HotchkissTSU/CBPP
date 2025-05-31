@@ -15,7 +15,7 @@
 			"include" : [ "include\\cbpp", "include" ],
 			"link_dynamic" : [],
 			"link_params" : "-Wl,-rpath=.",
-			"link_static" : [ "glfw3", "cbpp" ],
+			"link_static" : [ "glfw3", "cbpp", "z" ],
 			"obj" : "obj\\main",
 			"out" : "bin",
 			"out_libfile" : "lib",
@@ -36,8 +36,7 @@
 			"src" : 
 			[
 				"src\\cbpp\\*.cpp",
-				"src\\cbpp\\entity\\*.cpp",
-				"src\\cbpp\\bbox\\*.cpp"
+				"src\\cbpp\\entity\\*.cpp"
 			],
 			"static" : [ "static" ],
 			"type" : "OBJ"

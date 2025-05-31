@@ -127,7 +127,7 @@ namespace cbpp {
 }
 
 namespace cbpp {
-	std::vector<CString> g_aSearchPaths[SPATHS_AMOUNT];
+	List<CString> g_aSearchPaths[SPATHS_AMOUNT];
 
 	const char* SearchPathGroupName(SEARCH_PATH iGroupIndex) noexcept {
 		switch( iGroupIndex ) {
@@ -142,11 +142,11 @@ namespace cbpp {
 	}
 	
 	bool MountSearchPath(SEARCH_PATH iGroupIndex, const char* sPath) {
-		std::vector<CString>& aGroup = g_aSearchPaths[iGroupIndex];
+		List<CString>& aGroup = g_aSearchPaths[iGroupIndex];
 
 		bool bCollide = false;
-		for(size_t i = 0; i < aGroup.size(); i++) {
-			if( strcmp(aGroup[i], sPath) == 0 ) {
+		for(size_t i = 0; i < aGroup.Length(); i++) {
+			if( strcmp(aGroup.At(i), sPath) == 0 ) {
 				bCollide = true;
 				break;
 			}
@@ -159,7 +159,7 @@ namespace cbpp {
 			return false;
 		}
 
-		aGroup.push_back(sPath);
+		aGroup.PushBack(sPath);
 
 		return true;
 	}
@@ -170,11 +170,11 @@ namespace cbpp {
 			return new File(sPath, sModes);
 		}
 
-		std::vector<CString>& aGroup = g_aSearchPaths[iGroupIndex];
+		List<CString>& aGroup = g_aSearchPaths[iGroupIndex];
 
 		char sBuffer[512];
-		for(size_t i = 0; i < aGroup.size(); i++) {
-			snprintf(sBuffer, 512, "%s%s", (const char*)aGroup[i], sPath);
+		for(size_t i = 0; i < aGroup.Length(); i++) {
+			snprintf(sBuffer, 512, "%s%s", (const char*)aGroup.At(i), sPath);
 
 			FILE* hTestHandle = fopen(sBuffer, "r");
 			if(hTestHandle != NULL) {
@@ -210,5 +210,7 @@ namespace cbpp {
 	size_t GetFileExtension(const char* sPath, char* sBuffer = NULL) noexcept {
 		size_t iLen = strlen(sPath);
 		size_t iIndex = iLen;
+
+		return 0;
 	}
 }

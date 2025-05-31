@@ -15,7 +15,7 @@ namespace cbpp {
             m_phys_length = m_imag_length + CBPP_STRING_OVERHEAD;
         }
 
-        Char* tmp_ptr = (Char*) realloc(m_array, m_phys_length*sizeof(Char));
+        Char* tmp_ptr = Realloc<Char>(m_array, m_phys_length*sizeof(Char));
         if(tmp_ptr == NULL) {
             free(m_array);
             CbThrowErrorf("String memory allocation failure (Img:%lu/Phys:%lu)", m_imag_length, m_phys_length);
@@ -118,7 +118,7 @@ namespace cbpp {
     }
 
     Char* String::C32() const {
-        g_string_buffer = (char*) realloc(g_string_buffer, (m_imag_length+1)*sizeof(Char));
+        g_string_buffer = Realloc<char>(g_string_buffer, (m_imag_length+1)*sizeof(Char));
         memset(g_string_buffer, 0, m_imag_length+1);
         memcpy(g_string_buffer, m_array, m_imag_length);
 
@@ -133,7 +133,7 @@ namespace cbpp {
     }
 
     String operator+(const String& A, const String& B) {
-        Char* out_ptr = Allocate<Char>( A.Length() + B.Length() + 1 );
+        Char* out_ptr = Malloc<Char>( A.Length() + B.Length() + 1 );
 
         for(size_t i = 0; i < A.Length(); i++) {
             out_ptr[i] = A.ConstAt(i);
@@ -164,7 +164,7 @@ namespace cbpp {
         }
         size_ref += 1;
 
-        String* out = Allocate<String>(size_ref);
+        String* out = Malloc<String>(size_ref);
         if(out == NULL) {
             size_ref = 0;
             return NULL;
@@ -204,7 +204,7 @@ namespace cbpp {
 
         is_quo = false;
 
-        String* out = Allocate<String>(size_ref);
+        String* out = Malloc<String>(size_ref);
         if(out == NULL) {
             size_ref = 0;
             return NULL;
@@ -272,7 +272,7 @@ namespace cbpp {
 
     Char* String::str32dup(const Char* u32) {
         size_t iStrLen = str32len(u32);
-        Char* sOut = (Char*)malloc( sizeof(Char)*(iStrLen+1) );
+        Char* sOut = Malloc<Char>( sizeof(Char)*(iStrLen+1) );
         sOut[iStrLen] = U'\0';
         memcpy(sOut, u32, sizeof(Char)*iStrLen);
 
@@ -286,7 +286,7 @@ namespace cbpp {
     char* String::U32_U8(const Char* u32, size_t u32_ln) {
         char buffer[MB_CUR_MAX]; //buffer to hold UTF-8 bytes for a single UTF-32 character
 
-        char* out = Allocate<char>(MB_CUR_MAX * u32_ln);
+        char* out = Malloc<char>(MB_CUR_MAX * u32_ln);
 
         if(out == NULL) {
             return NULL;
@@ -307,7 +307,7 @@ namespace cbpp {
         size_t out_sz = p - out;
 
         //we have allocated this buffer with a bit of overhead, so need to free that leftover memory
-        char* tmp = Reallocate<char>(out, -1, out_sz + 1);
+        char* tmp = Realloc<char>(out, out_sz + 1);
         if(tmp == NULL) {
             return out;
         }
@@ -318,7 +318,7 @@ namespace cbpp {
 
     Char* String::U8_U32(const char* u8) {
         size_t u8_ln = strlen(u8);
-        Char* out = Allocate<Char>(u8_ln*MB_CUR_MAX);
+        Char* out = Malloc<Char>(u8_ln*MB_CUR_MAX);
         if(out == NULL) {
             return NULL;
         }
@@ -351,7 +351,7 @@ namespace cbpp {
 
         //we have allocated this buffer with a bit of overhead, so need to free that leftover memory
         size_t out_size = p_out+1 - out;
-        Char* tmp = Reallocate<Char>(out, u8_ln, out_size+1);
+        Char* tmp = Realloc<Char>(out, out_size+1);
 
         if(tmp == NULL) {
             return out;
@@ -365,7 +365,7 @@ namespace cbpp {
     CString::CString() : m_sData(NULL) { }
     CString::CString(const char* sTarget) {
         size_t iLength = strlen(sTarget);
-        m_sData = (char*) malloc(iLength+1);
+        m_sData = Malloc<char>(iLength+1);
         memcpy(m_sData, sTarget, iLength);
 
         m_sData[iLength] = '\0';
@@ -383,7 +383,7 @@ namespace cbpp {
         }
 
         size_t iLength = strlen(refOther.m_sData);
-        m_sData = (char*) malloc(iLength+1);
+        m_sData = Malloc<char>(iLength+1);
         memcpy(m_sData, refOther.m_sData, iLength);
 
         m_sData[iLength] = '\0';
@@ -419,6 +419,6 @@ namespace cbpp {
     }
 
     CString::~CString() {
-        if(m_sData != NULL) { free(m_sData); }
+        if(m_sData != NULL) { Free(m_sData); }
     }
 }

@@ -267,8 +267,8 @@ void PrintSearchPaths(FILE* hStream = stdout) {
 	fprintf(hStream, "Engine default search paths:\n");
 	for(size_t i = 0; i < cbpp::SPATHS_AMOUNT; i++) {
 		fprintf(hStream, "\tGroup %s:\n", cbpp::SearchPathGroupName((cbpp::SEARCH_PATH)i));
-		for(size_t j = 0; j < cbpp::g_aSearchPaths[i].size(); j++) {
-			fprintf(hStream, "\t\t%s\n", (const char*)cbpp::g_aSearchPaths[i][j]);
+		for(size_t j = 0; j < cbpp::g_aSearchPaths[i].Length(); j++) {
+			fprintf(hStream, "\t\t%s\n", (const char*)cbpp::g_aSearchPaths[i].At(j));
 		}
 	}
 }

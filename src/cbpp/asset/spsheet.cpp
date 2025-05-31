@@ -7,7 +7,20 @@
 #include "cbpp/asset/cdf_classes.h"
 
 namespace cbpp {
-    bool LoadMapping(cdf_object* pSource, sdk_Sprite*& pSpriteArray, uint32_t& iSprites) noexcept {
+    List<SpriteSheet*> g_aSheets; 
+
+    SpriteSheet::SpriteSheet() noexcept {
+        size_t iFreeIndex = g_aSheets.Find(NULL);
+        if(iFreeIndex == (size_t)(-1)) {
+            iFreeIndex = g_aSheets.PushBack(this); //Register ourselves in the global spritesheets list
+        }else {
+            g_aSheets[iFreeIndex] = this;
+        }
+
+        m_ID = iFreeIndex;
+    }
+
+    bool SpriteSheet::LoadMapping(cdf_object* pSource, sdk_Sprite*& pSpriteArray, uint32_t& iSprites) noexcept {
         if( !cdf_is_array(pSource) ) {
             return false;
         }
@@ -108,39 +121,45 @@ namespace cbpp {
 
         for(int i = 0; i < sizeof(bLoadInfo); i++) {
             if(bLoadInfo[i] == 0) {
-                cbpp::PushError(ERROR_IO, "Incomplete CTA file");
-                cdf_document_destroy(pDoc);
+                char sBuffer[512];
+                const char* sErrorMsg;
+
+                switch (i) {
+                    case 0:
+                        sErrorMsg = "cta_mapping";
+                        break;
+
+                    case 1:
+                        sErrorMsg = "cta_raster";
+                        break;
+
+                    case 2:
+                        sErrorMsg = "cta_imginfo";
+                        break;
+                }
+
+                snprintf(sBuffer, 512, "Imcomplete CTA file : field '%s' is missing!", sErrorMsg);
+                cbpp::PushError(ERROR_IO, sBuffer);
                 return false;
             }
         }
 
-        GLenum iSourceChannels;
-        switch(ImgData.m_iChannels) {
-            case 1:
-                iSourceChannels = GL_RED; break;
-
-            case 2:
-                iSourceChannels = GL_RG; break;
-            
-            case 3:
-                iSourceChannels = GL_RGB; break;
-
-            case 4:
-                iSourceChannels = GL_RGBA; break;
-
-            default:
-                iSourceChannels = GL_RGBA;
-        }
-
-        glGenTextures(1, &m_hTexture);
-        glBindTexture(GL_TEXTURE_2D, m_hTexture);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ImgData.m_iWidth, ImgData.m_iHeight, 0, iSourceChannels, GL_UNSIGNED_BYTE, pImageBytes);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        m_Atlas.SetData(pImageBytes, ImgData.m_iResolution, ImgData.m_iResolution, (cbvs::IMG_FORMAT)(ImgData.m_iChannels), true);
 
         cdf_document_destroy(pDoc);
         return true;
+    }
+
+    cbvs::Image& SpriteSheet::GetAtlas() noexcept {
+        return m_Atlas;
+    }
+
+    texres_t SpriteSheet::Resolution() noexcept {
+        return m_Atlas.Width();
+    }
+
+    SpriteSheet::~SpriteSheet() noexcept {
+        g_aSheets[m_ID] = NULL;
     }
 }
 

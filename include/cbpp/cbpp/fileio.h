@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <vector>
 
+#include "cbpp/ttype/list.h"
 #include "cbpp/cbstring.h"
 
 namespace cbpp {	
@@ -20,7 +20,7 @@ namespace cbpp {
 		SPATHS_AMOUNT //Must be a last entry in this enum!
 	};
 
-	extern std::vector<CString> g_aSearchPaths[];
+	extern List<CString> g_aSearchPaths[];
 
 	class File {
 		public:

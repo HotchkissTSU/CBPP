@@ -1,6 +1,6 @@
 /*
     Cuber Texture Atlas (CTA) packaging tool
-    The format is based on the CDF, so you can
+    The format is based on CDF, so you can
     use /sdk/cdftree on any .cta file to check it`s tree structure.
 */
 
@@ -28,6 +28,10 @@ char g_bHasFile = 0;
 char g_bOutLocal = 0;
 
 char* g_sOutputPath = NULL;
+
+char IsPOT(int x) {
+    return (x > 0) && ((x & (x - 1)) == 0);
+}
 
 void compile_sheet(yyjson_val* jRoot) {
     yyjson_val* jRaster = yyjson_obj_get(jRoot, "raster");
@@ -73,13 +77,25 @@ void compile_sheet(yyjson_val* jRoot) {
 
     int iWidth, iHeight, iChannels;
 
-    unsigned char* pRawImage = SOIL_load_image_from_memory(aImageData, iRasterLength, &iWidth, &iHeight, &iChannels, SOIL_LOAD_AUTO);
+    unsigned char* pRawImage = SOIL_load_image_from_memory(aImageData, iRasterLength, &iWidth, &iHeight, &iChannels, SOIL_LOAD_RGBA);
     free(aImageData);
+
+    if(iChannels != SOIL_LOAD_RGBA) {
+        printf("Warning! The source image channels are not RGBA, forcibly loading as RGBA\n");
+    }
 
     if(pRawImage == NULL) {
         sdk_errorf("SOIL: %s", SOIL_last_result());
     }
 
+    if(iWidth != iHeight) {
+        sdk_error("Non-square source images are not supported yet");
+    }
+
+    if(!IsPOT(iWidth)) {
+        sdk_error("NPOT resolution source images are not supported");
+    }
+    
     cdf_document* pDoc = cdf_document_create();
     cdf_object* pRoot = cdf_document_root(pDoc);
     cdf_object* pMappingObj = cdf_object_create(pDoc, "cta_mapping", CDF_TYPE_ARRAY);
@@ -101,20 +117,18 @@ void compile_sheet(yyjson_val* jRoot) {
         if(yyjson_arr_size(jVal) < 4) {
             sdk_errorf("Too short mapping (must be at least 4 numbers) for the sprite '%s'", sName);
         }
-
-        SpriteBuffer.fX = (float)(yyjson_get_int(yyjson_arr_get(jVal, 0)) / (float)iWidth);
-        SpriteBuffer.fY = (float)(yyjson_get_int(yyjson_arr_get(jVal, 1)) / (float)iHeight);
-        SpriteBuffer.fW = (float)(yyjson_get_int(yyjson_arr_get(jVal, 2)) / (float)iWidth);
-        SpriteBuffer.fH = (float)(yyjson_get_int(yyjson_arr_get(jVal, 3)) / (float)iHeight);
+        
+        SpriteBuffer.iX = yyjson_get_int(yyjson_arr_get(jVal, 0));
+        SpriteBuffer.iY = yyjson_get_int(yyjson_arr_get(jVal, 1));
+        SpriteBuffer.iW = yyjson_get_int(yyjson_arr_get(jVal, 2));
+        SpriteBuffer.iH = yyjson_get_int(yyjson_arr_get(jVal, 3));
         SpriteBuffer.iNameID = cdf_nametable_push(pDoc, sName);
 
         sdk_cdf_validate( cdf_array_data_push_ex(pMappingObj, &SpriteBuffer, sizeof(sdk_Sprite), CDF_TYPE_BINARY) )
     }
 
     sdk_ImageInfo ImgData;
-    ImgData.m_iChannels = iChannels;
-    ImgData.m_iHeight = iHeight;
-    ImgData.m_iWidth = iWidth;
+    ImgData.m_iResolution = iWidth;
 
     sdk_cdf_validate( cdf_push_binary(pDoc, pRoot, "cta_imginfo", (uint8_t*)&ImgData, sizeof(ImgData)) )
     sdk_cdf_validate( cdf_object_push(pRoot, pMappingObj) )

@@ -422,3 +422,20 @@ namespace cbpp {
         if(m_sData != NULL) { Free(m_sData); }
     }
 }
+
+namespace cbpp {
+    ConstString::ConstString(const ConstString& sOther) : m_sData(sOther.m_sData) {}
+    ConstString::ConstString(const char* sSource) : m_sData(sSource) {}
+
+    ConstString::operator const char* () const noexcept {
+        return m_sData;
+    }
+
+    bool ConstString::operator==(const ConstString& sOther) const noexcept {
+        return strcmp(m_sData, sOther.m_sData) == 0;
+    }
+
+    bool ConstString::operator<(const ConstString& sOther) const noexcept {
+        return strcmp(m_sData, sOther.m_sData) < 0;
+    }
+}

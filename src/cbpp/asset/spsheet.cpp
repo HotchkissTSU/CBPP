@@ -1,175 +1,142 @@
 #include "cbpp/asset/spsheet.h"
 #include "cbpp/error.h"
 #include "cbpp/fileio.h"
+#include "cbpp/ttype/list.h"
+#include "cbvs/texture.h"
+#include "cbvs/render.h"
 
 #include <string.h>
 
+#include "cdf/cdf.h"
 #include "cbpp/asset/cdf_classes.h"
+#include "cbpp/asset/sdk_structs.h"
 
 namespace cbpp {
     List<SpriteSheet*> g_aSheets; 
 
-    SpriteSheet::SpriteSheet() noexcept {
-        size_t iFreeIndex = g_aSheets.Find(NULL);
-        if(iFreeIndex == (size_t)(-1)) {
-            iFreeIndex = g_aSheets.PushBack(this); //Register ourselves in the global spritesheets list
-        }else {
-            g_aSheets[iFreeIndex] = this;
-        }
-
-        m_ID = iFreeIndex;
+    void SpriteSheet::GetResolution(texres_t& iW, texres_t& iH) const {
+        iW = m_iWidth;
+        iH = m_iHeight;
     }
 
-    bool SpriteSheet::LoadMapping(cdf_object* pSource, sdk_Sprite*& pSpriteArray, uint32_t& iSprites) noexcept {
-        if( !cdf_is_array(pSource) ) {
-            return false;
-        }
-
-        cdf_uint iLength = cdf_array_length(pSource);
-
-        pSpriteArray = (sdk_Sprite*) malloc(sizeof(sdk_Sprite) * iLength);
-        iSprites = iLength;
-
-        cdf_object Current;
-        cdf_retcode iCode;
-
-        for( size_t i = 0; i < iLength; i++ ) {
-            iCode = cdf_array_index(pSource, &Current, i);
-            if(iCode != CDF_OK) { return false; }
-
-            if(cdf_object_length(&Current) != sizeof(sdk_Sprite)) {
-                char sBuff[128];
-                snprintf(sBuff, 128, "Invalid mapping info for the sprite '%d'", i);
-                cbpp::PushError(ERROR_IO, sBuff);
-                memset(&pSpriteArray[i], 0, sizeof(sdk_Sprite));
-                continue;
-            }
-
-            memcpy(&pSpriteArray[i], cdf_object_data(&Current), sizeof(sdk_Sprite));
-        }
-
-        return true;
-    }
-    
-    bool SpriteSheet::LoadImage(cdf_object* pSource, uint8_t*& pImageBytes, size_t& iImageLen) noexcept {
-        pImageBytes = (uint8_t*)(cdf_object_data(pSource));
-        iImageLen = cdf_object_length(pSource);
-        return true;
+    SpriteSheet::~SpriteSheet() {
+        glDeleteTextures(1, &m_hTexture);
     }
 
-    bool SpriteSheet::LoadImgData(cdf_object* pSource, sdk_ImageInfo& ImgData) noexcept {
-        if(cdf_object_length(pSource) != sizeof(sdk_ImageInfo)) {
-            cbpp::PushError(ERROR_IO, "Invalid CTA image info");
-            return false;
-        }
-        memcpy(&ImgData, cdf_object_data(pSource), sizeof(sdk_ImageInfo));
-        return true;
-    }
-
-    bool SpriteSheet::Load(const char* sPath) noexcept {
-        File* hFile = OpenFile(PATH_TEXTURE, sPath, "rb");
-        if(hFile == NULL) { return false; }
+    bool LoadTextureSheet(const char* sPath) {
+        File* hInput = OpenFile(PATH_TEXTURE, sPath, "rb");
 
         cdf_document* pDoc;
         cdf_verinfo Version;
         int16_t iClassID;
 
-        cdf_retcode iCode = cdf_file_read((FILE*)hFile->Handle(), &pDoc, &Version, &iClassID);
-        hFile->Close();
+        cdf_retcode iCode = cdf_file_read((FILE*)(hInput->Handle()), &pDoc, &Version, &iClassID);
+
+        hInput->Close();
 
         if(iCode != CDF_OK) {
-            cbpp::PushError(ERROR_CDF, cdf_get_error(iCode));
+            PushError(ERROR_CDF, cdf_get_error(iCode));
             return false;
         }
 
         if(iClassID != CDF_CLASS_SPRITESHEET) {
-            cbpp::PushError(ERROR_IO, "The providen CDF file is not a spritesheet");
+            PushError(ERROR_IO, "Not a spritesheet");
             cdf_document_destroy(pDoc);
             return false;
         }
 
-        cdf_object* pRoot = cdf_document_root(pDoc);
+        SpriteSheet* Out = new SpriteSheet();
 
         cdf_object Current;
+        cdf_object* pRoot = cdf_document_root(pDoc);
         size_t iIter = 0;
+        sdk_ImageInfo ImageData;
 
-        uint8_t bLoadInfo[3];
-        memset(bLoadInfo, 0, 3);
-
-        uint8_t* pImageBytes = NULL;
-        size_t iImageLength = 0;
-        sdk_ImageInfo ImgData;
+        Color* aImage = NULL;
+        size_t iImageBytes;
 
         while( cdf_object_iterate(pRoot, &Current, &iIter) ) {
             const char* sName = cdf_object_name(pDoc, &Current);
 
+            if( strcmp(sName, "cta_imginfo") == 0 ) {
+                memcpy(&ImageData, cdf_object_data(&Current), sizeof(ImageData));
+            }
+
             if( strcmp(sName, "cta_mapping") == 0 ) {
-                bLoadInfo[0] = 1;
-                if(!LoadMapping(&Current, m_aSprites, m_iSprites)) { cdf_document_destroy(pDoc); return false; }
+                cdf_uint iArrayLen = cdf_array_length(&Current);
+                sdk_Sprite Buff;
+                cdf_object Obj;
+                SpriteMapping Map;
+
+                for(size_t i = 0; i < iArrayLen; i++) {
+                    cdf_array_index(&Current, &Obj, i);
+                    memcpy(&Buff, cdf_object_data(&Obj), sizeof(Buff));
+
+                    Map.X = (float_t)(Buff.iX) / (float_t)(ImageData.m_iWidth);
+                    Map.Y = (float_t)(Buff.iY) / (float_t)(ImageData.m_iHeight);
+                    Map.W = (float_t)(Buff.iW + Buff.iX) / (float_t)(ImageData.m_iWidth);
+                    Map.H = (float_t)(Buff.iH + Buff.iY) / (float_t)(ImageData.m_iHeight);
+
+                    const char* sSpriteName = pDoc->m_aNames[Buff.iNameID];
+                    Out->m_mMapping[sSpriteName] = Map;
+                }
             }
 
             if( strcmp(sName, "cta_raster") == 0 ) {
-                bLoadInfo[1] = 1;
-                if(!LoadImage(&Current, pImageBytes, iImageLength)) { cdf_document_destroy(pDoc); return false; }
-            }
-
-            if( strcmp(sName, "cta_imginfo") == 0 ) {
-                bLoadInfo[2] = 1;
-                if(!LoadImgData(&Current, ImgData)) { cdf_document_destroy(pDoc); return false; }
+                iImageBytes = cdf_object_length(&Current);
+                aImage = (Color*) cdf_object_data(&Current);
             }
         }
 
-        for(int i = 0; i < sizeof(bLoadInfo); i++) {
-            if(bLoadInfo[i] == 0) {
-                char sBuffer[512];
-                const char* sErrorMsg;
-
-                switch (i) {
-                    case 0:
-                        sErrorMsg = "cta_mapping";
-                        break;
-
-                    case 1:
-                        sErrorMsg = "cta_raster";
-                        break;
-
-                    case 2:
-                        sErrorMsg = "cta_imginfo";
-                        break;
-                }
-
-                snprintf(sBuffer, 512, "Imcomplete CTA file : field '%s' is missing!", sErrorMsg);
-                cbpp::PushError(ERROR_IO, sBuffer);
-                return false;
-            }
+        if(aImage == NULL) {
+            PushError(ERROR_IO, "Failed to get image data from the document");
+            cdf_document_destroy(pDoc);
+            return false;
         }
 
-        m_Atlas.SetData(pImageBytes, ImgData.m_iResolution, ImgData.m_iResolution, (cbvs::IMG_FORMAT)(ImgData.m_iChannels), true);
+        Out->m_hTexture = cbvs::CreateTexture(aImage, ImageData.m_iWidth, ImageData.m_iHeight);
+        Out->m_iWidth = ImageData.m_iWidth;
+        Out->m_iHeight = ImageData.m_iHeight;
 
+        g_aSheets.PushBack(Out);
+        
         cdf_document_destroy(pDoc);
         return true;
     }
 
-    cbvs::Image& SpriteSheet::GetAtlas() noexcept {
-        return m_Atlas;
+    void RemapTextureSheet(SpriteSheet& Target, texres_t iOldW, texres_t iOldH, texres_t iNewW, texres_t iNewH) {
+        float_t fRatioX = (float_t)(iOldW) / (float_t)(iNewW);
+        float_t fRatioY = (float_t)(iOldH) / (float_t)(iNewH);
+
+        for(auto Iter = Target.m_mMapping.begin(); Iter != Target.m_mMapping.end(); Iter++) {
+            SpriteMapping& Current = Iter->second;
+            Current.H *= fRatioY;
+            Current.W *= fRatioX;
+            Current.X *= fRatioX;
+            Current.Y *= fRatioY;
+        }
     }
 
-    texres_t SpriteSheet::Resolution() noexcept {
-        return m_Atlas.Width();
+    void CompileTextureSheets() {
+        cbvs::SpriteComposer* pComposer = new cbvs::SpriteComposer();
+        pComposer->Reset();
+
+        
     }
 
-    SpriteSheet::~SpriteSheet() noexcept {
-        g_aSheets[m_ID] = NULL;
-    }
-}
+    SpriteInfo GetSpriteInfo(const char* sName) {
+        SpriteInfo Out;
+        memset(&Out, 0, sizeof(Out));
 
-namespace cbpp {
-    SpriteSheet* LoadSheet(const char* sPath) noexcept {
-        SpriteSheet* pSheet = new SpriteSheet();
-        if(!pSheet->Load(sPath)) {
-            return NULL;
+        for(size_t i = 0; i < g_aSheets.Length(); i++) {
+            const mapping_t& Map = g_aSheets.At(i)->m_mMapping;
+            if(Map.count(sName)) {
+                Out.Mapping = Map.at(sName);
+                Out.TextureID = g_aSheets.At(i)->m_hTexture;
+                return Out;
+            }
         }
 
-        return pSheet;
+        return Out;
     }
 }

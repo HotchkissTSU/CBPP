@@ -48,6 +48,18 @@
                     "frag" : "texture"
                 }
             }
+        },
+
+        "cbpp" : {
+            "prefix" : "cbpp/",
+            "strict" : true,
+
+            "members" : {
+                "sprite" : {
+                    "vtx" : "sprite",
+                    "frag" : "sprite"
+                }
+            }
         }
     }
 }

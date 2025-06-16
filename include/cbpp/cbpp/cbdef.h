@@ -5,6 +5,16 @@
 
 #include <type_traits>
 
+#ifdef __linux__
+    #define ON_LINUX(code) code
+    #define ON_WINDOWS(code)
+#endif
+
+#if defined(_WIN64) || defined(_WIN32)
+    #define ON_LINUX(code)
+    #define ON_WINDOWS(code) code
+#endif
+
 //Build a serverside library
 #define CBPP_SERVER 0
 
@@ -84,7 +94,6 @@ _type Get##_pretty_name () const { return _vname; } private:
 
 //Paths
 #define CB_PATH_LOGS "assets/logs/"
-#define CB_PATH_SHADERS "assets/shaders/"
 
 //Maximal name of the log file, not including the '.log' suffix and the path prefix
 #define CB_MAX_LOGNAME 32

@@ -1,5 +1,10 @@
 #include "cbvs/render.h"
 #include "cbpp/error.h"
+#include "cbpp/asset/spsheet.h"
+#include "cbvs/ddraw.h"
+#include "cbvs/buffer.h"
+
+#include <assert.h>
 
 namespace cbvs {
     cbpp::float_t g_fScreenRatio = 1.0f;
@@ -18,22 +23,15 @@ namespace cbvs {
 }
 
 namespace cbvs {
-    GLuint SpriteBatcher::GenerateTexture() const {
-        GLuint hOut;
-        glGenTextures(1, &hOut);
-
-        glBindTexture(GL_TEXTURE_2D, hOut);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CBVS_SPRITEBATCH_SIZE, CBVS_SPRITEBATCH_SIZE,
-                        0, GL_RGBA, GL_UNSIGNED_BYTE, (const void*)(m_aImage));
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glGenerateMipmap(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        return hOut;
+    void SpriteComposer::Reset() {
+        memset(m_aMappingInfo, 0, sizeof(m_aMappingInfo));
     }
 
-    void SpriteBatcher::MarkRegionAs(int iX, int iY, int iW, int iH, bool bMark) {
+    GLuint SpriteComposer::GenerateTexture() const {
+        return CreateTexture((const cbpp::Color*)(m_aImage), CBVS_SPRITEBATCH_SIZE, CBVS_SPRITEBATCH_SIZE);
+    }
+
+    void SpriteComposer::MarkRegionAs(int iX, int iY, int iW, int iH, bool bMark) {
         for(int Y0 = iY; Y0 < iY + iH; Y0++) {
             for(int X0 = iX; X0 < iX + iW; X0++) {
                 m_aMappingInfo[Y0][X0] = bMark;
@@ -41,7 +39,7 @@ namespace cbvs {
         }
     }
 
-    bool SpriteBatcher::ScanRegion(int iX, int iY, int iW, int iH) const {
+    bool SpriteComposer::ScanRegion(int iX, int iY, int iW, int iH) const {
         const int iLen = CBVS_SPRITEBATCH_SIZE / CBVS_SPRITEMAPPER_MINSIZE;
         for(int X0 = iX; X0 < iX + iW; X0++) {
             for(int Y0 = iY; Y0 < iY + iH; Y0++) {
@@ -58,7 +56,7 @@ namespace cbvs {
         return true;
     }
 
-    bool SpriteBatcher::LocateFreeRegion(int iW, int iH, int& iX, int& iY) const {
+    bool SpriteComposer::LocateFreeRegion(int iW, int iH, int& iX, int& iY) const {
         const int iLen = CBVS_SPRITEBATCH_SIZE / CBVS_SPRITEMAPPER_MINSIZE;
         for(int X0 = 0; X0 < iLen; X0++) {
             for(int Y0 = 0; Y0 < iLen; Y0++) {
@@ -74,7 +72,17 @@ namespace cbvs {
         return false;
     }
 
-    void SpriteBatcher::PrintMappingInfo() const {
+    void SpriteComposer::BlitImage(const cbvs::Image& Source, texres_t iX, texres_t iY) {
+        const cbpp::Color* aPixels = Source.GetPixelData();
+
+        for(size_t i = iY; i < Source.Height(); i++) {
+            const cbpp::Color* pSource = &aPixels[Source.Width() * i];
+            cbpp::Color* pTarget = m_aImage[i] + iX;
+            memcpy(pTarget, pSource, Source.Width());
+        }
+    }
+
+    void SpriteComposer::PrintMappingInfo() const {
         const int iLen = CBVS_SPRITEBATCH_SIZE / CBVS_SPRITEMAPPER_MINSIZE;
 
         printf("   ");
@@ -96,5 +104,74 @@ namespace cbvs {
             }
             printf("\n");
         }
+    }
+
+    VertexBuffer<SpriteVertex>* GetSpriteRenderingBuffer() {
+        static VertexBuffer<SpriteVertex>* s_hSpriteBuffer = new VertexBuffer<SpriteVertex>();
+        return s_hSpriteBuffer;
+    }
+
+    bool InitRender() noexcept {
+        VertexBuffer<SpriteVertex>* hSpriteBuff = GetSpriteRenderingBuffer();
+
+        const VtxAttribData aSpriteAttribs[] = {
+            {2, sizeof(GLfloat)*2, GL_FLOAT},
+            {2, sizeof(GLfloat)*2, GL_FLOAT}
+        };
+
+        SpriteVertex aData[6];
+
+        hSpriteBuff->Init(
+            aData, 6,
+            GL_DYNAMIC_DRAW,
+            aSpriteAttribs, 2
+        );
+
+        return true;
+    }
+    
+    void CleanupRender() noexcept {
+        delete GetSpriteRenderingBuffer();
+    }
+
+    void RenderSprite(const char* sName, cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbpp::Color iColor, cbpp::float_t fDepth) {
+        cbpp::SpriteInfo Info = cbpp::GetSpriteInfo(sName);
+        //ddraw::Texture(vPos, vScale, Info.TextureID, false);
+
+        assert(Info.TextureID != 0);
+
+        Pipe* pSpritePipe = GetPipe("cbpp_sprite");
+        static SpriteVertex s_aSpriteVtxBuff[6];
+
+        static SpriteVertex vP1, vP2, vP3, vP4; //top-left, top-right, bottom-left, bottom-right
+
+        vP1 = {  vPos,                          {Info.Mapping.X, Info.Mapping.Y} };
+        vP2 = { {vPos.x + vScale.x, vPos.y},    {Info.Mapping.W, Info.Mapping.Y} };
+        vP3 = { {vPos.x, vPos.y + vScale.y},    {Info.Mapping.X, Info.Mapping.H} };
+        vP4 = {  vPos + vScale,                 {Info.Mapping.W, Info.Mapping.H} };
+
+        s_aSpriteVtxBuff[0] = vP3;
+        s_aSpriteVtxBuff[1] = vP2;
+        s_aSpriteVtxBuff[2] = vP1; // Generate a quad
+
+        s_aSpriteVtxBuff[3] = vP4;
+        s_aSpriteVtxBuff[4] = vP3;
+        s_aSpriteVtxBuff[5] = vP2;
+
+        VertexBuffer<SpriteVertex>* hSpriteBuff = GetSpriteRenderingBuffer();
+
+        hSpriteBuff->Use();
+        pSpritePipe->Use();
+
+        glBindTexture(GL_TEXTURE_2D, Info.TextureID);
+
+        pSpritePipe->PushUniform("cbpp_Depth", fDepth);
+        pSpritePipe->PushUniform("cbpp_Ratio", g_fScreenRatio);
+        //s_pSpritePipe->PushUniform("cbpp_Color", iColor);
+
+        hSpriteBuff->PushVertexData(s_aSpriteVtxBuff, 6);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        glCheck();
     }
 }

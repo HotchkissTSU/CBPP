@@ -220,8 +220,8 @@ namespace ddraw {
 
         glCheck();
     }
-/*
-    void Texture(cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbvs::Texture& hImage, bool bKeepRatio) noexcept {
+
+    void Texture(cbpp::Vec2 vPos, cbpp::Vec2 vScale, GLuint hImage, bool bKeepRatio) noexcept {
         g_hTexture->Use();
 
         if(bKeepRatio) {
@@ -242,7 +242,7 @@ namespace ddraw {
             vPos1.x, vPos2.y, 0.0f, 1.0f
         };
 
-        glBindTexture(GL_TEXTURE_2D, hImage.GetHandle());
+        glBindTexture(GL_TEXTURE_2D, hImage);
         glBindVertexArray(g_hTextureVAO);
             glBindBuffer(GL_ARRAY_BUFFER, g_hTextureVBO);
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(aBuffer), aBuffer);
@@ -251,7 +251,7 @@ namespace ddraw {
 
         glCheck();
     }
-*/
+
     void Text(cbpp::Vec2 vPos, const char* sSource, cbpp::float_t fScale) noexcept {
 
     }

@@ -1,14 +1,14 @@
 Cuber Texture Atlas
-Based of CDF (see cdf.txt)
+Based on CDF (see cdf.txt)
 
 ROOT:
-    imginfo, binary (12) : [ImageRes, 4 bytes][ImageChannels, 4 bytes]
-    mapping, array - stores any amount of binary structures:
+    cta_imginfo, binary (12) : [ImageWidth, 4 bytes][ImageHeight, 4 bytes][ImageFormat, 4 bytes]
+    cta_mapping, array - stores any amount of binary structures:
         [int32 NameID, 4 bytes][float X, 4 bytes][float Y, 4 bytes][float W, 4 bytes][float H, 4 bytes]
 
         Sprites` names are stored in the CDF nametable.
 
-    raster, binary - the raw pixel data of the source raster image.
+    cta_raster, binary - the raw pixel data of the source raster image.
 
 The sprite mapping info is stored in the form of the normalized texture coordinates.
 Only square POT images are allowed as input for the rendering optimisations reason.

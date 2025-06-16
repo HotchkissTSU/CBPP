@@ -28,7 +28,7 @@ namespace cbpp {
 
 	template <typename T> T* Malloc() noexcept {
 		return Malloc<T> (1);
-	}
+    }
 
 	template <typename T> T* Realloc(T* pMemory, size_t iNewSize) noexcept {
 		if( pMemory == NULL ) {

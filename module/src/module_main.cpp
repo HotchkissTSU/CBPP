@@ -5,34 +5,28 @@
 
 using namespace cbpp;
 
-cbvs::SpriteBatcher* g_pTest;
+cbvs::SpriteComposer* g_pTest;
 
 extern "C" {
     void ModulePreMain() { 
     }
 
     bool ModuleMain(int argc, char** argv) {
+        glCheck();
+
         printf("Module entry point!\n");
 
-        g_pTest = new cbvs::SpriteBatcher();
+        LoadTextureSheet("uvtest.cta");
 
-        int x,y;
-        bool res = g_pTest->LocateFreeRegion(5,20,x,y);
-
-        if(res) {
-            g_pTest->MarkRegionAs(x,y,5,20,true);
-        }
-
-        g_pTest->LocateFreeRegion(5,10,x,y);
-        g_pTest->MarkRegionAs(x,y,5,12, true);
-
-        g_pTest->PrintMappingInfo();
+        //CompileTextureSheets();
 
         return true;
     }
 
-    void ModuleTick() {}
-
+    void ModuleTick() {
+        cbvs::RenderSprite("uv_debug", Vec2(-0.25f), Vec2(0.5f), Color(255));
+    }
+    
     //Return TRUE if the event was processed by the module and engine should not use it
     bool ModuleEventCallback( cbpp::Event& ev ) { return false; }
 }

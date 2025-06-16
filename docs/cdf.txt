@@ -17,6 +17,7 @@ cdf object structure:
     4)Data,   <Length> bytes
 
 cdf file structure:
+    0)Adler32 checksum,       4 bytes
     1)Format signature "CDF", 4 bytes
     2)Version info:
         2.1) Major version,                     2 bytes

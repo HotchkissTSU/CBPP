@@ -13,8 +13,8 @@ namespace cbvs {
     typedef cbpp::texres_t texres_t;
 
     /*
-        A CPU-side image data holder. Stores the color data in the RGBA format,
-        so this is better to create your textures using it, to avoid costly converting process.
+        A CPU-side image data holder. Stores color data in the RGBA format,
+        so this is better to create your textures using it to avoid costly converting process.
     */
     class Image {
         public:
@@ -28,6 +28,8 @@ namespace cbvs {
             // Check whether this image can be used as a spritesheet (both width and height are POT)
             bool IsSheetCompatible() const noexcept;
 
+            GLuint GenerateTexture() const noexcept;
+
             const cbpp::Color* GetPixelData() const noexcept { return const_cast<const cbpp::Color*>(m_aImageData); }
             cbpp::Color* GetPixelData() noexcept { return m_aImageData; }
 
@@ -37,6 +39,11 @@ namespace cbvs {
             texres_t m_iW = 0, m_iH = 0;
             cbpp::Color* m_aImageData = NULL;
     };
+
+    GLuint CreateTexture(const cbpp::Color* pImage, texres_t iW, texres_t iH);
+    GLuint CreateTexture(const Image& SourceImage);
+
+    Image* GetImageFromTexture(GLuint hTexID, texres_t iWidth, texres_t iHeight);
 }
 
 #endif

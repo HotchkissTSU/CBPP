@@ -5,8 +5,8 @@
 #include "cbpp/error.h"
 
 namespace cbpp {
-    std::map<CString, BaseEntity* (*)(void)>& GetEntityFactories() noexcept {
-        static std::map<CString, BaseEntity* (*)(void)> s_mEntityFactoryDict;
+    std::map<ConstString, BaseEntity* (*)(void)>& GetEntityFactories() noexcept {
+        static std::map<ConstString, BaseEntity* (*)(void)> s_mEntityFactoryDict;
         return s_mEntityFactoryDict;
     }
     
@@ -15,7 +15,7 @@ namespace cbpp {
             CbThrowErrorf("Attempt to re-register entity class with name '%s'", classname);
         }
 
-        GetEntityFactories()[CString(classname)] = pfactory;
+        GetEntityFactories()[ConstString(classname)] = pfactory;
     }
 
     BaseEntity* CreateEntity(const char* sClassName) {

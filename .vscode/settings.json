@@ -70,7 +70,11 @@
         "stdfloat": "cpp",
         "untitled document": "cpp",
         "valarray": "cpp",
-        "cdf.h": "c"
+        "cdf.h": "c",
+        "any": "cpp",
+        "hash_set": "cpp",
+        "unordered_set": "cpp",
+        "ranges": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

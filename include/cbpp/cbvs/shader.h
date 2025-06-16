@@ -83,7 +83,7 @@ namespace cbvs {
             ~Pipe();
 
         private:
-            const char* m_sName;
+            cbpp::CString m_sName;
             GLint m_hPipeID;
     };
 

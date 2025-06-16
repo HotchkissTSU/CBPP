@@ -29,11 +29,14 @@ namespace cbvs {
 }
 
 namespace cbvs {
+    bool InitRender() noexcept;
+    void CleanupRender() noexcept;
+
     /*
         A tool for mapping multiple spritesheets to a single big texture for optimising on draw calls.
         This goon weights up to 16 megabytes, so do not attempt to allocate him on the stack.
     */
-    class SpriteBatcher {
+    class SpriteComposer {
         public:
             // Reset the mapper for reuse
             void Reset();
@@ -50,7 +53,7 @@ namespace cbvs {
             // Change this region`s status
             void MarkRegionAs(int iX, int iY, int iW, int iH, bool bMark);
 
-            bool BlitImage(cbvs::Image& Source, int iX, int iY);
+            void BlitImage(const cbvs::Image& Source, texres_t iX, texres_t iY);
 
             void PrintMappingInfo() const;
 
@@ -64,6 +67,13 @@ namespace cbvs {
             */
             char m_aMappingInfo[CBVS_SPRITEBATCH_SIZE / CBVS_SPRITEMAPPER_MINSIZE][CBVS_SPRITEBATCH_SIZE / CBVS_SPRITEMAPPER_MINSIZE];
     };
+    
+    struct SpriteVertex {
+        cbpp::Vec2 vPos;
+        cbpp::Vec2 vUV;
+    };
+
+    void RenderSprite(const char* sName, cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbpp::Color iColor, cbpp::float_t fDepth = 1.0f);
 }
 
 #endif

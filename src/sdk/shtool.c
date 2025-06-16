@@ -76,26 +76,22 @@ void compile_sheet(yyjson_val* jRoot) {
     fclose(pRasterFile);
 
     int iWidth, iHeight, iChannels;
-
-    unsigned char* pRawImage = SOIL_load_image_from_memory(aImageData, iRasterLength, &iWidth, &iHeight, &iChannels, SOIL_LOAD_RGBA);
+    
+    unsigned char* pRawImage = SOIL_load_image_from_memory(aImageData, iRasterLength, &iWidth, &iHeight, &iChannels, SOIL_LOAD_AUTO);
     free(aImageData);
 
     if(iChannels != SOIL_LOAD_RGBA) {
-        printf("Warning! The source image channels are not RGBA, forcibly loading as RGBA\n");
+        printf("Warning! The source image format isn`t RGBA. CBPP will likely perform runtime conversion\n");
     }
 
     if(pRawImage == NULL) {
         sdk_errorf("SOIL: %s", SOIL_last_result());
     }
 
-    if(iWidth != iHeight) {
-        sdk_error("Non-square source images are not supported yet");
+    if(!IsPOT(iWidth) || !IsPOT(iHeight)) {
+        sdk_error("NPOT resolution spritesheet source images are not supported");
     }
 
-    if(!IsPOT(iWidth)) {
-        sdk_error("NPOT resolution source images are not supported");
-    }
-    
     cdf_document* pDoc = cdf_document_create();
     cdf_object* pRoot = cdf_document_root(pDoc);
     cdf_object* pMappingObj = cdf_object_create(pDoc, "cta_mapping", CDF_TYPE_ARRAY);
@@ -128,7 +124,9 @@ void compile_sheet(yyjson_val* jRoot) {
     }
 
     sdk_ImageInfo ImgData;
-    ImgData.m_iResolution = iWidth;
+    ImgData.m_iWidth = iWidth;
+    ImgData.m_iHeight = iHeight;
+    ImgData.m_iChannels = iChannels;
 
     sdk_cdf_validate( cdf_push_binary(pDoc, pRoot, "cta_imginfo", (uint8_t*)&ImgData, sizeof(ImgData)) )
     sdk_cdf_validate( cdf_object_push(pRoot, pMappingObj) )

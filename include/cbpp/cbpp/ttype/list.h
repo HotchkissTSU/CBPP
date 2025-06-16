@@ -10,6 +10,16 @@ namespace cbpp {
         public:
             List() = default;
 
+            List(const List<T>& aOther) {
+                m_iAllocated = aOther.m_iAllocated;
+                m_iSize = aOther.m_iSize;
+
+                m_pMemory = Realloc<T>(m_pMemory, m_iAllocated);
+                for(size_t i = 0; i < m_iSize; i++) {
+                    m_pMemory[i] = aOther.m_pMemory[i];
+                }
+            }
+
             List(List<T>&& Other) {
                 m_iAllocated = Other.m_iAllocated;
                 m_iSize = Other.m_iSize;
@@ -60,6 +70,22 @@ namespace cbpp {
                 m_iSize = 0;
             }
 
+            // Simply allocate a new place without invoking a copy operator
+            // You MUST full it with any valid data, or our destructor will segfault
+            size_t  PushEmpty() {
+                m_iSize += 1;
+                const size_t iNewAllocSize = List_CalculateLength(m_iAllocated, m_iSize);
+
+                if(iNewAllocSize != m_iAllocated) {
+                    m_iAllocated = iNewAllocSize;
+                    m_pMemory = Realloc<T>(m_pMemory, m_iAllocated);
+                }
+
+                memset(&m_pMemory[m_iSize - 1], 0, sizeof(T));
+                
+                return m_iSize - 1;
+            }
+
             size_t PushBack(T& Value) {
                 m_iSize += 1;
                 const size_t iNewAllocSize = List_CalculateLength(m_iAllocated, m_iSize);
@@ -85,13 +111,23 @@ namespace cbpp {
 
                 memset(&m_pMemory[m_iSize - 1], 0, sizeof(T));
                 m_pMemory[m_iSize - 1] = Value;
-                //memcpy(&m_pMemory[m_iSize - 1], &Value, sizeof(T));
                 return m_iSize - 1;
             }
 
             void PopBack() {
                 m_pMemory[m_iSize-1].~T();
                 m_iSize--;
+            }
+
+            void operator=(const List<T>& aOther) {
+                this->Clear();
+                m_iAllocated = aOther.m_iAllocated;
+                m_iSize = aOther.m_iSize;
+
+                m_pMemory = Realloc<T>(m_pMemory, m_iAllocated);
+                for(size_t i = 0; i < m_iSize; i++) {
+                    m_pMemory[i] = aOther.m_pMemory[i];
+                }
             }
 
             size_t Find(const T& Target) const noexcept {

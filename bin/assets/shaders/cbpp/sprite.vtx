@@ -1,0 +1,14 @@
+#version 400 core
+
+layout (location=0) in vec2 vPos;
+layout (location=1) in vec2 vUV;
+
+uniform float cbpp_Depth;
+uniform float cbpp_Ratio;
+
+out vec2 vUV_flipped;
+
+void main() {
+    gl_Position = vec4(vPos.x / cbpp_Ratio, vPos.y, 0.0, cbpp_Depth);
+    vUV_flipped = vUV;
+}

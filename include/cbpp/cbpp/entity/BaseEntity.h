@@ -213,7 +213,7 @@ namespace cbpp {
         }
     }
 
-    std::map<CString, BaseEntity* (*)(void)>& GetEntityFactories() noexcept;
+    std::map<ConstString, BaseEntity* (*)(void)>& GetEntityFactories() noexcept;
 
     //An extremely dumb way of executing some code outside of any function
     //This bro simply inserts a function pointer in a global static table

@@ -2,8 +2,8 @@
 #define CBPP_STRING_H
 
 /*
-    CBPP uses UTF32 for an internal strings storage and UTF8 for a file I/O.
-    Forget about locales. They does not exist. It`s a myth.
+    CBPP uses UTF32 for the internal strings storage and UTF8 for the file I/O.
+    Forget about C locales. They does not exist. It`s a myth.
 */
 
 #include <cstdint>
@@ -193,7 +193,9 @@ namespace cbpp {
             size_t m_pointer = 0;
     };
 
-    // A structure for safe c-strings storage in any containers
+    /*
+        A wrapper over heap-allocated strings
+    */
     class CString {
         public:
             CString();
@@ -217,11 +219,35 @@ namespace cbpp {
         private:
             char* m_sData = NULL;
     };
+
+    /*
+        A wrapper over static string constants. Provided some comparsion operators for
+        safe usage in any containers.
+    */
+    class ConstString {
+        public:
+            ConstString() = delete;
+            ConstString(const char* sSource);
+            ConstString(const ConstString& sSource);
+
+            operator const char* () const noexcept;
+            bool operator==(const ConstString& sOther) const noexcept;
+            bool operator<(const ConstString& sOther) const noexcept;
+
+        private:
+            const char* m_sData;
+    };
 }
 
 template<> struct std::hash<cbpp::CString> {
-    size_t operator()(const cbpp::CString& sKey) {
+    size_t operator()(const cbpp::CString& sKey) const {
         return cbpp::Hash<size_t>((const char*)(sKey));
+    }
+};
+
+template<> struct std::hash<cbpp::ConstString> {
+    size_t operator()(const cbpp::ConstString& sSource) const {
+        return cbpp::Hash<size_t>((const char*)sSource);
     }
 };
 

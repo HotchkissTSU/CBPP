@@ -5,12 +5,9 @@
     CBPP Texture Atlas (CTA) format
 */
 
-#include "cbpp/vec2.h"
 #include "cbvs/texture.h"
-#include "cbpp/fileio.h"
 #include "cbpp/cbdef.h"
 #include "cbpp/cbstring.h"
-#include "cbpp/ttype/list.h"
 
 #include <stdint.h>
 #include <stddef.h>
@@ -21,12 +18,38 @@ namespace cbpp {
         float_t X,Y,W,H;
     };
 
-    extern std::unordered_map<CString, SpriteMapping> g_mSpriteMapping;
+    typedef std::unordered_map<CString, SpriteMapping> mapping_t;
 
-    /*
-        Load and map a new spritesheet
-    */
-    bool AppendTextureSheet( const char sPath );
+    struct SpriteInfo {
+        SpriteMapping Mapping;
+        GLuint TextureID;
+    };
+    
+    class SpriteSheet {
+        friend bool LoadTextureSheet( const char* sPath );
+        friend void CompileTextureSheets();
+        friend SpriteInfo GetSpriteInfo( const char* sName );
+        friend void RemapTextureSheet(SpriteSheet& Target, texres_t iOldW, texres_t iOldH, texres_t iNewW, texres_t iNewH);
+
+        public:
+            SpriteSheet() = default;
+            ~SpriteSheet();
+
+            const SpriteMapping& GetSpriteUV(const char* sName) const;
+            GLenum GetTextureID() const;
+
+            void GetResolution(texres_t& iW, texres_t& iH) const;
+
+        private:
+            GLuint m_hTexture;
+            texres_t m_iWidth, m_iHeight;
+            mapping_t m_mMapping;
+    };
+    
+    SpriteInfo GetSpriteInfo( const char* sName );
+
+    bool LoadTextureSheet( const char* sPath );
+    void CompileTextureSheets();
 }
 
 #endif

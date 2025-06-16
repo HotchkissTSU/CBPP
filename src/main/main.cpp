@@ -297,6 +297,8 @@ void Cleanup() {
 	free(GameData.Gamefile);
 	free(GameData.GameLibrary);
 
+    cbvs::CleanupRender();
+
 	//ddraw::Cleanup();
 	//cbvs::CleanupDefaultShaders();
 
@@ -380,6 +382,10 @@ int main( int argc, char** argv ) {
 		CbThrowError("Failed to init DDRAW");
 	}
 
+    if(!cbvs::InitRender()) {
+        CbThrowError("Failed to init main rendering");
+    }
+
 	glfwSetCursorPosCallback(GameData.MainWindow, cursor_position_callback);
 	glfwSetWindowSizeCallback(GameData.MainWindow, window_size_callback);
 	glfwSetKeyCallback(GameData.MainWindow, key_callback);
@@ -426,7 +432,7 @@ int main( int argc, char** argv ) {
 			}
 		}
 		
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		ModuleData.ModuleTick();

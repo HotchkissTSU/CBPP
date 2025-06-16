@@ -294,6 +294,7 @@ namespace cbvs {
             }
 
             cbpp::CString hName(pCurrent->m_sPipeName);
+            
             g_mShaderDict[hName] = pNewPipe;
 
             pPrev = pCurrent;

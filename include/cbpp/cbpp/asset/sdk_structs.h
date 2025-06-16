@@ -9,17 +9,28 @@
 #include "cdf/cdf.h"
 #include <stdint.h>
 
+/*
+    'cta_mapping' array member.
+    Spritsheets store mapping in the regular pixel coordinates.
+*/
 typedef struct {
     cdf_uint iNameID;
     uint32_t iX, iY, iW, iH;
 } sdk_Sprite;
 
+/*
+    cta_imginfo
+*/
 typedef struct {
-    uint32_t m_iResolution;
-    uint32_t m_iChannels;
+    uint32_t m_iWidth;
+    uint32_t m_iHeight;
+    uint32_t m_iChannels; // Spritesheets can store their source images in formats different from RGBA
 } sdk_ImageInfo;
 
-//See docs/glyth.jpg
+/*
+    'cff_mapping' array member.
+    See docs/glyth.jpg
+*/
 typedef struct {
     uint32_t iKeycode;  //An UTF-32 codepoint
     float fX, fY;       //Drawing origin

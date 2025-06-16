@@ -1,5 +1,5 @@
 {
-    "type" : "atlas", //Can be 'atlas' or 'font'
+    "type" : "atlas", //Can be 'atlas' or 'font' (this example is for 'atlas' type)
     "raster" : "path-to-my-image", //Path relative to this .json file`s location
     "mapping" : {
         "sprite_1" : [0,0,10,10], //Mapping info (in pixels)

@@ -187,6 +187,8 @@ namespace cbpp {
 			}
 		}
 
+        CbThrowErrorf("Failed to open file '%s' from the group %s", sPath, SearchPathGroupName(iGroupIndex));
+
 		return NULL;
 	}
 

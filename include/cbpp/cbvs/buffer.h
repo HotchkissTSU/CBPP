@@ -7,45 +7,30 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/*
+    About vertex attributes: 
+    0 - 2 GL_FLOATs - Vertex position
+    1 - 2 GL_FLOATs - Vertex UV coords
+*/
+
 namespace cbvs {
-
-    //  The thingie to represent a single vertex attribute.
-    struct VtxAttribData {
-        GLuint Size;
-        GLuint ByteSize;
-        GLenum Type;
-    };
-
     template <typename vertex_t> class VertexBuffer {
         public:
             /*
                 The summary size of all providen attributes must be equal to sizeof(vertex_t)
             */
-            void Init(const vertex_t* pMemory, size_t iLength, GLenum iMode, const VtxAttribData* pAttribInfo = NULL, uint8_t iAttribAmount = 0) {
-                printf("buffer init\n");
-
+            void Init(const vertex_t* pMemory, size_t iLength, GLenum iMode) {
                 glGenVertexArrays(1, &m_hVAO);
                 glGenBuffers(1, &m_hVBO);
-
-                size_t iOffset = 0;
 
                 glBindVertexArray(m_hVAO);
                     glBindBuffer(GL_ARRAY_BUFFER, m_hVBO);
                     glBufferData(GL_ARRAY_BUFFER, iLength * sizeof(vertex_t), (const void*) pMemory, iMode);
 
-                    for(size_t i = 0; i < iAttribAmount; i++) {
-                        glEnableVertexAttribArray(i);
-
-                        const VtxAttribData Data = pAttribInfo[i];
-                        glVertexAttribPointer(i, Data.Size, Data.Type, GL_FALSE, sizeof(vertex_t), (GLvoid*)(iOffset + i*sizeof(vertex_t)));
-
-                        //  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (GLvoid*)0);
-                        //  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (GLvoid*)(sizeof(GLfloat)*2));
-
-                        iOffset += Data.ByteSize;
-                    }
+                    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (GLvoid*)(0));
+                    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (GLvoid*)( sizeof(GLfloat)*2 ));
             }
-        
+
             VertexBuffer() = default;
             VertexBuffer(const VertexBuffer& Other) = delete;
 

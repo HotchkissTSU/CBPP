@@ -112,19 +112,16 @@ namespace cbvs {
     }
 
     bool InitRender() noexcept {
-        VertexBuffer<SpriteVertex>* hSpriteBuff = GetSpriteRenderingBuffer();
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
 
-        const VtxAttribData aSpriteAttribs[] = {
-            {2, sizeof(GLfloat)*2, GL_FLOAT},
-            {2, sizeof(GLfloat)*2, GL_FLOAT}
-        };
+        VertexBuffer<SpriteVertex>* hSpriteBuff = GetSpriteRenderingBuffer();
 
         SpriteVertex aData[6];
 
         hSpriteBuff->Init(
             aData, 6,
-            GL_DYNAMIC_DRAW,
-            aSpriteAttribs, 2
+            GL_DYNAMIC_DRAW
         );
 
         return true;
@@ -134,9 +131,12 @@ namespace cbvs {
         delete GetSpriteRenderingBuffer();
     }
 
-    void RenderSprite(const char* sName, cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbpp::Color iColor, cbpp::float_t fDepth) {
-        cbpp::SpriteInfo Info = cbpp::GetSpriteInfo(sName);
+    void RenderSprite(cbpp::spriteid_t iIndex, cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbpp::Color iColor, cbpp::float_t fDepth) {
+        const cbpp::SpriteInfo& Info = cbpp::GetSpriteInfo(iIndex);
         //ddraw::Texture(vPos, vScale, Info.TextureID, false);
+
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
 
         assert(Info.TextureID != 0);
 
@@ -167,7 +167,7 @@ namespace cbvs {
 
         pSpritePipe->PushUniform("cbpp_Depth", fDepth);
         pSpritePipe->PushUniform("cbpp_Ratio", g_fScreenRatio);
-        //s_pSpritePipe->PushUniform("cbpp_Color", iColor);
+        pSpritePipe->PushUniform("cbpp_Color", iColor);
 
         hSpriteBuff->PushVertexData(s_aSpriteVtxBuff, 6);
         glDrawArrays(GL_TRIANGLES, 0, 6);

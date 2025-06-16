@@ -31,7 +31,7 @@ namespace cbpp {
 			bool Open(const char* path, const char* mode);
 			void Close();
 
-			const FILE* Handle() const noexcept;
+		    FILE* Handle() const noexcept;
 
 			// Output <count> elements to <buffer>, each <size> bytes long
 			size_t Write(void* buffer, uint64_t count, uint64_t size = 1);

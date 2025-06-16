@@ -73,7 +73,7 @@ namespace cbvs {
         cbpp::Vec2 vUV;
     };
 
-    void RenderSprite(const char* sName, cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbpp::Color iColor, cbpp::float_t fDepth = 1.0f);
+    void RenderSprite(cbpp::spriteid_t, cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbpp::Color iColor, cbpp::float_t fDepth = 1.0f);
 }
 
 #endif

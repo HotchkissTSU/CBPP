@@ -115,8 +115,8 @@ namespace cbpp {
 		return is_open;
 	}
 
-	const FILE* File::Handle() const noexcept {
-		return const_cast<const FILE*> (io_ptr);
+	FILE* File::Handle() const noexcept {
+		return io_ptr;
 	}
 
 	File::~File() {

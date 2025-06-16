@@ -129,8 +129,8 @@ void compile_sheet(yyjson_val* jRoot) {
     ImgData.m_iChannels = iChannels;
 
     sdk_cdf_validate( cdf_push_binary(pDoc, pRoot, "cta_imginfo", (uint8_t*)&ImgData, sizeof(ImgData)) )
-    sdk_cdf_validate( cdf_object_push(pRoot, pMappingObj) )
     sdk_cdf_validate( cdf_push_binary(pDoc, pRoot, "cta_raster", pRawImage, iWidth*iHeight*iChannels) )
+    sdk_cdf_validate( cdf_object_push(pRoot, pMappingObj) )
 
     FILE* hFile = NULL;
     

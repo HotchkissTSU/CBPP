@@ -18,38 +18,26 @@ namespace cbpp {
         float_t X,Y,W,H;
     };
 
-    typedef std::unordered_map<CString, SpriteMapping> mapping_t;
+    //typedef std::unordered_map<CString, SpriteMapping> mapping_t;
+    typedef uint32_t spriteid_t;
 
     struct SpriteInfo {
+        const char* Name;
         SpriteMapping Mapping;
         GLuint TextureID;
     };
     
-    class SpriteSheet {
-        friend bool LoadTextureSheet( const char* sPath );
-        friend void CompileTextureSheets();
-        friend SpriteInfo GetSpriteInfo( const char* sName );
-        friend void RemapTextureSheet(SpriteSheet& Target, texres_t iOldW, texres_t iOldH, texres_t iNewW, texres_t iNewH);
+    spriteid_t GetSpriteID( const char* sName );
+    const SpriteInfo& GetSpriteInfo( spriteid_t iSpriteID );
 
-        public:
-            SpriteSheet() = default;
-            ~SpriteSheet();
+    /*
+        Load and mount a providen spritesheet
+    */
+    bool LoadTextureSheet( const char* sPath, bool bAppendExt = true );
 
-            const SpriteMapping& GetSpriteUV(const char* sName) const;
-            GLenum GetTextureID() const;
-
-            void GetResolution(texres_t& iW, texres_t& iH) const;
-
-        private:
-            GLuint m_hTexture;
-            texres_t m_iWidth, m_iHeight;
-            mapping_t m_mMapping;
-    };
-    
-    SpriteInfo GetSpriteInfo( const char* sName );
-
-    bool LoadTextureSheet( const char* sPath );
     void CompileTextureSheets();
+
+    void CleanupSprites();
 }
 
 #endif

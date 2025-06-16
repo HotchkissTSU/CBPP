@@ -52,14 +52,18 @@ namespace cbvs {
 
         return true;
     }
-
+    
     bool Image::IsSheetCompatible() const noexcept {
         return cbpp::math::IsPOT(m_iH) && cbpp::math::IsPOT(m_iW);
     }
 
     Image::Image(const uint8_t* aPixels, texres_t iW, texres_t iH, int iChannels) noexcept : m_iH(iH), m_iW(iW) {
         m_aImageData = cbpp::Malloc<cbpp::Color> (iW*iH);
-        ConvertImage(iChannels, aPixels, m_aImageData, iW, iH);
+        if(iChannels != 4) {
+            ConvertImage(iChannels, aPixels, m_aImageData, iW, iH);
+        }else{
+            memcpy(m_aImageData, aPixels, iW*iH*sizeof(cbpp::Color));
+        }
     }
 
     Image::Image(texres_t iW, texres_t iH) noexcept {

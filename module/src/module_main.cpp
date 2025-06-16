@@ -5,7 +5,7 @@
 
 using namespace cbpp;
 
-cbvs::SpriteComposer* g_pTest;
+spriteid_t g_iSprite;
 
 extern "C" {
     void ModulePreMain() { 
@@ -16,17 +16,19 @@ extern "C" {
 
         printf("Module entry point!\n");
 
-        LoadTextureSheet("uvtest.cta");
+        LoadTextureSheet("uvtest");
+        LoadTextureSheet("weapon01");
 
-        //CompileTextureSheets();
+        g_iSprite = GetSpriteID("hcal_carbine_side");
 
         return true;
     }
-
-    void ModuleTick() {
-        cbvs::RenderSprite("uv_debug", Vec2(-0.25f), Vec2(0.5f), Color(255));
-    }
     
+    void ModuleTick() {
+        //ddraw::Texture(Vec2(-0.25f), Vec2(0.5f), g_hTexture, true);
+        cbvs::RenderSprite(g_iSprite, Vec2(-0.25f), Vec2(0.5f), Color(255,0,0));
+    }
+
     //Return TRUE if the event was processed by the module and engine should not use it
     bool ModuleEventCallback( cbpp::Event& ev ) { return false; }
 }

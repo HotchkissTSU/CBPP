@@ -15,10 +15,9 @@
 
 namespace cbpp {
     struct SpriteMapping {
-        float_t X,Y,W,H;
+        float_t X,Y,W,H; // W and H here are not width and height (surprise!) - they are the coordinates of the top-right corner of the UV rectangle
     };
 
-    //typedef std::unordered_map<CString, SpriteMapping> mapping_t;
     typedef uint32_t spriteid_t;
 
     struct SpriteInfo {
@@ -35,8 +34,9 @@ namespace cbpp {
     */
     bool LoadTextureSheet( const char* sPath, bool bAppendExt = true );
 
-    void CompileTextureSheets();
+    //void CompileTextureSheets();
 
+    // Deallocate all currently used sprites
     void CleanupSprites();
 }
 

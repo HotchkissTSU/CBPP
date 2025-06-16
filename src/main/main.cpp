@@ -298,6 +298,7 @@ void Cleanup() {
 	free(GameData.GameLibrary);
 
     cbvs::CleanupRender();
+    CleanupSprites();
 
 	//ddraw::Cleanup();
 	//cbvs::CleanupDefaultShaders();
@@ -306,7 +307,7 @@ void Cleanup() {
 
 	if(ModuleData.LibHandle != NULL) {
 		dlclose(ModuleData.LibHandle);
-	}
+    }
 
 	free(g_string_buffer);
 }
@@ -431,7 +432,7 @@ int main( int argc, char** argv ) {
 				
 			}
         }
-        
+
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 

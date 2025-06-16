@@ -130,7 +130,7 @@ namespace cbvs {
     void CleanupRender() noexcept {
         delete GetSpriteRenderingBuffer();
     }
-
+    
     void RenderSprite(cbpp::spriteid_t iIndex, cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbpp::Color iColor, cbpp::float_t fDepth) {
         const cbpp::SpriteInfo& Info = cbpp::GetSpriteInfo(iIndex);
         //ddraw::Texture(vPos, vScale, Info.TextureID, false);
@@ -145,10 +145,12 @@ namespace cbvs {
 
         static SpriteVertex vP1, vP2, vP3, vP4; //top-left, top-right, bottom-left, bottom-right
 
-        vP1 = {  vPos,                          {Info.Mapping.X, Info.Mapping.Y} };
-        vP2 = { {vPos.x + vScale.x, vPos.y},    {Info.Mapping.W, Info.Mapping.Y} };
-        vP3 = { {vPos.x, vPos.y + vScale.y},    {Info.Mapping.X, Info.Mapping.H} };
-        vP4 = {  vPos + vScale,                 {Info.Mapping.W, Info.Mapping.H} };
+        const cbpp::float_t fRatio = (Info.Mapping.W - Info.Mapping.X) / (Info.Mapping.H - Info.Mapping.Y);
+
+        vP1 = {  vPos,                          {Info.Mapping.X, Info.Mapping.H} };
+        vP2 = { {vPos.x + vScale.x*fRatio, vPos.y},    {Info.Mapping.W, Info.Mapping.H} };
+        vP3 = { {vPos.x, vPos.y + vScale.y},    {Info.Mapping.X, Info.Mapping.Y} };
+        vP4 = {  vPos + vScale*cbpp::Vec2(fRatio, 1.0f),                 {Info.Mapping.W, Info.Mapping.Y} };
 
         s_aSpriteVtxBuff[0] = vP3;
         s_aSpriteVtxBuff[1] = vP2;

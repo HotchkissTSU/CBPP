@@ -45,14 +45,14 @@ namespace cbvs {
 
         for( texres_t x = 0; x < iW; x++ ) {
             for(texres_t y = 0; y < iH; y++) {
-                const uint8_t* pPixel = aSource + x*(y+1)*iSrcChannels;
-                pTarget[x*(y+1)] = pConvFunc(pPixel);
+                const uint8_t* pPixel = aSource + (iW * y + x)*iSrcChannels;
+                pTarget[ iW * y + x ] = pConvFunc(pPixel);
             }
         }
 
         return true;
     }
-    
+
     bool Image::IsSheetCompatible() const noexcept {
         return cbpp::math::IsPOT(m_iH) && cbpp::math::IsPOT(m_iW);
     }
@@ -76,22 +76,58 @@ namespace cbvs {
         }
     }
 
-    GLuint CreateTexture(const cbpp::Color* pImage, texres_t iW, texres_t iH) {
+    GLuint CreateTexture(const cbpp::Color* pImage, texres_t iW, texres_t iH, bool bFlipY) {
+        cbpp::Color* pSource = (cbpp::Color*)pImage;
+
+        if(bFlipY) {
+            pSource = cbpp::Malloc<cbpp::Color>(iW*iH);
+            /*
+            for(size_t y = 0; y < iH; y++) {
+                cbpp::Color* pTarget = pSource + y*iW;
+                const cbpp::Color* pSource = pImage + (iH-y-1)*iW;
+                memcpy( pTarget, pSource, iW*sizeof(cbpp::Color));
+            }*/
+
+            memcpy( pSource, pImage, iW*iH*sizeof(cbpp::Color) );
+
+            int i, j;
+            for( j = 0; j*2 < iH; ++j )
+            {
+                int index1 = j * iW * sizeof(cbpp::Color);
+                int index2 = (iH - 1 - j) * iW * sizeof(cbpp::Color);
+                char* img = (char*)(pSource);
+                for( i = iW * sizeof(cbpp::Color); i > 0; --i )
+                {
+                    unsigned char temp = img[index1];
+                    img[index1] = img[index2];
+                    img[index2] = temp;
+                    ++index1;
+                    ++index2;
+                }
+            }
+        }
+
         GLuint hTex;
         glGenTextures(1, &hTex);
 
         glBindTexture(GL_TEXTURE_2D, hTex);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, iW, iH, 0, GL_RGBA, GL_UNSIGNED_BYTE, (const void*)pImage);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, iW, iH, 0, GL_RGBA, GL_UNSIGNED_BYTE, (const void*)pSource);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glGenerateMipmap(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, 0);
 
+        glCheck();
+
+        if(bFlipY) {
+            Free(pSource);
+        }
+
         return hTex;
     }
 
-    GLuint CreateTexture(const Image& Source) {
-        return CreateTexture(Source.GetPixelData(), Source.Width(), Source.Height());
+    GLuint CreateTexture(const Image& Source, bool bFlipY) {
+        return CreateTexture(Source.GetPixelData(), Source.Width(), Source.Height(), bFlipY);
     }
 
     Image* GetImageFromTexture(GLuint hTexID, texres_t iWidth, texres_t iHeight) {

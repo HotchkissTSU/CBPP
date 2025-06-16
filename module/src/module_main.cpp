@@ -18,15 +18,16 @@ extern "C" {
 
         LoadTextureSheet("uvtest");
         LoadTextureSheet("weapon01");
+        LoadTextureSheet("eule");
 
-        g_iSprite = GetSpriteID("hcal_carbine_side");
+        g_iSprite = GetSpriteID("wife-material");
 
         return true;
     }
-    
+
     void ModuleTick() {
         //ddraw::Texture(Vec2(-0.25f), Vec2(0.5f), g_hTexture, true);
-        cbvs::RenderSprite(g_iSprite, Vec2(-0.25f), Vec2(0.5f), Color(255,0,0));
+        cbvs::RenderSprite(g_iSprite, Vec2(0), Vec2(1), Color(255));
     }
 
     //Return TRUE if the event was processed by the module and engine should not use it

@@ -15,17 +15,6 @@
 namespace cbpp {
     List<SpriteInfo> g_aSprites;
 
-    /*
-    void SpriteSheet::GetResolution(texres_t& iW, texres_t& iH) const {
-        iW = m_iWidth;
-        iH = m_iHeight;
-    }
-
-    SpriteSheet::~SpriteSheet() {
-        glDeleteTextures(1, &m_hTexture);
-    }
-    */
-
     bool LoadTextureSheet( const char* sPath, bool bAppendExt ) {
         char sPathBuffer[128];
 
@@ -109,18 +98,24 @@ namespace cbpp {
         sdk_ImageInfo SourceImageInfo;
         memcpy( &SourceImageInfo, cdf_object_data(&RasterData), cdf_object_length(&RasterData) );
 
+        if(cdf_object_length(&Raster) != SourceImageInfo.m_iHeight*SourceImageInfo.m_iWidth*SourceImageInfo.m_iChannels) {
+            PushError(ERROR_IO, "Raster length does not correspond to cta_imginfo");
+            cdf_document_destroy(pDoc);
+            return false;
+        }
+
         /*
             Using cbvs::Image class to perform a convertion to RGBA if needed.
 
             A spritesheet file can store source image in any channels format it wants, but
-            texture atlases only use RGBA, so convertion is required.
+            texture atlases only use RGBA, so possible convertion is required.
         */
         cbvs::Image RasterImage( (const uint8_t*)cdf_object_data(&Raster), 
                                 SourceImageInfo.m_iWidth, 
                                 SourceImageInfo.m_iHeight, 
                                 SourceImageInfo.m_iChannels );
 
-        GLuint hAtlasTexture = cbvs::CreateTexture(RasterImage);
+        GLuint hAtlasTexture = cbvs::CreateTexture(RasterImage, false);
 
         cdf_object CurrentSprite;
         cdf_uint iLength = cdf_array_length(&Mapping);
@@ -128,6 +123,7 @@ namespace cbpp {
         SpriteInfo Sprite;
         sdk_Sprite CurrentMapping;
 
+        // Iterate each mapping and push it into the global registry
         for(size_t i = 0; i < iLength; i++) {
             cdf_array_index(&Mapping, &CurrentSprite, i);
             memcpy( &CurrentMapping, cdf_object_data(&CurrentSprite), cdf_object_length(&CurrentSprite) );
@@ -146,96 +142,19 @@ namespace cbpp {
         cdf_document_destroy(pDoc);
         return true;
     }
-    
-/*
-    bool LoadTextureSheet(const char* sPath) {
-        char sPathBuffer[512];
-        snprintf(sPathBuffer, 512, "%s%s", sPath, ".cta");
 
-        File* hInput = OpenFile(PATH_TEXTURE, sPathBuffer, "rb");
-
-        cdf_document* pDoc;
-        cdf_verinfo Version;
-        int16_t iClassID;
-
-        cdf_retcode iCode = cdf_file_read((FILE*)(hInput->Handle()), &pDoc, &Version, &iClassID);
-
-        hInput->Close();
-
-        if(iCode != CDF_OK) {
-            PushError(ERROR_CDF, cdf_get_error(iCode));
-            return false;
-        }
-
-        if(iClassID != CDF_CLASS_SPRITESHEET) {
-            PushError(ERROR_IO, "Not a spritesheet");
-            cdf_document_destroy(pDoc);
-            return false;
-        }
-
-        cdf_object Current;
-        cdf_object* pRoot = cdf_document_root(pDoc);
-        size_t iIter = 0;
-        sdk_ImageInfo ImageData;
-
-        Color* aImage = NULL;
-        size_t iImageBytes;
-
-        GLuint hTex = 0;
-
-        SpriteInfo& SpriteBuff = g_aSprites.At( g_aSprites.PushEmpty() );
-
-        while( cdf_object_iterate(pRoot, &Current, &iIter) ) {
-            const char* sName = cdf_object_name(pDoc, &Current);
-
-            if( strcmp(sName, "cta_imginfo") == 0 ) {
-                memcpy(&ImageData, cdf_object_data(&Current), sizeof(ImageData));
-            }
-
-            if( strcmp(sName, "cta_mapping") == 0 ) {
-                cdf_uint iArrayLen = cdf_array_length(&Current);
-                sdk_Sprite Buff;
-                cdf_object Obj;
-                SpriteMapping& Map = SpriteBuff.Mapping;
-
-                for(size_t i = 0; i < iArrayLen; i++) {
-                    cdf_array_index(&Current, &Obj, i);
-                    memcpy(&Buff, cdf_object_data(&Obj), sizeof(Buff));
-
-                    Map.X = (float_t)(Buff.iX) / (float_t)(ImageData.m_iWidth);
-                    Map.Y = (float_t)(Buff.iY) / (float_t)(ImageData.m_iHeight);
-                    Map.W = (float_t)(Buff.iW + Buff.iX) / (float_t)(ImageData.m_iWidth);
-                    Map.H = (float_t)(Buff.iH + Buff.iY) / (float_t)(ImageData.m_iHeight);
-
-                    SpriteBuff.Name = strdup( pDoc->m_aNames[Buff.iNameID] );
-                    SpriteBuff.TextureID = hTex;
-
-                    printf("%s\n", SpriteBuff.Name);
-                }
-            }
-
-            if( strcmp(sName, "cta_raster") == 0 ) {
-                iImageBytes = cdf_object_length(&Current);
-                aImage = (Color*) cdf_object_data(&Current);
-
-                if(aImage == NULL) {
-                    PushError(ERROR_IO, "Failed to get image data from the document");
-                    cdf_document_destroy(pDoc);
-                    return false;
-                }
-
-                hTex = cbvs::CreateTexture(aImage, ImageData.m_iWidth, ImageData.m_iHeight);
-            }
-        }
-        
-        cdf_document_destroy(pDoc);
-        return true;
-    }*/
-
-    void CompileTextureSheets() {
+    /*void CompileTextureSheets() {
         cbvs::SpriteComposer* pComposer = new cbvs::SpriteComposer();
-        pComposer->Reset();        
-    }
+        pComposer->Reset(); 
+
+        for(size_t i = 0; i < g_aSprites.Length(); i++) {
+            SpriteInfo& Current = g_aSprites.At(i);
+
+            int Wt, Ht, Xt, Yt;
+        }
+
+        delete pComposer;       
+    }*/
 
     spriteid_t GetSpriteID( const char* sName ) {
         for(size_t i = 0; i < g_aSprites.Length(); i++) {
@@ -258,6 +177,7 @@ namespace cbpp {
     void CleanupSprites() {
         for(size_t i = 0; i < g_aSprites.Length(); i++) {
             free( (char*)(g_aSprites.At(i).Name) );
+            glDeleteTextures(1, &g_aSprites.At(i).TextureID);
         }
 
         g_aSprites.Clear();

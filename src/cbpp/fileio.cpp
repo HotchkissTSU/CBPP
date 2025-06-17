@@ -137,6 +137,7 @@ namespace cbpp {
 			case PATH_SOUND:   return "PATH_SOUND";
 			case PATH_TEXTURE: return "PATH_TEXTURE";
 			case PATH_SHADER:  return "PATH_SHADER";
+            case PATH_FONT:    return "PATH_FONT";
 			default: 		   return "PATH_UNKNOWN";
 		}
 	}
@@ -178,15 +179,15 @@ namespace cbpp {
 
 			FILE* hTestHandle = fopen(sBuffer, "r");
 			if(hTestHandle != NULL) {
-				#ifdef CBPP_DEBUG
+				/*#ifdef CBPP_DEBUG
 				printf("Resolved path for '%s' in group %s: %s\n", sPath, SearchPathGroupName(iGroupIndex), sBuffer);
-				#endif
+				#endif*/
 
 				fclose(hTestHandle);
 				return new File(sBuffer, sModes);
 			}
-		}
-
+        }
+        
         CbThrowErrorf("Failed to open file '%s' from the group %s", sPath, SearchPathGroupName(iGroupIndex));
 
 		return NULL;

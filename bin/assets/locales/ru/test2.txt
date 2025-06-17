@@ -1,4 +1,4 @@
-#ENTRY1 text text text
+#test_entry text text text
 /commentary
 #ENTRY2 entry2 /commentary
 #niggah amongus

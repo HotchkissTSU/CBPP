@@ -7,7 +7,8 @@
         "map" : ["assets/maps/"],
         "sound" : ["assets/sound/"],
         "texture" : ["assets/textures/"],
-        "shader": ["assets/shaders/"]
+        "shader": ["assets/shaders/"],
+        "font" : ["assets/fonts/"]
     },
     
     "locales" : {

@@ -255,9 +255,9 @@ namespace cbvs {
         std::map<cbpp::CString, GLuint> mShadersVTX, mShadersFRAG, mShadersGEOM;
 
         while(pCurrent != NULL) {
-            #ifdef CBPP_DEBUG
+            /*#ifdef CBPP_DEBUG
                 cbpp::Print(*pCurrent);
-            #endif
+            #endif*/
 
             GLuint hVTX, hGEOM = -1, hFRAG;
             

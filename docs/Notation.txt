@@ -1,4 +1,4 @@
-## Recomendations for variable naming in CBPP ##
+## Recommendations for variable naming in CBPP ##
 
 Global prefixes:
     A global variable   -> g_ (Has a priority over s_)

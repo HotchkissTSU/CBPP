@@ -10,7 +10,6 @@ ROOT:
 
     cta_raster, binary - the raw pixel data of the source raster image.
 
-The sprite mapping info is stored in the form of the normalized texture coordinates.
 Only square POT images are allowed as input for the rendering optimisations reason.
 
 Packaging a CTA file:

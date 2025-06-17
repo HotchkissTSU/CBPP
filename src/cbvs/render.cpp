@@ -8,6 +8,7 @@
 
 namespace cbvs {
     cbpp::float_t g_fScreenRatio = 1.0f;
+    cbpp::Vec2 g_vScreenSize;
 
     IRenderable::IRenderable(const char* sPipeName) {
         m_pPipe = cbvs::GetPipe(sPipeName);
@@ -16,7 +17,7 @@ namespace cbvs {
             CbThrowErrorf("Unable to find the '%s' rendering pipeline", sPipeName);
         }
     }
-
+    
     void IRenderable::CallPipe() const noexcept {
         if(m_pPipe != NULL) { m_pPipe->Use(); }
     }
@@ -133,12 +134,9 @@ namespace cbvs {
     
     void RenderSprite(cbpp::spriteid_t iIndex, cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbpp::Color iColor, cbpp::float_t fDepth) {
         const cbpp::SpriteInfo& Info = cbpp::GetSpriteInfo(iIndex);
-        //ddraw::Texture(vPos, vScale, Info.TextureID, false);
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
-
-        assert(Info.TextureID != 0);
 
         Pipe* pSpritePipe = GetPipe("cbpp_sprite");
         static SpriteVertex s_aSpriteVtxBuff[6];
@@ -147,10 +145,10 @@ namespace cbvs {
 
         const cbpp::float_t fRatio = (Info.Mapping.W - Info.Mapping.X) / (Info.Mapping.H - Info.Mapping.Y);
 
-        vP1 = {  vPos,                          {Info.Mapping.X, Info.Mapping.H} };
-        vP2 = { {vPos.x + vScale.x*fRatio, vPos.y},    {Info.Mapping.W, Info.Mapping.H} };
-        vP3 = { {vPos.x, vPos.y + vScale.y},    {Info.Mapping.X, Info.Mapping.Y} };
-        vP4 = {  vPos + vScale*cbpp::Vec2(fRatio, 1.0f),                 {Info.Mapping.W, Info.Mapping.Y} };
+        vP1 = {  vPos,                                      {Info.Mapping.X, Info.Mapping.H} };
+        vP2 = { {vPos.x + vScale.x*fRatio, vPos.y},         {Info.Mapping.W, Info.Mapping.H} };
+        vP3 = { {vPos.x, vPos.y + vScale.y},                {Info.Mapping.X, Info.Mapping.Y} };
+        vP4 = {  vPos + vScale*cbpp::Vec2(fRatio, 1.0f),    {Info.Mapping.W, Info.Mapping.Y} };
 
         s_aSpriteVtxBuff[0] = vP3;
         s_aSpriteVtxBuff[1] = vP2;

@@ -7,6 +7,8 @@ using namespace cbpp;
 
 spriteid_t g_iSprite;
 
+uint32_t g_iMX, g_iMY;
+
 extern "C" {
     void ModulePreMain() { 
     }
@@ -16,9 +18,9 @@ extern "C" {
 
         printf("Module entry point!\n");
 
-        LoadTextureSheet("uvtest");
         LoadTextureSheet("weapon01");
         LoadTextureSheet("eule");
+        LoadTextureSheet("fx");
 
         g_iSprite = GetSpriteID("wife-material");
 
@@ -26,10 +28,18 @@ extern "C" {
     }
 
     void ModuleTick() {
-        //ddraw::Texture(Vec2(-0.25f), Vec2(0.5f), g_hTexture, true);
-        cbvs::RenderSprite(g_iSprite, Vec2(0), Vec2(1), Color(255));
+        cbvs::RenderSprite(g_iSprite, Vec2(-1), Vec2(0.5f), Color(255));
     }
 
     //Return TRUE if the event was processed by the module and engine should not use it
-    bool ModuleEventCallback( cbpp::Event& ev ) { return false; }
+    bool ModuleEventCallback( cbpp::Event& ev ) {
+        switch (ev.Type) {
+            case Event::MOUSE_MOVE:
+                g_iMX = ev.Data.MouseMove.X;
+                g_iMY = ev.Data.MouseMove.Y;
+                return true;
+        }
+
+        return false;
+    }
 }

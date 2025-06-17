@@ -77,11 +77,9 @@ void window_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0,0,width,height);
 
-	/*
-	cbvs::ScreenSize.x = (float_t)width;
-	cbvs::ScreenSize.y = (float_t)height;
 
-	cbvs::ScreenRatio = (float_t)width / (float_t)height;*/
+	cbvs::g_vScreenSize.x = (float_t)width;
+	cbvs::g_vScreenSize.y = (float_t)height;
 
 	cbvs::g_fScreenRatio = (float_t)width / (float_t)height;
 }
@@ -188,6 +186,7 @@ void MountSearchPaths(yyjson_val* jValue) noexcept {
 	__mount_group(jValue, "texture", cbpp::PATH_TEXTURE);
 	__mount_group(jValue, "sound",   cbpp::PATH_SOUND);
 	__mount_group(jValue, "shader",  cbpp::PATH_SHADER);
+    __mount_group(jValue, "font",    cbpp::PATH_FONT);
 }
 
 bool LoadGamefile() {
@@ -412,6 +411,8 @@ int main( int argc, char** argv ) {
 		CbThrowError( "Failed to init DDRAW" );
 		exit(-1);
 	}*/
+
+    LoadTextureSheet("cbpp_base");
 
 	if(!ModuleData.ModuleMain( argc, argv )) {
 		CbThrowError("Unable to proceed, ModuleMain has returned FALSE");

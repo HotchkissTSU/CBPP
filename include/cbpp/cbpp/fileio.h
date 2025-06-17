@@ -16,6 +16,7 @@ namespace cbpp {
 		PATH_MAP,
 		PATH_SOUND,
 		PATH_SHADER,
+        PATH_FONT,
 
 		SPATHS_AMOUNT //Must be a last entry in this enum!
 	};

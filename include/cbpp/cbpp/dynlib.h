@@ -3,8 +3,13 @@
 
 #include "cbdef.h"
 
-ON_LINUX( #include <dlfcn.h> )
-ON_WINDOWS( #include <Windows.h> )
+#if CBPP_LINUX
+    #include <dlfcn.h>
+#endif
+
+#if CBPP_WINDOWS
+    #include <Windows.h>
+#endif
 
 namespace cbpp {
     class DynamicLibrary {
@@ -12,8 +17,16 @@ namespace cbpp {
             DynamicLibrary() = default;
             DynamicLibrary(const char* sPath);
 
-            void Load(const char* sPath);
-            void* GetSymbol(const char* sName);
+            bool Load(const char* sPath);
+            void Unload() const;
+            void* GetSymbol(const char* sName) const;
+
+            const char* GetLastError() const;
+
+        private:
+            ON_LINUX (
+                void* m_pLibHandle = NULL;
+            )
     };
 }
 

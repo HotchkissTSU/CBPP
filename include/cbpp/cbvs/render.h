@@ -26,6 +26,7 @@ namespace cbvs {
     };
 
     extern cbpp::float_t g_fScreenRatio;
+    extern cbpp::Vec2 g_vScreenSize;
 }
 
 namespace cbvs {

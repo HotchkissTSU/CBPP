@@ -5,12 +5,15 @@
 
 #include <type_traits>
 
-#ifdef __linux__
+#define CBPP_LINUX defined(__linux__)
+#define CBPP_WINDOWS (defined(_WIN64) || defined(_WIN32))
+
+#if CBPP_LINUX
     #define ON_LINUX(code) code
     #define ON_WINDOWS(code)
 #endif
 
-#if defined(_WIN64) || defined(_WIN32)
+#if CBPP_WINDOWS
     #define ON_LINUX(code)
     #define ON_WINDOWS(code) code
 #endif

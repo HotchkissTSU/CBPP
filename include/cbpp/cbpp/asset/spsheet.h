@@ -50,8 +50,7 @@ namespace cbpp {
     };
 
     /*
-        Load and mount a providen sheet-based file. Currently supported:
-        .cta .cff
+        Load and mount a spritesheet
     */
     bool LoadSheet( const char* sPath, bool bAppendExt = true );
 

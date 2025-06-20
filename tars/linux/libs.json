@@ -26,7 +26,7 @@
 		
 		"libcdf" : 
 		{
-			"comp_params":"-O2 -ffast-math -Wno-discarded-qualifiers -D CDF_USE_ZLIB",
+			"comp_params":"-g3 -ffast-math -Wno-discarded-qualifiers -D CDF_USE_ZLIB",
 			"link_static" :[ "z" ],
 			"include" : [ "include" ],
 			"obj" : "obj/cdf",

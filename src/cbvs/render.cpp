@@ -131,24 +131,25 @@ namespace cbvs {
     void CleanupRender() noexcept {
         delete GetSpriteRenderingBuffer();
     }
-    
+
     void RenderSprite(cbpp::spriteid_t iIndex, cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbpp::float_t fAngle, cbpp::Color iColor, cbpp::float_t fDepth) {
+        static SpriteVertex s_aSpriteVtxBuff[6];
+        static SpriteVertex vP1, vP2, vP3, vP4; //top-left, top-right, bottom-left, bottom-right
+
         const cbpp::SpriteInfo& Info = cbpp::GetSpriteInfo(iIndex);
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
 
-        Pipe* pSpritePipe = GetPipe("cbpp_sprite");
-        static SpriteVertex s_aSpriteVtxBuff[6];
-
-        static SpriteVertex vP1, vP2, vP3, vP4; //top-left, top-right, bottom-left, bottom-right
+        static Pipe* pSpritePipe = GetPipe("cbpp_sprite");
 
         const cbpp::float_t fRatio = (Info.Mapping.W - Info.Mapping.X) / (Info.Mapping.H - Info.Mapping.Y);
+        const cbpp::Vec2 vScaleFinal = vScale * cbpp::Vec2(fRatio, 1.0f);
 
-        vP1 = {  vPos,                                      {Info.Mapping.X, Info.Mapping.H} };
-        vP2 = { {vPos.x + vScale.x*fRatio, vPos.y},         {Info.Mapping.W, Info.Mapping.H} };
-        vP3 = { {vPos.x, vPos.y + vScale.y},                {Info.Mapping.X, Info.Mapping.Y} };
-        vP4 = {  vPos + vScale*cbpp::Vec2(fRatio, 1.0f),    {Info.Mapping.W, Info.Mapping.Y} };
+        vP1 = {  vPos - vScaleFinal*0.5f,                                              {Info.Mapping.X, Info.Mapping.H} };
+        vP2 = { cbpp::Vec2(vPos.x + vScale.x*fRatio, vPos.y) - vScaleFinal*0.5f,       {Info.Mapping.W, Info.Mapping.H} };
+        vP3 = { cbpp::Vec2(vPos.x, vPos.y + vScale.y) - vScaleFinal*0.5f,              {Info.Mapping.X, Info.Mapping.Y} };
+        vP4 = {  vPos + vScale*cbpp::Vec2(fRatio, 1.0f) - vScaleFinal*0.5f,            {Info.Mapping.W, Info.Mapping.Y} };
 
         s_aSpriteVtxBuff[0] = vP3;
         s_aSpriteVtxBuff[1] = vP2;
@@ -169,7 +170,7 @@ namespace cbvs {
         pSpritePipe->PushUniform("cbpp_Ratio", g_fScreenRatio);
         pSpritePipe->PushUniform("cbpp_Color", iColor);
         pSpritePipe->PushUniform("cbpp_Angle", fAngle);
-        pSpritePipe->PushUniform("cbpp_RotateOrigin", (vP1.vPos + vP2.vPos) / 2);
+        pSpritePipe->PushUniform("cbpp_RotateOrigin", (vP1.vPos + vP4.vPos) / 2);
 
         hSpriteBuff->PushVertexData(s_aSpriteVtxBuff, 6);
         glDrawArrays(GL_TRIANGLES, 0, 6);

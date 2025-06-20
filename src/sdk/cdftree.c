@@ -198,6 +198,7 @@ int main( int argc, char** argv ) {
     }
 
     cdf_object* pRoot = cdf_document_root(g_pDoc);
+
     print_cdf_object(pRoot, 0, 0);
 
     cdf_document_destroy(g_pDoc);

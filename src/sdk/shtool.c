@@ -15,6 +15,8 @@
 #include "cbpp/asset/cdf_classes.h"
 #include "cbpp/asset/sdk_structs.h"
 
+#define SHTOOL_MAX_RESOLUTION 4096
+
 const char* g_sArgs = "hlf:o:c:";
 
 const char* g_sHelpMsg = "CBPP SDK\nshtool:\n'-h' - Display this message and exit\n'-f' - Input file path\n\
@@ -32,6 +34,9 @@ char* g_sOutputPath = NULL;
 char IsPOT(int x) {
     return (x > 0) && ((x & (x - 1)) == 0);
 }
+
+// The prefix to add before every sprite name
+char* g_sNamesPrefix = NULL;
 
 void compile_sheet(yyjson_val* jRoot) {
     yyjson_val* jRaster = yyjson_obj_get(jRoot, "raster");
@@ -92,6 +97,10 @@ void compile_sheet(yyjson_val* jRoot) {
         sdk_error("NPOT resolution spritesheet source images are not supported");
     }
 
+    if(iWidth > SHTOOL_MAX_RESOLUTION || iHeight > SHTOOL_MAX_RESOLUTION) {
+        sdk_errorf("The source image is too big (%lu/%lu). Both width and height must not exeed %lu", iWidth, iHeight, SHTOOL_MAX_RESOLUTION);
+    }
+
     cdf_document* pDoc = cdf_document_create();
     cdf_object* pRoot = cdf_document_root(pDoc);
     cdf_object* pMappingObj = cdf_object_create(pDoc, "cta_mapping", CDF_TYPE_ARRAY);
@@ -100,8 +109,11 @@ void compile_sheet(yyjson_val* jRoot) {
     yyjson_obj_iter Iter = yyjson_obj_iter_with(jMapping);
 
     sdk_Sprite SpriteBuffer;
+    char sNameBuffer_[128];
+    char* sNameBuffer = (char*) sNameBuffer_;
 
     while ((jKey = yyjson_obj_iter_next(&Iter))) {
+        memset(sNameBuffer, 0, 128);
         jVal = yyjson_obj_iter_get_val(jKey);
         
         const char* sName = yyjson_get_str(jKey);
@@ -113,12 +125,18 @@ void compile_sheet(yyjson_val* jRoot) {
         if(yyjson_arr_size(jVal) < 4) {
             sdk_errorf("Too short mapping (must be at least 4 numbers) for the sprite '%s'", sName);
         }
+
+        if(g_sNamesPrefix != NULL) {
+            sNameBuffer = strcat(sNameBuffer, g_sNamesPrefix);
+        }
+
+        sNameBuffer = strcat(sNameBuffer, sName);
         
         SpriteBuffer.iX = yyjson_get_int(yyjson_arr_get(jVal, 0));
         SpriteBuffer.iY = yyjson_get_int(yyjson_arr_get(jVal, 1));
         SpriteBuffer.iW = yyjson_get_int(yyjson_arr_get(jVal, 2));
         SpriteBuffer.iH = yyjson_get_int(yyjson_arr_get(jVal, 3));
-        SpriteBuffer.iNameID = cdf_nametable_push(pDoc, sName);
+        SpriteBuffer.iNameID = cdf_nametable_push(pDoc, sNameBuffer);
 
         sdk_cdf_validate( cdf_array_data_push_ex(pMappingObj, &SpriteBuffer, sizeof(sdk_Sprite), CDF_TYPE_BINARY) )
     }
@@ -161,10 +179,6 @@ void compile_sheet(yyjson_val* jRoot) {
     free(sPathBuffer);
 }
 
-void compile_font() {
-
-}
-
 int main(int argc, char** argv) {
     const char* sMode;
 
@@ -202,21 +216,13 @@ int main(int argc, char** argv) {
     yyjson_val* jRoot = yyjson_doc_get_root(jDoc);
     if(jRoot == NULL) { sdk_error("JSON has no root value"); }
 
-    yyjson_val* jType = yyjson_obj_get(jRoot, "type");
-    if(jType == NULL) { sdk_error("JSON file has no proper 'type' string specified"); }
-    if(yyjson_is_str(jType)){
-        sMode = yyjson_get_str( jType );
-    }else{
-        sMode = "atlas";
+    yyjson_val* jPrefix = yyjson_obj_get(jRoot, "prefix");
+    if( yyjson_is_str(jPrefix) ) {
+        g_sNamesPrefix = (char*) yyjson_get_str(jPrefix);
+        printf("Using global '%s' prefix\n", g_sNamesPrefix);
     }
 
-    if( strcmp("atlas", sMode) == 0 ) {
-        compile_sheet(jRoot);
-    }else if( strcmp("font", sMode) == 0 ) {
-
-    }else{
-        sdk_errorf("Unknown type: '%s'", sMode);
-    }
+    compile_sheet(jRoot);
 
     return EXIT_SUCCESS;
 }

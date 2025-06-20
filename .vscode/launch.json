@@ -45,7 +45,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/sdk/shtool",
-            "args": ["-f", "assets/textures/weapon/sheet_weapon_01.json", "-o", "test.cta"],
+            "args": ["-l", "-f", "assets/textures/hueta.json", "-o", "weapon01.cta"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",
             "environment": [],

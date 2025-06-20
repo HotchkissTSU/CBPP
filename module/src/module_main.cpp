@@ -9,6 +9,8 @@ spriteid_t g_iSprite;
 
 uint32_t g_iMX, g_iMY;
 
+float_t g_fNigga = 0.0f;
+
 extern "C" {
     void ModulePreMain() { 
     }
@@ -22,13 +24,14 @@ extern "C" {
         LoadSheet("eule");
         LoadSheet("fx");
 
-        g_iSprite = GetSpriteID("hcal_carbine_side");
+        g_iSprite = GetSpriteID("weapon_hcal_carbine_side");
 
         return true;
     }
-
+    
     void ModuleTick() {
-        cbvs::RenderSprite(g_iSprite, Vec2(-1), Vec2(0.5f), CBPP_MATH_PI/4.0f, Color(255), 1.0f);
+        g_fNigga += 0.01f;
+        cbvs::RenderSprite(g_iSprite, Vec2(0.0f, 0.0f), Vec2(0.7f), g_fNigga, Color(255), 1.0f);
     }
 
     //Return TRUE if the event was processed by the module and engine should not use it

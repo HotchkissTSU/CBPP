@@ -132,7 +132,7 @@ namespace cbvs {
         delete GetSpriteRenderingBuffer();
     }
     
-    void RenderSprite(cbpp::spriteid_t iIndex, cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbpp::Color iColor, cbpp::float_t fDepth) {
+    void RenderSprite(cbpp::spriteid_t iIndex, cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbpp::float_t fAngle, cbpp::Color iColor, cbpp::float_t fDepth) {
         const cbpp::SpriteInfo& Info = cbpp::GetSpriteInfo(iIndex);
 
         glEnableVertexAttribArray(0);
@@ -168,6 +168,8 @@ namespace cbvs {
         pSpritePipe->PushUniform("cbpp_Depth", fDepth);
         pSpritePipe->PushUniform("cbpp_Ratio", g_fScreenRatio);
         pSpritePipe->PushUniform("cbpp_Color", iColor);
+        pSpritePipe->PushUniform("cbpp_Angle", fAngle);
+        pSpritePipe->PushUniform("cbpp_RotateOrigin", (vP1.vPos + vP2.vPos) / 2);
 
         hSpriteBuff->PushVertexData(s_aSpriteVtxBuff, 6);
         glDrawArrays(GL_TRIANGLES, 0, 6);

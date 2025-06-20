@@ -1,0 +1,25 @@
+Cuber Model
+
+todo:
+- model`s physbox, independent of bones
+- bone skeleton support, each bone can have multiple sprites parented to it, each sprite can have it`s skins
+- IK for 2-jointed parts, each IK controller has it`s own name and index for referense
+
+CDF structure:
+
+ROOT
+    cbm_physb_type, UINT
+        0 - convex mesh
+        1 - sphere
+        2 - rectangle
+
+    if cbm_physb_type == 0:
+        cbm_physb
+            cbm_physbln, uint
+            cbm_physbvts, array of vectors
+    
+    elif cbm_physb_type == 1:
+        cbm_physb, binary[12]
+    
+    elif cbm_physb_type == 2:
+        cbm_physb, binary[16]

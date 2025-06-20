@@ -38,4 +38,12 @@ typedef struct {
     float fMaxBBoxY;    //bbox_ymax
 } sdk_FontGlyth;
 
+typedef struct {
+    
+} sdk_ModelHeader;
+
+typedef struct {
+    cdf_uint ParentBoneID;
+} sdk_ModelBone;
+
 #endif

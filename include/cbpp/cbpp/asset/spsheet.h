@@ -7,15 +7,15 @@
 
 #include "cbvs/texture.h"
 #include "cbpp/cbdef.h"
-#include "cbpp/cbstring.h"
+#include "cbpp/ttype/list.h"
 
 #include <stdint.h>
 #include <stddef.h>
-#include <unordered_map>
 
 namespace cbpp {
     struct SpriteMapping {
-        float_t X,Y,W,H; // W and H here are not width and height (surprise!) - they are the coordinates of the top-right corner of the UV rectangle
+        float_t X,Y; // Bottom-left corner of the UV
+        float_t W,H; // Top-right corner of the UV
     };
 
     typedef uint32_t spriteid_t;
@@ -29,10 +29,31 @@ namespace cbpp {
     spriteid_t GetSpriteID( const char* sName );
     const SpriteInfo& GetSpriteInfo( spriteid_t iSpriteID );
 
+    class Font {
+        public:
+            struct Glyth {
+                float_t fX, fY;       //Drawing origin
+                float_t fWidth;       //Kinda self-explanatory
+                float_t fBearY;       //Y bearing
+                float_t fMaxBBoxY;    //bbox_ymax
+            };
+
+            struct Language {
+                const char* Name;
+                size_t Offset;
+                List<Glyth> Mapping;
+            };
+
+        private:
+            GLuint m_hTexture;
+            List<Language> m_aLangs;
+    };
+
     /*
-        Load and mount a providen spritesheet
+        Load and mount a providen sheet-based file. Currently supported:
+        .cta .cff
     */
-    bool LoadTextureSheet( const char* sPath, bool bAppendExt = true );
+    bool LoadSheet( const char* sPath, bool bAppendExt = true );
 
     //void CompileTextureSheets();
 

@@ -15,30 +15,7 @@
 namespace cbpp {
     List<SpriteInfo> g_aSprites;
 
-    bool LoadTextureSheet( const char* sPath, bool bAppendExt ) {
-        char sPathBuffer[128];
-
-        const char* sExt;
-        if(bAppendExt) { sExt = ".cta"; }
-        else{ sExt = ""; }
-
-        snprintf(sPathBuffer, 128, "%s%s", sPath, sExt);
-
-        File* hInput = OpenFile(PATH_TEXTURE, sPathBuffer, "rb");
-
-        cdf_document* pDoc;
-        cdf_verinfo VersionData;
-        int16_t iClassID;
-
-        cdf_retcode iCode = cdf_file_read(hInput->Handle(), &pDoc, &VersionData, &iClassID);
-        if(iCode != CDF_OK) {
-            PushError(ERROR_CDF, cdf_get_error(iCode));
-            delete hInput;
-            return false;
-        }
-
-        delete hInput;
-
+    bool LoadAtlasSheet(cdf_document* pDoc) {
         cdf_object* pRoot = cdf_document_root(pDoc);
         cdf_object Current, Raster, Mapping, RasterData;
         size_t Iterator = 0;
@@ -142,19 +119,52 @@ namespace cbpp {
         cdf_document_destroy(pDoc);
         return true;
     }
+    
+    bool LoadFontSheet(cdf_document* pDoc) {
+        cdf_object* pRoot = cdf_document_root(pDoc);
 
-    /*void CompileTextureSheets() {
-        cbvs::SpriteComposer* pComposer = new cbvs::SpriteComposer();
-        pComposer->Reset(); 
-
-        for(size_t i = 0; i < g_aSprites.Length(); i++) {
-            SpriteInfo& Current = g_aSprites.At(i);
-
-            int Wt, Ht, Xt, Yt;
+        size_t Iterator = 0;
+        cdf_object Current;
+        while( cdf_object_iterate(pRoot, &Current, &Iterator) ) {
+            
         }
 
-        delete pComposer;       
-    }*/
+        return true;
+    }
+
+    bool LoadSheet( const char* sPath, bool bAppendExt ) {
+        char sPathBuffer[128];
+
+        const char* sExt;
+        if(bAppendExt) { sExt = ".cta"; }
+        else{ sExt = ""; }
+
+        snprintf(sPathBuffer, 128, "%s%s", sPath, sExt);
+
+        File* hInput = OpenFile(PATH_TEXTURE, sPathBuffer, "rb");
+
+        cdf_document* pDoc;
+        cdf_verinfo VersionData;
+        int16_t iClassID;
+
+        cdf_retcode iCode = cdf_file_read(hInput->Handle(), &pDoc, &VersionData, &iClassID);
+        if(iCode != CDF_OK) {
+            PushError(ERROR_CDF, cdf_get_error(iCode));
+            delete hInput;
+            return false;
+        }
+
+        delete hInput;
+
+        switch (iClassID) {
+            case CDF_CLASS_SPRITESHEET:     return LoadAtlasSheet(pDoc);
+            case CDF_CLASS_FONT:            return LoadFontSheet(pDoc);
+        }     
+
+        PushError(ERROR_IO, "File is not a sheet");   
+        cdf_document_destroy(pDoc);
+        return false;
+    }
 
     spriteid_t GetSpriteID( const char* sName ) {
         for(size_t i = 0; i < g_aSprites.Length(); i++) {

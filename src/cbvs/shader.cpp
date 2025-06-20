@@ -209,6 +209,15 @@ namespace cbvs {
         return false;
     }
 
+    bool Pipe::PushUniform(const char* sName, cbpp::Vec2 vValue) noexcept {
+        GLint hLocation = this->GetUniform(sName);
+        if(hLocation != -1) {
+            glUniform2f(hLocation, (GLfloat)vValue.x, (GLfloat)vValue.y);
+            return true;
+        }
+        return false;
+    }
+
     bool Pipe::PushUniform(const char* sName, int32_t iValue) noexcept {
         GLint hLocation = this->GetUniform(sName);
         if(hLocation != -1) {

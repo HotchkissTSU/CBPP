@@ -6,15 +6,15 @@ Global prefixes:
     A static value      -> s_
 
 Name prefixes:
-    std::map                            -> m
-    Primitive from cbpp::math           -> mp
-    Integer value                       -> i 
-    Boolean                             -> b
-    Floating-point value                -> f 
-    CBPP entity                         -> e 
-    CBPP vector                         -> v 
-    Any array                           -> a
-    Any pointer                         -> p 
-    Reference                           -> ref
-    Any handles (including cbpp::File)  -> h 
-    JSON / BSON data structures         -> j
+    Any associative container               -> m
+    Primitive from cbpp::math               -> mp
+    Integer value                           -> i 
+    Boolean                                 -> b
+    Floating-point value                    -> f 
+    CBPP entity                             -> e 
+    CBPP vector                             -> v 
+    Any array                               -> a
+    Any pointer                             -> p 
+    Reference                               -> ref
+    Any handles (files, OpenGL IDs etc.)    -> h 
+    JSON / BSON / CDF data structures       -> j

@@ -412,13 +412,13 @@ int main( int argc, char** argv ) {
 		exit(-1);
 	}*/
 
-    LoadTextureSheet("cbpp_base");
+    LoadSheet("cbpp_base");
 
 	if(!ModuleData.ModuleMain( argc, argv )) {
 		CbThrowError("Unable to proceed, ModuleMain has returned FALSE");
 		exit(-1);
-	}
-	
+    }
+    
 	//ddraw::SetColor( cbpp::Color(255,0,0,255) );
 	
 	cbpp::Event ev;

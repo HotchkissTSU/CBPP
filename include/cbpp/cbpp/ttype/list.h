@@ -71,7 +71,7 @@ namespace cbpp {
             }
 
             // Simply allocate a new place without invoking a copy operator
-            // You MUST full it with any valid data, or our destructor will segfault
+            // You MUST fill it with any valid data, or our destructor will segfault
             size_t  PushEmpty() {
                 m_iSize += 1;
                 const size_t iNewAllocSize = List_CalculateLength(m_iAllocated, m_iSize);

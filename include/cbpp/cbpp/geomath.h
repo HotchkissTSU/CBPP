@@ -123,6 +123,8 @@ namespace cbpp {
 
         size_t PlanarToLinear(size_t iSideLength, size_t iX, size_t iY) noexcept;
         void LinearToPlanar(size_t iSideLength, size_t iLinear, size_t& iX, size_t& iY) noexcept;
+
+        uint32_t CeilToPowerOf2(uint32_t iV) noexcept;
     }
 }
 

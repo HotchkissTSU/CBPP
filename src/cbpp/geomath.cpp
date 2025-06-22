@@ -65,6 +65,17 @@ namespace cbpp::math {
         iY = iLinear / iSideLength;
     }
 
+    uint32_t CeilToPowerOf2(uint32_t v) noexcept {
+        v--;
+        v |= v >> 1;
+        v |= v >> 2;
+        v |= v >> 4;
+        v |= v >> 8;
+        v |= v >> 16;
+        v++;
+        return v;
+    }
+
     //Line
     Line::Line(Vec2 vp1, Vec2 vp2) {
         vDir = vp2 - vp1;

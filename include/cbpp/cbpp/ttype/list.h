@@ -130,6 +130,14 @@ namespace cbpp {
                 }
             }
 
+            T* Array() noexcept {
+                return m_pMemory;
+            }
+
+            const T* Array() const noexcept {
+                return const_cast<const T*> (m_pMemory);
+            }
+
             size_t Find(const T& Target) const noexcept {
                 for(size_t i = 0; i < m_iSize; i++) {
                     if( m_pMemory[i] == Target ) {

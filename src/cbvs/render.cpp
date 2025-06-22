@@ -140,16 +140,16 @@ namespace cbvs {
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
-
+        
         static Pipe* pSpritePipe = GetPipe("cbpp_sprite");
 
         const cbpp::float_t fRatio = (Info.Mapping.W - Info.Mapping.X) / (Info.Mapping.H - Info.Mapping.Y);
-        const cbpp::Vec2 vScaleFinal = vScale * cbpp::Vec2(fRatio, 1.0f);
+        const cbpp::Vec2 vScaleFinal = vScale * cbpp::Vec2(fRatio, 1.0f) * 0.5f;
 
-        vP1 = {  vPos - vScaleFinal*0.5f,                                              {Info.Mapping.X, Info.Mapping.H} };
-        vP2 = { cbpp::Vec2(vPos.x + vScale.x*fRatio, vPos.y) - vScaleFinal*0.5f,       {Info.Mapping.W, Info.Mapping.H} };
-        vP3 = { cbpp::Vec2(vPos.x, vPos.y + vScale.y) - vScaleFinal*0.5f,              {Info.Mapping.X, Info.Mapping.Y} };
-        vP4 = {  vPos + vScale*cbpp::Vec2(fRatio, 1.0f) - vScaleFinal*0.5f,            {Info.Mapping.W, Info.Mapping.Y} };
+        vP1 = {  vPos - vScaleFinal,                                              {Info.Mapping.X, Info.Mapping.H} };
+        vP2 = { cbpp::Vec2(vPos.x + vScale.x*fRatio, vPos.y) - vScaleFinal,       {Info.Mapping.W, Info.Mapping.H} };
+        vP3 = { cbpp::Vec2(vPos.x, vPos.y + vScale.y) - vScaleFinal,              {Info.Mapping.X, Info.Mapping.Y} };
+        vP4 = {  vPos + vScale*cbpp::Vec2(fRatio, 1.0f) - vScaleFinal,            {Info.Mapping.W, Info.Mapping.Y} };
 
         s_aSpriteVtxBuff[0] = vP3;
         s_aSpriteVtxBuff[1] = vP2;

@@ -36,24 +36,8 @@
 			"src" : 
 			[
 				"src\\cbpp\\*.cpp",
-				"src\\cbpp\\entity\\*.cpp"
-			],
-			"static" : [ "static" ],
-			"type" : "OBJ"
-		},
-		"ui" : 
-		{
-			"dynamic" : [ "lib" ],
-			"include" : [ "include\\cbpp", "include\\cbpp\\ui", "include" ],
-			"link_dynamic" : [],
-			"link_params" : "",
-			"link_static" : [],
-			"obj" : "obj\\cbpp_base",
-			"out" : "bin",
-			"out_libfile" : "lib",
-			"src" : 
-			[
-				"src/cbpp/ui/*.cpp"
+				"src\\cbpp\\entity\\*.cpp",
+                "src/enet_impl.c"
 			],
 			"static" : [ "static" ],
 			"type" : "OBJ"
@@ -68,7 +52,7 @@
 			"obj" : "obj\\cbpp_base",
 			"out" : "bin",
 			"out_libfile" : "lib",
-			"src" : [ "src\\cbpp\\asset\\*.cpp" ],
+			"src" : [ "src\\cbpp\\asset\\*.cpp", "src/cbpp/asset/*.c" ],
 			"static" : [ "static" ],
 			"type" : "OBJ"
 		},
@@ -137,7 +121,7 @@
 		"cdf_shared" : 
 		{
 			"compiler":"gcc",
-			"comp_params":"-fPIC -g3 -ffast-math -D CDF_USE_ZLIB",
+			"comp_params":"-fPIC -O2 -ffast-math -D CDF_USE_ZLIB",
 			"dynamic" : [ "lib" ],
 			"include" : [ "include" ],
 			"link_dynamic" : [],

@@ -26,24 +26,13 @@
 		
 		"libcdf" : 
 		{
-			"comp_params":"-g3 -ffast-math -Wno-discarded-qualifiers -D CDF_USE_ZLIB",
+			"comp_params":"-O2 -ffast-math -Wno-discarded-qualifiers -D CDF_USE_ZLIB",
 			"link_static" :[ "z" ],
 			"include" : [ "include" ],
 			"obj" : "obj/cdf",
 			"out" : "static",
 			"src" : [ "src/cdf/cdf.c" ],
 			"type" : "STATIC"
-		},
-
-		"cdftest" : 
-		{
-			"comp_params" :"-O2",
-			"link_static":["cdf", "z"],
-			"include" : [ "include" ],
-			"obj" : "obj/cdf",
-			"out" : "bin",
-			"src" : [ "src/cdf/test/cdftest.c" ],
-			"type" : "EXE"
 		},
 
 		"libsoil_nogl" : {

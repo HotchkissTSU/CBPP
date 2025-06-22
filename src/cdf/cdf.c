@@ -290,7 +290,6 @@ cdf_retcode cdf_nametable_read(FILE* hFile, char*** pTable, cdf_uint iNames) {
 
             j++;
         }
-
         
         //shrink the buffer to match the actual data length
         aNames[i] = (char*) realloc(aNames[i], j+1);

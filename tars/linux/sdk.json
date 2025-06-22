@@ -31,7 +31,8 @@
 		{
 			"compiler" : "gcc",
 			"link_static" : ["cdf", "yyjson", "soil_nogl", "m", "z"],
-			"src" : ["src/sdk/shtool.c"]
+			"src" : ["src/sdk/shtool.c"],
+            "comp_params" : "-m64 -O2"
 		}
 	}
 }

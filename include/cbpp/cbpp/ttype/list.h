@@ -6,6 +6,7 @@
 namespace cbpp {
     size_t List_CalculateLength(size_t iAlloc, size_t iSize) noexcept;
 
+    // CBPP growable array
     template <typename T> class List {
         public:
             List() = default;
@@ -71,7 +72,7 @@ namespace cbpp {
             }
 
             // Simply allocate a new place without invoking a copy operator
-            // You MUST fill it with any valid data, or our destructor will segfault
+            // You MUST fill it with any valid data manually, or our destructor will perform a sexy and loud segfault
             size_t  PushEmpty() {
                 m_iSize += 1;
                 const size_t iNewAllocSize = List_CalculateLength(m_iAllocated, m_iSize);
@@ -85,7 +86,7 @@ namespace cbpp {
                 
                 return m_iSize - 1;
             }
-
+            
             size_t PushBack(T& Value) {
                 m_iSize += 1;
                 const size_t iNewAllocSize = List_CalculateLength(m_iAllocated, m_iSize);

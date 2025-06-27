@@ -421,7 +421,7 @@ __cdf_get_func(int32_t, CDF_TYPE_INT, int)
 __cdf_get_func(uint32_t, CDF_TYPE_UINT, uint)
 __cdf_get_func(float, CDF_TYPE_FLOAT, float)
 __cdf_get_func(double, CDF_TYPE_DOUBLE, double)
-__cdf_get_func(cdf_vector, CDF_TYPE_VECTOR, vector)         // scary!
+__cdf_get_func(cdf_vector, CDF_TYPE_VECTOR, vector)         // scary! boo!
 __cdf_get_func(int64_t, CDF_TYPE_LONG, long)
 __cdf_get_func(uint64_t, CDF_TYPE_ULONG, ulong)
 

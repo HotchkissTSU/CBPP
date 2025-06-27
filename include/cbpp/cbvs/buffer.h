@@ -16,9 +16,6 @@
 namespace cbvs {
     template <typename vertex_t> class VertexBuffer {
         public:
-            /*
-                The summary size of all providen attributes must be equal to sizeof(vertex_t)
-            */
             void Init(const vertex_t* pMemory, size_t iLength, GLenum iMode) {
                 glGenVertexArrays(1, &m_hVAO);
                 glGenBuffers(1, &m_hVBO);

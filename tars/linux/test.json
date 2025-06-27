@@ -9,9 +9,9 @@
 			"from_obj":0,
 			"type":"DLL",
 			"include":["include\\cbpp", "module\\include", "include"],
-			"static":["module\\static", "bin", "static"],
+			"static":["module\\static", "game/bin", "static"],
 			"dynamic":["module\\lib", "lib"],
-			"out":"bin\\modules",
+			"out":"game/bin/modules",
 			"out_libfile":"lib",
 			"src":[
 				"module\\src\\*.cpp"

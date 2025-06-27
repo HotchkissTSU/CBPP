@@ -42,6 +42,7 @@ namespace cbvs {
 
     GLuint CreateTexture(const cbpp::Color* pImage, texres_t iW, texres_t iH, bool bFlipY = false);
     GLuint CreateTexture(const Image& SourceImage, bool bFlipY = false);
+    GLuint CreateTexture(const void* pSource, texres_t iW, texres_t iH, int iChannels);
 
     Image* GetImageFromTexture(GLuint hTexID, texres_t iWidth, texres_t iHeight);
 }

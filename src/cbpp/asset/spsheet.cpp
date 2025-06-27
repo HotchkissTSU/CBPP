@@ -7,6 +7,7 @@
 #include "cbpp/color.h"
 
 #include <string.h>
+#include <math.h>
 
 #include "cdf/cdf.h"
 #include "cbpp/asset/cdf_classes.h"
@@ -63,11 +64,7 @@ namespace cbpp {
                 bHasMapping = true;
             }
         }
-
-        for(int i = 0; i < pDoc->m_iNames; i++) {
-            printf("cdf: %s\n", pDoc->m_aNames[i]);
-        }
-
+        
         const char* sErrorMsg;
 
         if(!bHasImgInfo) { sErrorMsg = "The 'cta_imginfo' field is missing"; }
@@ -135,7 +132,15 @@ namespace cbpp {
             Sprite.TextureID = hAtlasTexture;
             Sprite.Name = strdup( pDoc->m_aNames[ CurrentMapping.iNameID ] );
 
-            printf("mapper: %s\n", Sprite.Name);
+            size_t iWidth;
+
+            if(CurrentMapping.iY >= CurrentMapping.iH) {
+                iWidth = CurrentMapping.iY - CurrentMapping.iH;
+            }else {
+                iWidth = CurrentMapping.iH - CurrentMapping.iY;
+            }
+
+            Sprite.OrigWidth = iWidth;
 
             Sprite.Mapping.X = (float_t)(CurrentMapping.iX) / (float_t)(SourceImageInfo.m_iWidth);
             Sprite.Mapping.Y = (float_t)(CurrentMapping.iY) / (float_t)(SourceImageInfo.m_iHeight);

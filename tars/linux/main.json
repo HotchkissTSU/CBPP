@@ -14,13 +14,13 @@
 			"dynamic" : [ "lib" ],
 			"include" : [ "include\\cbpp", "include" ],
 			"link_dynamic" : [],
-			"link_params" : "-Wl,-rpath=.",
+			"link_params" : "-Wl,-rpath=./bin",
 			"link_static" : [ "glfw3", "cbpp", "z" ],
 			"obj" : "obj\\main",
-			"out" : "bin",
+			"out" : "game",
 			"out_libfile" : "lib",
 			"src" : [ "src\\main\\*.cpp" ],
-			"static" : [ "bin", "static" ],
+			"static" : [ "game/bin", "static" ],
 			"type" : "EXE"
 		},
 		"cbpp" : 
@@ -144,10 +144,10 @@
 			"link_params" : "",
 			"link_static" : [ "glfw3" ],
 			"obj" : "obj\\cbpp_base",
-			"out" : "bin",
+			"out" : "game/bin",
 			"out_libfile" : "lib",
 			"src" : [ "obj\\cbpp_base\\*.o", "obj\\cbvs\\*.o" ],
-			"static" : [ "static", "bin" ],
+			"static" : [ "static", "game/bin" ],
 			"type" : "DLL"
 		}
 	}

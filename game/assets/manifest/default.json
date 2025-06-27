@@ -1,5 +1,5 @@
 {
-    "gamelib" : "./modules/test.so",
+    "gamelib" : "bin/modules/test.so",
 
     "paths" : {
         "all" : ["assets/"],
@@ -36,12 +36,6 @@
                     "vtx" : "generic",
                     "frag" : "generic",
                     "geom" : "circlef"
-                },
-
-                "text" : {
-                    "vtx" : "text",
-                    "frag" : "text",
-                    "geom" : "text"
                 },
 
                 "texture" : {

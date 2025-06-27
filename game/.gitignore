@@ -1,6 +1,5 @@
 cbep
 logs/
-*.so
-sdk/
+bin/
 assets/textures/
 assets/locales/

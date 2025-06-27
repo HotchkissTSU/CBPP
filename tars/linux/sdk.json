@@ -6,12 +6,12 @@
 		"from_obj" : 0,
 		"include" : [ "include", "include/cbpp", "src/sdk" ],
 		"link_dynamic" : [],
-		"link_params" : "-Wl,-rpath=..",
+		"link_params" : "-Wl,-rpath=.",
 		"link_static" : [ "cbpp" ],
 		"obj" : "obj/sdk",
-		"out" : "bin/sdk",
+		"out" : "game/bin",
 		"out_libfile" : "lib",
-		"static" : [ "bin", "static" ],
+		"static" : [ "game/bin", "static" ],
 		"type" : "EXE"
 	},
 

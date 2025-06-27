@@ -24,30 +24,11 @@ namespace cbpp {
         const char* Name;
         SpriteMapping Mapping;
         GLuint TextureID;
+        texres_t OrigWidth;
     };
     
     spriteid_t GetSpriteID( const char* sName );
     const SpriteInfo& GetSpriteInfo( spriteid_t iSpriteID );
-
-    class Font {
-        public:
-            struct Glyth {
-                float_t fX, fY;       //Drawing origin
-                float_t fWidth;       //Kinda self-explanatory
-                float_t fBearY;       //Y bearing
-                float_t fMaxBBoxY;    //bbox_ymax
-            };
-
-            struct Language {
-                const char* Name;
-                size_t Offset;
-                List<Glyth> Mapping;
-            };
-
-        private:
-            GLuint m_hTexture;
-            List<Language> m_aLangs;
-    };
 
     /*
         Load and mount a spritesheet

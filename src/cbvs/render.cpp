@@ -143,8 +143,11 @@ namespace cbvs {
         
         static Pipe* pSpritePipe = GetPipe("cbpp_sprite");
 
+        const cbpp::float_t ScaleRatio = ((cbpp::float_t)Info.OrigWidth / g_vScreenSize.x);
+
         const cbpp::float_t fRatio = (Info.Mapping.W - Info.Mapping.X) / (Info.Mapping.H - Info.Mapping.Y);
-        const cbpp::Vec2 vScaleFinal = vScale * cbpp::Vec2(fRatio, 1.0f) * 0.5f;
+        const cbpp::Vec2 vScaleFinal = vScale * cbpp::Vec2(fRatio, 1.0f) * 0.5f * ScaleRatio;
+        vScale = vScale * ScaleRatio;
 
         vP1 = {  vPos - vScaleFinal,                                              {Info.Mapping.X, Info.Mapping.H} };
         vP2 = { cbpp::Vec2(vPos.x + vScale.x*fRatio, vPos.y) - vScaleFinal,       {Info.Mapping.W, Info.Mapping.H} };

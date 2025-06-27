@@ -1,3 +1,3 @@
-#bin/sh
-cd bin
+#!/bin/sh
+cd game
 ./cbep

@@ -129,7 +129,7 @@ cdf_object* cdf_object_create_ex(cdf_document* pDoc, const char* sName, cdf_uint
 //Works the same way as cdf_object_destroy() does, but also allows for stack-allocated objects deletion
 void cdf_object_destroy_ex(cdf_document* pDoc, cdf_object* pObj, int bStackAllocated);
 
-//Append a sub-object. The both objects are supposed to belong to the single document
+//Append a sub-object. Both objects are supposed to belong to the single document
 cdf_retcode cdf_object_push(cdf_object* pParent, cdf_object* pChild);
 
 //Append a primitive data field to an object

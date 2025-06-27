@@ -12,6 +12,8 @@
 //We assume that the minimal single spritesheet`s size is this
 #define CBVS_SPRITEMAPPER_MINSIZE 64
 
+#define CBVS_SCALE_FACTOR (1 << 0)
+
 namespace cbvs {
     class IRenderable {
         public:

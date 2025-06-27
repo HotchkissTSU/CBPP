@@ -130,6 +130,39 @@ namespace cbvs {
         return CreateTexture(Source.GetPixelData(), Source.Width(), Source.Height(), bFlipY);
     }
 
+    GLuint CreateTexture(const void* pSource, texres_t iW, texres_t iH, int iChannels) {
+        GLuint hOut;
+
+        GLenum iFormat;
+
+        switch( iChannels ) {
+            case 1:
+                iFormat = GL_RED; break;
+
+            case 2:
+                iFormat = GL_RG; break;
+
+            case 3:
+                iFormat = GL_RGB; break;
+
+            case 4:
+                iFormat = GL_RGBA; break;
+
+            default:
+                iFormat = GL_RGBA;
+        }
+
+        glGenTextures(1, &hOut);
+        glBindTexture(GL_TEXTURE_2D, hOut);
+            glTexImage2D(GL_TEXTURE_2D, 0, iFormat, iW, iH, 0, iFormat, GL_UNSIGNED_BYTE, pSource);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glGenerateMipmap(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        return hOut;
+    }
+    
     Image* GetImageFromTexture(GLuint hTexID, texres_t iWidth, texres_t iHeight) {
         cbpp::Color* pData = cbpp::Malloc<cbpp::Color> (iWidth * iHeight);
 

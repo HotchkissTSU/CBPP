@@ -29,7 +29,7 @@ extern "C" {
         LoadSheet("eule");
         LoadSheet("fx");
 
-        LoadFontBitmap("ithaca.ttf", "default", 20, LOAD_ARROWS);
+        LoadFontBitmap("ithaca.ttf", "default", 20, LOAD_ASCII | LOAD_CYRILLIC);
 
         g_iSprite = GetSpriteID("weapon_pipe");
         g_iSprite2 = GetSpriteID("weapon_hcal_carbine_side");

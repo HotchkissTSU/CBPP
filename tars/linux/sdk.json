@@ -35,10 +35,10 @@
             "comp_params" : "-m64 -O2"
 		},
 
-        "cbb2" :
+        "cbb" :
         {
             "compiler" : "g++",
-            "link_static" : ["yyjson", "cbpp"],
+            "link_static" : ["yyjson", "cbpp", "z"],
             "src" : ["src/sdk/cbb2/*.cpp"],
             "comp_params" : "-g3"
         }

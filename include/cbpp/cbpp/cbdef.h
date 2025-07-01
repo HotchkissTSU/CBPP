@@ -22,7 +22,7 @@
 #define CBPP_SERVER 0
 
 //Build a clientside library
-#define CBPP_CLIENT 1
+#define CBPP_CLIENT !defined(CBPP_SERVER)
 
 /*
     === UTILITY MACROS ===
@@ -87,6 +87,14 @@ _type Get##_pretty_name () const { return _vname; } private:
     public: static hash_t ID() {\
         constexpr static hash_t s_iHash = cbpp::Hash(__PRETTY_FUNCTION__); return s_iHash; }\
     private:
+
+#define CB_FUNC_CLEANUP_DECL(code)\
+    goto __f_after;\
+    __f_cleanup:\
+    code\
+    __f_after:
+
+#define CB_FUNC_CLEANUP goto __f_cleanup;
 
 /*
     === ENGINE OPTIONS ===

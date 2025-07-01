@@ -10,6 +10,7 @@
 #include "SOIL/SOIL.h"
 #include "cbpp/bit.h"
 #include "cbvs/texture.h"
+#include "cbpp/cbdef.h"
 
 namespace cbpp {
     constexpr static const UnicodeRange g_aUnicodeRanges[] = {
@@ -133,15 +134,15 @@ namespace cbpp {
             stbtt_PackFontRanges(&PackContext, aFileContent.Array(), 0, aPackRanges.Array(), aPackRanges.Length());
         stbtt_PackEnd(&PackContext);
 
-        #ifdef CBPP_DEBUG
         char sbuff[64];
-        snprintf(sbuff, 64, "%s.tga", sName);
+        snprintf(sbuff, 64, "%s_%d.tga", sName, iMask);
+        printf(sbuff);
         SOIL_save_image(sbuff, SOIL_SAVE_TYPE_TGA, iBitmapSide, iBitmapSide, 1, pBitmap);
-        #endif
 
         GLuint hTexture = cbvs::CreateTexture(pBitmap, iBitmapSide, iBitmapSide, 1);
         Free(pBitmap);
 
+        // No unnecesary copy operator nor constructor calls, we simply write into memory
         Font& Out = g_aFonts.At( g_aFonts.PushEmpty() );
         Out.m_bSDF = false;
 

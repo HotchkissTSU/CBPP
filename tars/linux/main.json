@@ -55,7 +55,7 @@
 			"src" : [ "src\\cbpp\\asset\\*.cpp", "src/cbpp/asset/*.c" ],
 			"static" : [ "static" ],
 			"type" : "OBJ"
-		},
+        },
 		"cbvs" : 
 		{
 			"dynamic" : [ "lib" ],
@@ -66,7 +66,7 @@
 			"obj" : "obj\\cbvs",
 			"out" : "bin",
 			"out_libfile" : "lib",
-			"src" : [ "src\\cbvs\\*.cpp" ],
+			"src" : [ "src\\cbvs\\*.cpp", "src/cbvs/*.c" ],
 			"static" : [ "static" ],
 			"type" : "OBJ"
 		},
@@ -82,6 +82,22 @@
 			"out" : "bin",
 			"out_libfile" : "lib",
 			"src" : [ "src\\glad.c" ],
+			"static" : [ "static" ],
+			"type" : "OBJ"
+		},
+        "glfw3_shared" : 
+		{
+            "compiler" : "gcc",
+			"dynamic" : [ "lib" ],
+			"comp_params" : "-fPIC -D _GLFW_X11 -O2",
+			"include" : [ "include", "include/GLFW" ],
+			"link_dynamic" : [],
+			"link_params" : "",
+			"link_static" : [],
+			"obj" : "obj/glfw_shared",
+			"out" : "bin",
+			"out_libfile" : "lib",
+			"src" : [ "src/glfw3/*.c" ],
 			"static" : [ "static" ],
 			"type" : "OBJ"
 		},
@@ -146,7 +162,7 @@
 			"obj" : "obj\\cbpp_base",
 			"out" : "game/bin",
 			"out_libfile" : "lib",
-			"src" : [ "obj\\cbpp_base\\*.o", "obj\\cbvs\\*.o" ],
+			"src" : [ "obj\\cbpp_base\\*.o", "obj\\cbvs\\*.o", "obj/glfw_shared/*.o" ],
 			"static" : [ "static", "game/bin" ],
 			"type" : "DLL"
 		}

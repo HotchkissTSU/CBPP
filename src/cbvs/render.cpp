@@ -107,8 +107,8 @@ namespace cbvs {
         }
     }
 
-    VertexBuffer<SpriteVertex>* GetSpriteRenderingBuffer() {
-        static VertexBuffer<SpriteVertex>* s_hSpriteBuffer = new VertexBuffer<SpriteVertex>();
+    SpriteVertexBuffer* GetSpriteRenderingBuffer() {
+        static SpriteVertexBuffer* s_hSpriteBuffer = new SpriteVertexBuffer();
         return s_hSpriteBuffer;
     }
 
@@ -116,7 +116,7 @@ namespace cbvs {
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
 
-        VertexBuffer<SpriteVertex>* hSpriteBuff = GetSpriteRenderingBuffer();
+        SpriteVertexBuffer* hSpriteBuff = GetSpriteRenderingBuffer();
 
         SpriteVertex aData[6];
 
@@ -162,7 +162,7 @@ namespace cbvs {
         s_aSpriteVtxBuff[4] = vP3;
         s_aSpriteVtxBuff[5] = vP2;
 
-        VertexBuffer<SpriteVertex>* hSpriteBuff = GetSpriteRenderingBuffer();
+        SpriteVertexBuffer* hSpriteBuff = GetSpriteRenderingBuffer();
 
         hSpriteBuff->Use();
         pSpritePipe->Use();

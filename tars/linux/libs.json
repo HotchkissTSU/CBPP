@@ -61,6 +61,16 @@
 			"out" : "static",
 			"src" : [ "src/glad.c" ],
 			"type" : "STATIC"
-		}
+		},
+
+        "libglfw3" : {
+            "comp_params" : "-D _GLWF_X11 -O2",
+            "include" : ["include", "include/GLFW"],
+            "obj" : "obj/glfw_static",
+            "out" : "static",
+            "src" : ["src/glfw3/*.c"],
+            "compiler" : "gcc",
+            "type" : "STATIC"
+        }
 	}
 }

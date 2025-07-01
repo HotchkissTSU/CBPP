@@ -18,10 +18,11 @@ namespace cbpp {
     */
 
     enum EFontLoadMask : uint32_t {
-        LOAD_ASCII =        1 << 0,         // Any character between 32 and 127
-        LOAD_CYRILLIC =     1 << 1,         // 0400 - 04FF
-        LOAD_LATIN_AUX =    1 << 2,         // 00A0 - 00FF, some thingies for other europian languages
-        LOAD_ALL =          1 << 3          // Scorch the earth, boil the seas
+        LOAD_ASCII =        1 << 0,          // Any character between 32 and 127
+        LOAD_CYRILLIC =     1 << 1,          // 0400 - 04FF
+        LOAD_LATIN_AUX =    1 << 2,          // 00A0 - 00FF, some thingies for other europian languages
+        LOAD_ARROWS =       1 << 3,          // 2190 - 21FF
+        LOAD_ALL =          1 << 4           // Scorch the earth, boil the seas
     };
 
     // This enum must correspond to the one above
@@ -29,6 +30,7 @@ namespace cbpp {
         UTF_RANGE_ASCII,
         UTF_RANGE_CYRILLIC,
         UTF_RANGE_LATIN_AUX,
+        UTF_RANGE_ARROWS,
         UTF_RANGE_FULL,
 
         UTF_RANGES_AMOUNT //This entry must be the last one
@@ -62,11 +64,12 @@ namespace cbpp {
     constexpr EUnicodeRangeIndex UnicodeRangeByLoadMask(EFontLoadMask iMask);
 
     class Font {
-        friend bool LoadFont(const char*, const char*, bool);
+        friend bool LoadFontBitmap(const char* sName, const char* sAlias, int iHeight, EFontLoadMask iMask);
 
         private:
             GlythRange m_aRanges[UTF_RANGES_AMOUNT];
             uint32_t m_iLoadedRanges = 0;
+            GLuint m_hTexture;
             bool m_bSDF = false;
     };
 

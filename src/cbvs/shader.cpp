@@ -2,6 +2,7 @@
 
 #include "cbpp/error.h"
 #include "cbpp/fileio.h"
+#include "cbpp/cb_alloc.h"
 
 namespace cbvs {
     ShaderLoaderNode* g_pShadersHead = NULL;
@@ -65,35 +66,128 @@ namespace cbvs {
             default: return "";
         }
     }
-    /*
-    void GetCachedPipeName(char* sTarget, const char* sPipeName) noexcept {
-        for(size_t i = 0; i < strlen(sPipeName); i++) {
-            if(sPipeName[i] == '/' || sPipeName == '\\') {
-                sTarget[i] = '.';
-            }else{
-                sTarget[i] = sPipeName[i];
+
+    enum {
+        GLSL_INCLUDE,       // C-like includes
+        GLSL_AUTOVERSION    // Automatically insert a "#version ... core" string
+    };
+
+    inline bool GLSL_IsSpace(char cSource, bool bQuoted) {
+        if(bQuoted) { return false; }
+        return (cSource == '\n') || (cSource == ' ') || (cSource == '\t');
+    }
+
+    GLSL_CommInfo* LocatePrepCommands(const char* sSource, size_t* piAmount) noexcept {
+        char* pCurrent = (char*) sSource;
+        (*piAmount) = 0;
+
+        char sCommand[128]; size_t iCmd = 0;
+        char sArgument[256]; size_t iArg = 0;
+
+        GLSL_CommInfo* pOut = NULL;
+        bool bQuoted = false;
+
+        while(*pCurrent) {
+            if(*pCurrent == '#') {
+                iCmd = 0; iArg = 0;
+
+                // Read the command
+                while(!GLSL_IsSpace(*pCurrent, false) && (*pCurrent)) {
+                    if(iCmd < 127) {
+                        sCommand[iCmd] = *pCurrent;
+                        sCommand[iCmd+1] = '\0';
+                    }
+
+                    iCmd++;
+                    pCurrent++;
+                }
+
+                pCurrent++;
+
+                // Read the argument
+                while(1) {
+                    if(*pCurrent == '"') { bQuoted = !bQuoted; }
+
+                    if( (!bQuoted && GLSL_IsSpace(*pCurrent, bQuoted)) || !(*pCurrent) ) {
+                        break;
+                    }
+
+                    if(iArg < 255) {
+                        sArgument[iArg] = *pCurrent;
+                        sArgument[iArg+1] = '\0';
+                    }
+
+                    iArg++;
+                    pCurrent++;
+                }
+
+                // Perform some sanity checks
+
+                if( iCmd != 0 && iArg == 0 ) {
+                    snprintf(sArgument, 256, "Command '%s' does not have an argument", sCommand);
+                    cbpp::PushError(cbpp::ERROR_IO, sArgument);
+
+                    cbpp::Free(pOut);
+                    return NULL;
+                }
+
+                // Empty (how?), or only '#' alone
+                if( iCmd < 2 ) {
+                    snprintf(sArgument, 256, "Empty preprocessor command");
+                    cbpp::PushError(cbpp::ERROR_IO, sArgument);
+
+                    cbpp::Free(pOut);
+                    return NULL;
+                }
+
+                (*piAmount)++;
+                pOut = cbpp::Realloc<GLSL_CommInfo>(pOut, *piAmount);
+                GLSL_CommInfo* pThis = &pOut[ (*piAmount) - 1 ];
+
+                if( strcmp(sCommand, "#include") == 0 ) {
+                    pThis->iCommand = GLSL_INCLUDE;
+                }else if( strcmp(sCommand, "#autoversion") == 0 ) {
+                    pThis->iCommand = GLSL_AUTOVERSION;
+                }
+
+                if(iArg > 0) {
+                    pThis->sArgument = strdup(sArgument);
+                }else{
+                    pThis->sArgument = NULL;
+                }
+
+                pThis->iFullLength = iArg + iCmd + 1;
             }
-        }
-    }
 
-    bool PipeCached(const char* sPipeName) noexcept {
-        char* sCacheName = strdup(sPipeName);
-        GetCachedPipeName(sCacheName, sPipeName);
-
-        char sPathBuffer[256];
-        snprintf(sPathBuffer, 256, "cache/%s", sCacheName);
-        free(sCacheName);
-
-        cbpp::File* hTest = cbpp::OpenFile(cbpp::PATH_SHADER, sPathBuffer, "rb");
-        if(hTest != NULL) {
-            delete hTest;
-            return true;
+            pCurrent++;
         }
 
-        return false;
+        return pOut;
     }
-    */
     
+    inline void GLSL_PushSource(char** sBlocks, char* sText, size_t* piLength) noexcept {
+        (*piLength)++;
+        sBlocks = cbpp::Realloc<char*>(sBlocks, *piLength);
+    }
+
+    char** PreprocessShaderSource(const char* sSource, size_t** ppLengths) noexcept {
+        size_t iCommsAmount;
+        GLSL_CommInfo* pCommsInfo = LocatePrepCommands(sSource, &iCommsAmount);
+
+        if(iCommsAmount == 0) {
+            return NULL;
+        }
+
+        char** pOut = NULL;
+
+        char *pPrev = (char*)(sSource), *pCur;
+        for(size_t i = 0; i < iCommsAmount; i++) {
+            GLSL_CommInfo& Cur = pCommsInfo[i];
+
+            
+        }
+    }
+
     GLuint CreateShader(const char* sPath, GLenum iShaderType) noexcept {
         char sShaderNameBuffer[128];
         snprintf(sShaderNameBuffer, 128, "%s%s", sPath, GetShaderFileExtension(iShaderType));
@@ -103,7 +197,7 @@ namespace cbvs {
 
         size_t iFileLength = hFile->Length();
 
-        char* sFileText = (char*) malloc(iFileLength+1);
+        char* sFileText = cbpp::Malloc<char>(iFileLength+1);
         sFileText[iFileLength] = '\0';
 
         hFile->Read(sFileText, hFile->Length());
@@ -113,7 +207,7 @@ namespace cbvs {
         glShaderSource(hShader, 1, &sFileText, NULL);
         glCompileShader(hShader);
 
-        free(sFileText);
+        cbpp::Free(sFileText);
 
         GLint iResult;
         glGetShaderiv(hShader, GL_COMPILE_STATUS, &iResult);

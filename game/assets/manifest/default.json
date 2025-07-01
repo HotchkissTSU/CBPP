@@ -53,7 +53,13 @@
                 "sprite" : {
                     "vtx" : "sprite",
                     "frag" : "sprite"
-                }
+                }//,
+
+                //"text" : {
+                //    "vtx" : "text",
+                //    "frag" : "text",
+                //    "geom" : "text"
+                //}
             }
         }
     }

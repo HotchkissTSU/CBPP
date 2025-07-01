@@ -4,7 +4,7 @@
 #include <math.h>
 
 #include "cbpp/fileio.h"
-#include "SOIL/stb_truetype.h"
+#include "stb/stb_truetype.h"
 #include "cbpp/error.h"
 #include "cbpp/geomath.h"
 #include "SOIL/SOIL.h"
@@ -16,6 +16,7 @@ namespace cbpp {
         {0x0020, 0x007F},   // ASCII
         {0x0400, 0x04FF},   // Cyrillic
         {0x00A0, 0x00FF},   // Latin aux
+        {0x2190, 0x21FF},   // Arrows
         {0x0020, 0xFFFF},   // Let the VRAM erupt in flames
     };
 
@@ -110,6 +111,15 @@ namespace cbpp {
             }
         }
 
+        if( iUsedGlythsAmount == 0 ) {
+            PushError(ERROR_IO, "This font does not have a single glyth from requested ranges");
+            for(int i = 0; i < aPackedChars.Length(); i++) {
+                Free( aPackedChars.At(i) );
+            }
+
+            return false;
+        }
+        
         // Find an approximate minimal bitmap size needed to fit this font
         const float fV = sqrt((float)(iUsedGlythsAmount)) * iHeight * 0.75f;
         const uint32_t iBitmapSide = math::CeilToPowerOf2((uint32_t)fV);
@@ -133,6 +143,7 @@ namespace cbpp {
         Free(pBitmap);
 
         Font& Out = g_aFonts.At( g_aFonts.PushEmpty() );
+        Out.m_bSDF = false;
 
         return true;
     }

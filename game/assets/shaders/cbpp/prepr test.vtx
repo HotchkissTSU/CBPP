@@ -1,0 +1,25 @@
+#version 400 core
+
+#hello "multiword test!"
+
+layout (location=0) in vec2 vPos;
+layout (location=1) in vec2 vUV;
+
+uniform float cbpp_Depth;
+uniform float cbpp_Ratio;
+uniform float cbpp_Angle;
+uniform vec2 cbpp_RotateOrigin;
+
+out vec2 vUV_flipped;
+
+void main() {
+    vec2 vSource = (vPos - cbpp_RotateOrigin);
+
+    vec2 vRotated = vec2( 
+        vSource.x * cos(cbpp_Angle) - vSource.y * sin(cbpp_Angle),
+        vSource.x * sin(cbpp_Angle) + vSource.y * cos(cbpp_Angle)
+    );
+
+    gl_Position = vec4((vRotated + cbpp_RotateOrigin) / vec2(cbpp_Ratio, 1.0), 0.0, cbpp_Depth );
+    vUV_flipped = vUV;
+}

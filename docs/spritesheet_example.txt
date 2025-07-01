@@ -1,0 +1,11 @@
+//  This file is named with the .txt suffix because VS Code can`t stop yapping about commentaries not being
+//  a part of the JSON standart, but CBPP handles them just fine, so you can use them freely.
+
+{
+    "prefix" : "my_prefix_",        //An optional global prefix
+    "raster" : "path-to-my-image",  //Path relative to this .json file`s location
+    "mapping" : {
+        "sprite_1" : [0,0,10,10],   //Mapping info (in pixels, from top-left to bottom-right)
+        "sprite_2" : [10,0,10,10]
+    }
+}

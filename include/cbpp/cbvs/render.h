@@ -70,11 +70,6 @@ namespace cbvs {
             */
             char m_aMappingInfo[CBVS_SPRITEBATCH_SIZE / CBVS_SPRITEMAPPER_MINSIZE][CBVS_SPRITEBATCH_SIZE / CBVS_SPRITEMAPPER_MINSIZE];
     };
-    
-    struct SpriteVertex {
-        cbpp::Vec2 vPos;
-        cbpp::Vec2 vUV;
-    };
 
     void RenderSprite(cbpp::spriteid_t, cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbpp::float_t fAngle, cbpp::Color iColor, cbpp::float_t fDepth = 1.0f);
 }

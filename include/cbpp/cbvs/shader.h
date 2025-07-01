@@ -11,6 +11,8 @@
 #include "cbpp/color.h"
 #include "cbpp/cbstring.h"
 
+#define CBVS_SHADER_VERSION ("#version 400 core")
+
 #define CBVS_SHADER_REGISTER(sName, sVTX, sFRAG)\
     cbvs::__shloader_insert( new cbvs::ShaderLoaderNode(sName, sVTX, sFRAG, NULL) );
 
@@ -23,7 +25,7 @@ namespace cbvs {
         1) We form a list of all the pipelines we want to compile, link and mount
         2) We sort out repeating shaders not to do extra work and then perform all of the OGL`s magic
     */
-    struct ShaderLoaderNode : public cbpp::BasePrintable {
+    struct ShaderLoaderNode final : public cbpp::BasePrintable {
         ShaderLoaderNode(const char* sName, const char* sVTX, const char* sFRAG, const char* sGEOM = NULL);
 
         //This thing is also printable for debugging purposes
@@ -51,8 +53,19 @@ namespace cbvs {
 }
 
 namespace cbvs {
+    struct GLSL_CommInfo {
+        int iCommand;
+        char* sArgument;
+        size_t iFullLength;
+    };
+
     //Obtain a file extension for different shader types` sources
     const char* GetShaderFileExtension(GLenum iShaderClass) noexcept;
+
+    GLSL_CommInfo* LocatePrepCommands(const char* sSource, size_t* piAmount) noexcept;
+
+    //Add support for #include directives in GLSL
+    char** PreprocessShaderSource(char* sSource, size_t** ppLengths) noexcept;
 
     //Load and compile a single shader of the given type
     GLuint CreateShader(const char* sPath, GLenum iShaderClass) noexcept;

@@ -1,8 +1,0 @@
-{
-    "prefix" : "my_prefix_",        //An optional global prefix
-    "raster" : "path-to-my-image",  //Path relative to this .json file`s location
-    "mapping" : {
-        "sprite_1" : [0,0,10,10],   //Mapping info (in pixels, from top-left to right-bottom)
-        "sprite_2" : [10,0,10,10]
-    }
-}

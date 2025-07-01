@@ -15,6 +15,7 @@ Name prefixes:
     CBPP vector                             -> v 
     Any array                               -> a
     Any pointer                             -> p 
+    String                                  -> s
     Reference                               -> ref
     Any handles (files, OpenGL IDs etc.)    -> h 
     JSON / BSON / CDF data structures       -> j

@@ -29,10 +29,26 @@ extern "C" {
         LoadSheet("eule");
         LoadSheet("fx");
 
-        LoadFontBitmap("ithaca.ttf", "default", 22, LOAD_ALL);
+        LoadFontBitmap("ithaca.ttf", "default", 20, LOAD_ARROWS);
 
         g_iSprite = GetSpriteID("weapon_pipe");
         g_iSprite2 = GetSpriteID("weapon_hcal_carbine_side");
+
+        File* input = OpenFile(PATH_SHADER, "cbpp/prepr test.vtx", "rt");
+        size_t length = input->Length();
+
+        char* text = Malloc<char>(length+1);
+        text[length] = '\0';
+
+        input->Read(text, length);
+
+        size_t iCount;
+        cbvs::GLSL_CommInfo* pData = cbvs::LocatePrepCommands(text, &iCount);
+
+        for(int i = 0; i < iCount; i++) {
+            cbvs::GLSL_CommInfo& Current = pData[i];
+            printf("%d %s\n", Current.iCommand, Current.sArgument);
+        }
 
         return true;
     }
@@ -43,7 +59,7 @@ extern "C" {
         cbvs::RenderSprite(g_iSprite2, Vec2(0.5f, 0.0f), Vec2(1), g_fNigga, Color(255), 1.0f);
     }
 
-    //Return TRUE if the event was processed by the module and engine should not use it
+    //Return TRUE if this event was processed by the module and engine should not use it
     bool ModuleEventCallback( cbpp::Event& ev ) {
         switch (ev.Type) {
             case Event::MOUSE_MOVE:

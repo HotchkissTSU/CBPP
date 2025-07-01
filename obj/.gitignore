@@ -1,0 +1,12 @@
+glad.o
+
+cbpp_base/
+cbvs/
+cdf/
+glfw_shared/
+glfw_static/
+main/
+sdk/
+soil/
+yyjson/
+zlib/

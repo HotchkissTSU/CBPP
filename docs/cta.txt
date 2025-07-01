@@ -1,5 +1,5 @@
 Cuber Texture Atlas
-Based on CDF (see cdf.txt)
+Based on CDF
 
 ROOT:
     cta_imginfo, binary (12) : [ImageWidth, 4 bytes][ImageHeight, 4 bytes][ImageFormat, 4 bytes]
@@ -10,8 +10,8 @@ ROOT:
 
     cta_raster, binary - the raw pixel data of the source raster image.
 
-Only square POT images are allowed as input for the rendering optimisations reason.
+Only POT images are allowed as input for the rendering optimisations reasons.
 
 Packaging a CTA file:
     For creating .cta files, 'shtool' SDK utility exists.
-    It takes a .json info file as input, you can check it`s structure in docs/spritesheet_example.json
+    It takes a .json info file as input, you can check it`s structure in docs/spritesheet_example.txt

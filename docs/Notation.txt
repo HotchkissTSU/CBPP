@@ -5,6 +5,11 @@ Global prefixes:
     A member value      -> m_ (Can be omitted in data-oriented structures with direct access to it`s members)
     A static value      -> s_
 
+In GLSL:
+    Vertex attribute    -> a_ 
+    Uniform variable    -> u_
+    Interface var/block -> i_
+
 Name prefixes:
     Any associative container               -> m
     Primitive from cbpp::math               -> mp
@@ -16,6 +21,7 @@ Name prefixes:
     Any array                               -> a
     Any pointer                             -> p 
     String                                  -> s
-    Reference                               -> ref
+    Reference                               -> r
     Any handles (files, OpenGL IDs etc.)    -> h 
-    JSON / BSON / CDF data structures       -> j
+    JSON / BSON / CDF data structures       -> j 
+

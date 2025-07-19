@@ -120,9 +120,9 @@ namespace cbpp {
 
             return false;
         }
-        
+
         // Find an approximate minimal bitmap size needed to fit this font
-        const float fV = sqrt((float)(iUsedGlythsAmount)) * iHeight * 0.75f;
+        const float fV = sqrt((float)(iUsedGlythsAmount)) * iHeight;
         const uint32_t iBitmapSide = math::CeilToPowerOf2((uint32_t)fV);
 
         uint8_t* pBitmap = Malloc<uint8_t>(iBitmapSide*iBitmapSide);
@@ -134,17 +134,45 @@ namespace cbpp {
             stbtt_PackFontRanges(&PackContext, aFileContent.Array(), 0, aPackRanges.Array(), aPackRanges.Length());
         stbtt_PackEnd(&PackContext);
 
+        // Find the lowest glyth to crop image vertically
+        texres_t iMaxHeight = 0;
+        for(uint32_t i = 0; i < aPackedChars.Length(); i++) {
+            stbtt_packedchar* Chars = aPackedChars.At(i);
+            stbtt_pack_range& CurrentRange = aPackRanges.At(i);
+            for(size_t j = 0; j < CurrentRange.num_chars; j++) {
+                if( Chars[j].y1 > iMaxHeight ) {
+                    iMaxHeight = Chars[j].y1;
+                }
+            }
+        }
+
+        iMaxHeight = math::CeilToPowerOf2(iMaxHeight);
+
         char sbuff[64];
         snprintf(sbuff, 64, "%s_%d.tga", sName, iMask);
         printf(sbuff);
-        SOIL_save_image(sbuff, SOIL_SAVE_TYPE_TGA, iBitmapSide, iBitmapSide, 1, pBitmap);
+        SOIL_save_image(sbuff, SOIL_SAVE_TYPE_TGA, iBitmapSide, iMaxHeight, 1, pBitmap);
 
-        GLuint hTexture = cbvs::CreateTexture(pBitmap, iBitmapSide, iBitmapSide, 1);
+        GLuint hTexture = cbvs::CreateTexture(pBitmap, iBitmapSide, iMaxHeight, 1);
         Free(pBitmap);
 
-        // No unnecesary copy operator nor constructor calls, we simply write into memory
+        // No unnecesary copy operator nor constructor calls, we simply write directly into memory
         Font& Out = g_aFonts.At( g_aFonts.PushEmpty() );
         Out.m_bSDF = false;
+        Out.m_hTexture = hTexture;
+
+        for(uint32_t iRangeIndex = 0; iRangeIndex < aPackRanges.Length(); iRangeIndex++) {
+            GlythRange& FontRange = Out.m_aRanges[i];
+            stbtt_pack_range& RawRange = aPackRanges[i];
+
+            FontRange.iOffset = RawRange.first_unicode_codepoint_in_range;
+            for(uint32_t iCodepoint = 0; iCodepoint < RawRange.num_chars; iCodepoint++) {
+                stbtt_packedchar RawGlyth = RawRange.chardata_for_range[iCodepoint];
+                FontRange.aData.PushBack(RawGlyth);
+            }
+
+            FontRange.aData.Shrink();
+        }
 
         return true;
     }

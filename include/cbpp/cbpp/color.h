@@ -16,7 +16,7 @@ namespace cbpp {
 		
 		Color(Color& clr) : r(clr.r), g(clr.g), b(clr.b), a(clr.a) {};
 		
-		Color() : r(0), g(0), b(0), a(0) {};
+		Color() : r(0), g(0), b(0), a(255) {};
 		
 		Color operator+(Color other);
 		Color operator+(uint8_t other);

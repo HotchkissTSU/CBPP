@@ -84,10 +84,14 @@ namespace cbvs {
         char sCommand[128]; size_t iCmd = 0;
         char sArgument[256]; size_t iArg = 0;
 
+        int iLineCounter = 0;
+
         GLSL_CommInfo* pOut = NULL;
         bool bQuoted = false;
 
         while(*pCurrent) {
+            iLineCounter += (*pCurrent == '\n');
+
             if(*pCurrent == '#') {
                 iCmd = 0; iArg = 0;
 
@@ -124,7 +128,7 @@ namespace cbvs {
                 // Perform some sanity checks
 
                 if( iCmd != 0 && iArg == 0 ) {
-                    snprintf(sArgument, 256, "Command '%s' does not have an argument", sCommand);
+                    snprintf(sArgument, 256, "(%u) Command '%s' does not have an argument", iLineCounter, sCommand);
                     cbpp::PushError(cbpp::ERROR_IO, sArgument);
 
                     cbpp::Free(pOut);
@@ -133,7 +137,7 @@ namespace cbvs {
 
                 // Empty (how?), or only '#' alone
                 if( iCmd < 2 ) {
-                    snprintf(sArgument, 256, "Empty preprocessor command");
+                    snprintf(sArgument, 256, "(%u) Empty preprocessor command", iLineCounter);
                     cbpp::PushError(cbpp::ERROR_IO, sArgument);
 
                     cbpp::Free(pOut);
@@ -212,12 +216,14 @@ namespace cbvs {
         GLint iResult;
         glGetShaderiv(hShader, GL_COMPILE_STATUS, &iResult);
         if(iResult == GL_FALSE) {
+            char sErrorLog [512], sShaderLog[512];
+
             GLint iSize = 0;
             glGetShaderiv(hShader, GL_INFO_LOG_LENGTH, &iSize);
-            
-            char* sErrorLog = (char*) malloc(iSize+1);
-            sErrorLog[iSize] = '\0';
-            glGetShaderInfoLog(hShader, iSize, NULL, sErrorLog);
+
+            glGetShaderInfoLog(hShader, std::min(iSize, 512), NULL, sShaderLog);
+
+            snprintf(sErrorLog, 512, "Shader '%s':\n%s", sShaderNameBuffer, sShaderLog);
 
             cbpp::PushError(cbpp::ERROR_GL, sErrorLog);
             

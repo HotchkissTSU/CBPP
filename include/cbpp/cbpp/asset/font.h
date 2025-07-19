@@ -36,10 +36,6 @@ namespace cbpp {
         UTF_RANGES_AMOUNT //This entry must be the last one
     };
 
-    /*
-        C++ has this moronic shit that you cant use enum type as a simple integer (as you can in the regular C).
-        Performing a manual cast to uint32_t every time you want a bitmask is ugly and retarded, so this operator is implemented.
-    */
     inline EFontLoadMask operator | (EFontLoadMask iLeft, EFontLoadMask iRight) {
         return (EFontLoadMask)( (uint32_t)(iLeft) | (uint32_t)(iRight) );
     }

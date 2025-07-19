@@ -69,7 +69,7 @@ namespace cbpp {
 		if(bKill) {
 			exit(-1);
 		}
-	}
+    }
 
 	const char* ErrorNameByCode(ERROR_CODE iCode) noexcept {
 		switch (iCode) {
@@ -77,6 +77,8 @@ namespace cbpp {
 			case ERROR_IO: return "Input/output error";
 			case ERROR_MEM: return "Memory management failure";
 			case ERROR_TCODE: return "Text encoding error";
+            case ERROR_CDF: return "CDF API error";
+            case ERROR_GF: return "Bad gamefile";
 			default: return "(Unknown error type)";
 		}
 	}

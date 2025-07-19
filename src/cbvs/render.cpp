@@ -132,7 +132,7 @@ namespace cbvs {
         delete GetSpriteRenderingBuffer();
     }
 
-    void RenderSprite(cbpp::spriteid_t iIndex, cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbpp::float_t fAngle, cbpp::Color iColor, cbpp::float_t fDepth) {
+    /*void RenderSprite(cbpp::spriteid_t iIndex, cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbpp::float_t fAngle, cbpp::Color iColor, cbpp::float_t fDepth) {
         static SpriteVertex s_aSpriteVtxBuff[6];
         static SpriteVertex vP1, vP2, vP3, vP4; //top-left, top-right, bottom-left, bottom-right
 
@@ -179,5 +179,56 @@ namespace cbvs {
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glCheck();
+    }*/
+
+    struct SpriteRenderTarget {
+        GLuint Texture;
+        SpriteVertex Vtx;
+    };
+
+    cbpp::List <SpriteVertex> g_aSpriteTargets(128);
+    cbpp::List <ScreenResolution> g_aScrRes;
+
+    GLuint g_hPrevTexture = 0;
+
+    void RenderSprite(cbpp::spriteid_t iIndex, cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbpp::float_t fAngle, cbpp::Color iColor, cbpp::float_t fDepth) {
+        const cbpp::SpriteInfo& Info = cbpp::GetSpriteInfo(iIndex);
+
+        if(g_hPrevTexture == 0) {
+            g_hPrevTexture = Info.TextureID;
+        }else if(Info.TextureID != g_hPrevTexture) {
+            g_hPrevTexture = Info.TextureID;
+            RenderSpriteFinish();
+        }
+
+        SpriteVertex Vtx;
+
+        Vtx.Angle = fAngle; Vtx.Depth = fDepth;
+        Vtx.X0 = vPos.x; Vtx.Y0 = vPos.y;
+        Vtx.X1 = vPos.x + vScale.x; Vtx.Y1 = vPos.y + vScale.y;
+        Vtx.U0 = Info.Mapping.X; Vtx.V0 = Info.Mapping.Y;
+        Vtx.U1 = Info.Mapping.W; Vtx.V1 = Info.Mapping.H;
+
+        g_aSpriteTargets.PushBack(Vtx);
+    }
+
+    void RenderSpriteFinish() {
+        for(int i = 0; i < 6; i++) {
+            glEnableVertexAttribArray(i);
+        }
+
+        static Pipe* hShader = GetPipe("cbpp_sprite");
+        hShader->Use();
+
+        SpriteVertexBuffer* hBuffer = GetSpriteRenderingBuffer();
+        hBuffer->Use();
+        hBuffer->PushVertexData(g_aSpriteTargets.Array(), g_aSpriteTargets.Length());
+
+        hShader->PushUniform("u_fScreenRatio", g_fScreenRatio);
+
+        glBindTexture(GL_TEXTURE_2D, g_hPrevTexture);
+        glDrawArrays(GL_POINTS, 0, g_aSpriteTargets.Length());
+
+        g_aSpriteTargets.Clear();
     }
 }

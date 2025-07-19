@@ -4,6 +4,7 @@
 #include "cbvs/shader.h"
 #include "cbvs/texture.h"
 #include "cbpp/color.h"
+#include "cbpp/ttype/list.h"
 #include "cbpp/asset/spsheet.h"
 
 //The engine will try to compose as much spritesheets as possible to a single huge texture this size
@@ -32,11 +33,17 @@ namespace cbvs {
 }
 
 namespace cbvs {
+    struct ScreenResolution {
+        uint32_t iWidth, iHeight;
+    };
+
+    extern cbpp::List <ScreenResolution> g_aScrRes;
+
     bool InitRender() noexcept;
     void CleanupRender() noexcept;
 
     /*
-        A tool for mapping multiple spritesheets to a single big texture for optimising on draw calls.
+        A tool for mapping multiple spritesheets to a single big texture for optimising draw calls.
         This goon weights up to 16 megabytes, so do not attempt to allocate him on the stack.
     */
     class SpriteComposer {
@@ -72,6 +79,7 @@ namespace cbvs {
     };
 
     void RenderSprite(cbpp::spriteid_t, cbpp::Vec2 vPos, cbpp::Vec2 vScale, cbpp::float_t fAngle, cbpp::Color iColor, cbpp::float_t fDepth = 1.0f);
+    void RenderSpriteFinish();
 }
 
 #endif

@@ -1,5 +1,5 @@
 #include "cbvs/cbvs.h"
-#include "cb_main/load_shaders.h"
+#include "cb_main/aux.h"
 
 bool ProcessShaderGroup(yyjson_val* jGrp, const char* sGName) noexcept {
     char sPrefix[64]; sPrefix[0] = '\0';
@@ -17,7 +17,7 @@ bool ProcessShaderGroup(yyjson_val* jGrp, const char* sGName) noexcept {
     yyjson_val* jMembers = yyjson_obj_get(jGrp, "members");
     if(jMembers == NULL && bStrict) {
         char sBuffer[128]; snprintf(sBuffer, 128, "Shader group '%s' has no members defined", sGName);
-        cbpp::PushError(cbpp::ERROR_IO, sBuffer);
+        cbpp::PushError(cbpp::ERROR_GF, sBuffer);
         return false;
     }
 
@@ -40,14 +40,14 @@ bool ProcessShaderGroup(yyjson_val* jGrp, const char* sGName) noexcept {
         yyjson_val* jVTX = yyjson_obj_get(jValue, "vtx");
         if(!yyjson_is_str(jVTX)) {
             snprintf(sVTXBuffer, 128, "Pipeline '%s' has no vertex shader", sName);
-            cbpp::PushError(cbpp::ERROR_IO, sVTXBuffer);
+            cbpp::PushError(cbpp::ERROR_GF, sVTXBuffer);
             return false;
         }
 
         yyjson_val* jFRAG = yyjson_obj_get(jValue, "frag");
         if(!yyjson_is_str(jFRAG)) {
             snprintf(sVTXBuffer, 128, "Pipeline '%s' has no fragment shader", sName);
-            cbpp::PushError(cbpp::ERROR_IO, sVTXBuffer);
+            cbpp::PushError(cbpp::ERROR_GF, sVTXBuffer);
             return false;
         }
 
@@ -75,7 +75,7 @@ bool RegisterShaders(yyjson_val* jValue) noexcept {
     yyjson_obj_foreach(jValue, i, iMax, sGrpName, jGrp) {
         if(!ProcessShaderGroup(jGrp, sGrpName->uni.str)) {
             char sBuffer[128]; snprintf(sBuffer, 128, "Failed to process shader group '%s'", sGrpName->uni.str);
-            cbpp::PushError(cbpp::ERROR_IO, sBuffer);
+            cbpp::PushError(cbpp::ERROR_GF, sBuffer);
             return false;
         }
     }

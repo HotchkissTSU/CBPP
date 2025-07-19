@@ -1,23 +1,24 @@
 #version 400 core
 
-layout (location=0) in vec2 vPos;
-layout (location=1) in vec2 vUV;
+layout (location = 0) in vec2 a_vPos1;
+layout (location = 1) in vec2 a_vPos2;
+layout (location = 2) in vec2 a_vUV1;
+layout (location = 3) in vec2 a_vUV2;
+layout (location = 4) in float a_fAngle;
+layout (location = 5) in float a_fDepth;
 
-uniform float cbpp_Depth;
-uniform float cbpp_Ratio;
-uniform float cbpp_Angle;
-uniform vec2 cbpp_RotateOrigin;
-
-out vec2 vUV_flipped;
+out VS_OUT {
+    vec2 aPos[2];
+    vec2 aUV[2];
+    float fAngle;
+    float fDepth;
+} vs_out;
 
 void main() {
-    vec2 vSource = (vPos - cbpp_RotateOrigin);
-
-    vec2 vRotated = vec2( 
-        vSource.x * cos(cbpp_Angle) - vSource.y * sin(cbpp_Angle),
-        vSource.x * sin(cbpp_Angle) + vSource.y * cos(cbpp_Angle)
-    );
-
-    gl_Position = vec4((vRotated + cbpp_RotateOrigin) / vec2(cbpp_Ratio, 1.0), 0.0, cbpp_Depth );
-    vUV_flipped = vUV;
+    vs_out.aUV[0] = a_vUV1;
+    vs_out.aUV[1] = a_vUV2;
+    vs_out.aPos[0] = a_vPos1;
+    vs_out.aPos[1] = a_vPos2;
+    vs_out.fAngle = a_fAngle;
+    vs_out.fDepth = a_fDepth;
 }

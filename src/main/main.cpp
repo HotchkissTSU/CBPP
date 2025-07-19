@@ -8,11 +8,12 @@
 #include <typeinfo>
 #include <cstring>
 #include <signal.h>
+#include <locale.h>
 
 #include "GLFW/glfw3.h"
 
 #include "cb_main/gamedata.h"
-#include "cb_main/load_shaders.h"
+#include "cb_main/aux.h"
 
 #ifdef __linux__
 	#include <dlfcn.h>
@@ -76,7 +77,6 @@ void text_input_callback(GLFWwindow* window, unsigned int codepoint) {
 void window_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0,0,width,height);
-
 
 	cbvs::g_vScreenSize.x = (float_t)width;
 	cbvs::g_vScreenSize.y = (float_t)height;
@@ -214,21 +214,28 @@ bool LoadGamefile() {
 	if(jRoot == NULL) {
 		CbThrowError("Json root node is NULL");
 		return false;
-	}
-
+    }
+    
 	yyjson_val* jGamelib = yyjson_obj_get(jRoot, "gamelib");
 
 	if(jGamelib != NULL && yyjson_is_str(jGamelib)) {
 		const char* sTmp = yyjson_get_str(jGamelib);
 		glib = strdup(sTmp);
-	}
+    }
+
+    yyjson_val* jRess = yyjson_obj_get(jRoot, "resolutions");
+    if(jRess != NULL) {
+        RegisterScreenResolutions(jRess);
+    }else{
+        CbThrowWarning("No screen resolutions are providen");
+    }
 
 	yyjson_val* jSearchPaths = yyjson_obj_get(jRoot, "paths");
 	if(jSearchPaths != NULL) {
 		MountSearchPaths(jSearchPaths);
 	}else{
 		CbThrowWarning("No search paths are providen. This is probably kinda bad");
-	}
+    }
 
 	yyjson_val* jShaders = yyjson_obj_get(jRoot, "shaders");
 	if(jShaders != NULL) {
@@ -438,11 +445,13 @@ int main( int argc, char** argv ) {
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		ModuleData.ModuleTick();
+
+        cbvs::RenderSpriteFinish();
 		
 		glfwSwapBuffers(GameData.MainWindow);
 	}
 	
 	Cleanup();
 
-	return 0;
+    return 0;
 }

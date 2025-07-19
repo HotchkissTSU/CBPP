@@ -10,7 +10,7 @@
 	Tier 2 errors are used only as hints in the way like "something bad happened deeply inside the function call stack, so we
 	will return false and push this error".
 
-	The main rule is that any call must not be able to kill the runtime - because nobody really likes game crashes.
+	The main rule is that no call should be able to kill the runtime - because nobody really likes game crashes.
 	Better do completely wrong than do nothing.
 
 	Hold the line, leave no quarter!
@@ -31,17 +31,18 @@
 namespace cbpp {
 	/*
 		Tier 1 error.
-		Commit a warcrime and murder the engine
+		Commit a warcrime and brutally murder the engine
 	*/
 	void Throw(const char* sMsg, const char* sFunc, size_t iLine, bool bKill) noexcept;
 
 	enum ERROR_CODE : uint8_t {
-		ERROR_INVALID, //No errors, everything is probably cool
-		ERROR_IO,      //Error within the Input/Output system
-		ERROR_MEM,     //Error with the memory management (NULL-pointer, invalid size etc.)
-		ERROR_TCODE,   //Error with text encoding
-		ERROR_GL,      //Error in the OpenGL API
-		ERROR_CDF	   //CDF API outage
+		ERROR_INVALID,      //No errors, everything is probably cool
+		ERROR_IO,           //Error within the Input/Output system
+		ERROR_MEM,          //Error with the memory management (NULL-pointer, invalid size etc.)
+		ERROR_TCODE,        //Error with text encoding
+		ERROR_GL,           //Error in the OpenGL API
+		ERROR_CDF,	        //CDF API outage
+        ERROR_GF            //Something incomprehensible in our gamefile
 	};
 
 	const char* ErrorNameByCode(ERROR_CODE iCode) noexcept;
@@ -62,7 +63,7 @@ namespace cbpp {
 
 	/*
 		Push a tier 2 error in the stack.
-		The passed string is copied and not modified in any way
+		The passed string is copied.
 	*/
 	void PushError(ERROR_CODE iClass, const char* sMsg) noexcept;
 	bool HasErrors() noexcept;

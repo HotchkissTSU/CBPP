@@ -39,8 +39,12 @@ namespace cbvs {
     };
 
     struct SpriteVertex {
-        cbpp::Vec2 vPos;
-        cbpp::Vec2 vUV;
+        GLfloat X0, Y0;
+        GLfloat X1, Y1;
+        GLfloat U0, V0;
+        GLfloat U1, V1;
+        GLfloat Angle;
+        GLfloat Depth;
     };
 
     class SpriteVertexBuffer : public IVertexBuffer <SpriteVertex> {
@@ -53,8 +57,12 @@ namespace cbvs {
                     glBindBuffer(GL_ARRAY_BUFFER, m_hVBO);
                     glBufferData(GL_ARRAY_BUFFER, iCount * sizeof(SpriteVertex), (const void*) pMemory, iMode);
 
-                    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (GLvoid*)(0));
-                    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*4, (GLvoid*)( sizeof(GLfloat)*2 ));
+                    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(SpriteVertex), (GLvoid*)(0));
+                    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(SpriteVertex), (GLvoid*)( sizeof(GLfloat)*2 ));
+                    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(SpriteVertex), (GLvoid*)( sizeof(GLfloat)*4 ));
+                    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(SpriteVertex), (GLvoid*)( sizeof(GLfloat)*6 ));
+                    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(SpriteVertex), (GLvoid*)( sizeof(GLfloat)*8 ));
+                    glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(SpriteVertex), (GLvoid*)( sizeof(GLfloat)*9 ));
             }
     };
 }

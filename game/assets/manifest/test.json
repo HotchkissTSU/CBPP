@@ -1,6 +1,12 @@
 {
     "gamelib" : "bin/modules/test.so",
 
+    "resolutions" : [
+        [800, 600],
+        [1280, 720],
+        [1920, 1080]
+    ],
+
     "paths" : {
         "all" : ["assets/"],
         "locale" : ["assets/locales/"],
@@ -52,14 +58,9 @@
             "members" : {
                 "sprite" : {
                     "vtx" : "sprite",
-                    "frag" : "sprite"
-                }//,
-
-                //"text" : {
-                //    "vtx" : "text",
-                //    "frag" : "text",
-                //    "geom" : "text"
-                //}
+                    "frag" : "sprite",
+                    "geom" : "sprite"
+                }
             }
         }
     }

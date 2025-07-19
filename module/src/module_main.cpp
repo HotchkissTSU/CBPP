@@ -21,17 +21,15 @@ extern "C" {
     }
 
     bool ModuleMain(int argc, char** argv) {
-        glCheck();
-
         printf("Module entry point!\n");
 
         LoadSheet("weapon01");
         LoadSheet("eule");
         LoadSheet("fx");
 
-        LoadFontBitmap("ithaca.ttf", "default", 20, LOAD_ASCII | LOAD_CYRILLIC);
+        LoadFontBitmap("ithaca.ttf", "default", 32, LOAD_ASCII | LOAD_CYRILLIC);
 
-        g_iSprite = GetSpriteID("weapon_pipe");
+        g_iSprite = GetSpriteID("eblan");
         g_iSprite2 = GetSpriteID("weapon_hcal_carbine_side");
 
         File* input = OpenFile(PATH_SHADER, "cbpp/prepr test.vtx", "rt");
@@ -52,7 +50,7 @@ extern "C" {
 
         return true;
     }
-
+    
     void ModuleTick() {
         g_fNigga += 0.01f;
         cbvs::RenderSprite(g_iSprite, Vec2(-0.5f, 0.0f), Vec2(1), g_fNigga, Color(255), 1.0f);
